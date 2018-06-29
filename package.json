@@ -1,0 +1,23 @@
+{
+  "name": "tanks-server",
+  "version": "1.0.0",
+  "description": "Authoritative server responsible for Tanks multiplayer gameplay",
+  "main": "main.js",
+  "dependencies": {
+    "ws": "^5.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DakotaLarson/Tanks-Server.git"
+  },
+  "author": "Dakota Larson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DakotaLarson/Tanks-Server/issues"
+  },
+  "homepage": "https://github.com/DakotaLarson/Tanks-Server#readme"
+}
