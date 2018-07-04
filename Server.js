@@ -1,29 +1,33 @@
 const WebSocket = require('ws');
 
-const CLI = require('CLI');
-const Component = require('Component');
+import CommandLineReader from 'CommandLineReader';
+import Component from 'Component';
 
-module.exports = class Server extends Component{
+export default class Server extends Component{
     constructor(){
         super();
+        this.lineReader = new CommandLineReader();
     }
 
     enable = () => {
         this.wss = new WebSocket.Server({
             port: 8000
         });
-        console.log('test 2');
-        this.wss.on('connection', (ws)=> {
-            ws.on('message', (message) => {
-                console.log('received: ' + message);
-                ws.send(message.toUpperCase());
-            });
-        });
+        this.wss.on('connection', this.handleConnection);
 
+        this.attachChild(this.lineReader);
     };
 
     disable = () => {
         this.wss.close();
+        this.detachChild(this.lineReader);
+    };
+
+    handleConnection = (ws) => {
+        ws.on('message', (message) => {
+            console.log('received: ' + message);
+            ws.send(message.toUpperCase());
+        });
     };
 };
 
