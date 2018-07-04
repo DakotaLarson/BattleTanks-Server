@@ -12,7 +12,7 @@ module.exports = class Server extends Component{
         this.wss = new WebSocket.Server({
             port: 8000
         });
-
+        console.log('test 2');
         this.wss.on('connection', (ws)=> {
             ws.on('message', (message) => {
                 console.log('received: ' + message);
