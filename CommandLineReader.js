@@ -25,7 +25,7 @@ export default class CommandLineReader extends Component{
         if(line.toLowerCase() === 'exit'){
             EventHandler.callEvent(EventHandler.Event.COMMANDLINE_EXIT);
         }else{
-            console.log(line.toUpperCase());
+            console.log('Unknown Command.');
         }
     };
 };

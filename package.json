@@ -22,7 +22,8 @@
     "build": "webpack",
     "build-prod": "webpack --mode=production",
     "start-compiler": "webpack --watch",
-    "start-supervisor": "supervisor --inspect ./build/server.js"
+    "start-supervisor": "supervisor --inspect ./build/server.js",
+    "start-server": "node --inspect ./build/server.js"
   },
   "repository": {
     "type": "git",

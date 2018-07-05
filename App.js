@@ -1,12 +1,12 @@
 import Component from 'Component';
 import EventHandler from 'EventHandler';
-import Server from 'Server';
+import WebSocketServer from 'WebSocketServer';
 
 class App extends Component{
 
     constructor(){
         super();
-        this.server = new Server();
+        this.server = new WebSocketServer();
     }
 
     start = ()  => {
@@ -15,6 +15,7 @@ class App extends Component{
     };
 
     stop = () => {
+        EventHandler.removeListener(EventHandler.Event.COMMANDLINE_EXIT, this.handleCommandExit);
         this.detachChild(this.server);
     };
 
@@ -26,10 +27,11 @@ class App extends Component{
 (() => {
     let app = new App();
     app.start();
+    console.log('Server Running...');
 
     process.on('exit', () => {
         app.stop();
-        console.log('Server Closed');
+        console.log('Server Closed.');
     });
     process.on('SIGINT', () => {
         EventHandler.callEvent(EventHandler.Event.COMMANDLINE_EXIT);
