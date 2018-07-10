@@ -1,9 +1,17 @@
 const eventListeners = {};
 
 const Event = {
-    COMMANDLINE_EXIT: 0
+    COMMANDLINE_EXIT: 0,
 
-};//Latest Event #: 0 (Update upon event addition!)
+    WORLDLOADER_WORLD_LOAD: 1,
+
+    PLAYER_CONNECT: 2,
+    PLAYER_DISCONNECT: 3,
+
+    WS_CONNECTION_CHECK: 4,
+    WS_CONNECTION_UNRESPONSIVE: 5
+
+};//Latest Event #: 5 (Update upon event addition!)
 
 export default class EventHandler{
 

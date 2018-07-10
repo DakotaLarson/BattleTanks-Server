@@ -18,7 +18,7 @@ module.exports = (env, argv) => {
         entry: {
             app: [
                 'babel-polyfill',
-                './App.js'
+                './js/App.js'
             ],
         },
         output: {
@@ -37,7 +37,7 @@ module.exports = (env, argv) => {
         },
         resolve: {
             modules: [
-                path.resolve('./'),
+                path.resolve('./js'),
                 //path.resolve('./node_modules')
             ]
         },
