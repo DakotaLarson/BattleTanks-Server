@@ -1,51 +1,39 @@
 const eventListeners = {};
 
-const Event = {
-    COMMANDLINE_EXIT: 0,
+module.exports.Event = {
+    PLAYER_CONNECT: 0,
+    WS_CONNECTION_CHECK: 1,
+    WS_CONNECTION_UNRESPONSIVE: 2,
+    WS_CONNECTION_CLOSED: 3
+};//Latest Event #: 3 (Update upon event addition!)
 
-    WORLDLOADER_WORLD_LOAD: 1,
-
-    PLAYER_CONNECT: 2,
-    PLAYER_DISCONNECT: 3,
-
-    WS_CONNECTION_CHECK: 4,
-    WS_CONNECTION_UNRESPONSIVE: 5
-
-};//Latest Event #: 5 (Update upon event addition!)
-
-export default class EventHandler{
-
-    static addListener = (event, callback) => {
-        if(eventListeners.hasOwnProperty(event)){
-            eventListeners[event].unshift(callback);
-        }else{
-            eventListeners[event] = [callback];
+module.exports.addListener = (event, callback) => {
+    if(event in eventListeners){
+        eventListeners[event].unshift(callback);
+    }else{
+        eventListeners[event] = [callback];
+    }
+};
+module.exports.addMonitorListener = (event, callback) => {
+    if(event in eventListeners){
+        eventListeners[event].push(callback);
+    }else{
+        eventListeners[event] = [callback];
+    }
+};
+ module.exports.removeListener = (event, callback) => {
+    if(event in eventListeners){
+        let callbackIndex = eventListeners[event].indexOf(callback);
+        if(callbackIndex > -1){
+            eventListeners[event].splice(callbackIndex, 1);
         }
-    };
-    static addMonitorListener = (event, callback) => {
-        if(eventListeners.hasOwnProperty(event)){
-            eventListeners[event].push(callback);
-        }else{
-            eventListeners[event] = [callback];
+    }
+};
+module.exports.callEvent = (event, argument) => {
+    if(event in eventListeners){
+        let callbacks = eventListeners[event];
+        for(let i = 0; i < callbacks.length; i ++){
+            callbacks[i](argument);
         }
-    };
-    static removeListener = (event, callback) => {
-        if(eventListeners.hasOwnProperty(event)){
-            let callbackIndex = eventListeners[event].indexOf(callback);
-            if(callbackIndex > -1){
-                eventListeners[event].splice(callbackIndex, 1);
-            }
-        }
-    };
-    static callEvent = (event, argument) => {
-        if(eventListeners.hasOwnProperty(event)){
-            let callbacks = eventListeners[event];
-            for(let i = 0; i < callbacks.length; i ++){
-                callbacks[i](argument);
-            }
-        }
-    };
-    static get Event(){
-        return Event;
     }
 };

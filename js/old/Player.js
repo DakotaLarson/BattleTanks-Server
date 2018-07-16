@@ -1,22 +1,24 @@
- const EventHandler = require('./EventHandler');
+import Component from 'Component';
+import EventHandler from 'EventHandler';
 
-module.exports = class Player {
+export default class Player extends Component{
 
     constructor(ws){
+        super();
         this.ws = ws;
     }
 
-    enable(){
+    enable = () => {
         EventHandler.addListener(EventHandler.Event.WS_CONNECTION_CHECK, this.checkConnection);
 
         this.ws.on('message', (message) => {
-            this.handleMessage(message);
+            this.handleMessage(ws, message);
         });
         this.ws.on('close', (code, reason) => {
-            this.handleClose(code, reason);
+            this.handleClose(ws, code, reason);
         });
         this.ws.on('error', (error) => {
-            this.handleError(error);
+            this.handleError(ws, error);
         });
         this.ws.isAlive = true;
         this.ws.on('pong', () => {
@@ -24,12 +26,12 @@ module.exports = class Player {
         });
     };
 
-    disable(){
+    disable = () => {
         EventHandler.removeListener(EventHandler.Event.WS_CONNECTION_CHECK, this.checkConnection);
         this.ws.terminate();
-    }
+    };
 
-    handleMessage(message){
+    handleMessage = (ws, message) => {
         if(message instanceof Buffer){
             console.log(message);
         }else{
@@ -37,16 +39,15 @@ module.exports = class Player {
         }
     };
 
-    handleClose(code, reason){
+    handleClose = (ws, code, reason) => {
         console.log('WS Closed: ' + code + ' ' + reason);
-        EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_CLOSED, this);
     };
 
-    handleError(error){
+    handleError = (ws, error) => {
         console.log(error);
     };
 
-    checkConnection(){
+    checkConnection = () => {
         if(!this.ws.isAlive){
             EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_UNRESPONSIVE, this);
         }else{
@@ -54,4 +55,4 @@ module.exports = class Player {
             this.ws.ping();
         }
     };
-};
+}
