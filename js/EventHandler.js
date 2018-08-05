@@ -1,11 +1,16 @@
 const eventListeners = {};
 
 module.exports.Event = {
+    //PLAYER
     PLAYER_CONNECT: 0,
+    PLAYER_DISCONNECT: 5,
+
+    //WS
     WS_CONNECTION_CHECK: 1,
     WS_CONNECTION_UNRESPONSIVE: 2,
-    WS_CONNECTION_CLOSED: 3
-};//Latest Event #: 3 (Update upon event addition!)
+    WS_CONNECTION_CLOSED: 3,
+    WS_CONNECTION_OPENED: 4
+};//Latest Event #: 5 (Update upon event addition!)
 
 module.exports.addListener = (event, callback) => {
     if(event in eventListeners){

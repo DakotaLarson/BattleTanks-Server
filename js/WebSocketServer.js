@@ -2,6 +2,7 @@ const WebSocket = require('ws');
 const EventHandler = require('./EventHandler');
 const Player = require('./Player');
 
+let connectionCheckerId;
 
 module.exports.enable = () => {
     this.wss = new WebSocket.Server({
@@ -13,33 +14,34 @@ module.exports.enable = () => {
     });
     this.wss.on('connection', handleConnection);
 
-    this.connectionCheckerId = setInterval(checkConnections, 30000, 30000);
+    connectionCheckerId = setInterval(checkConnections, 30000, 30000);
 
-    // let str1 = 'test String';
-    //
-    // let buff1 = Buffer.from(str1);
-    // console.log(buff1);
-    // let str2 = buff1.toString('utf-8');
-    // console.log(str2);
 };
 
 module.exports.disable = () => {
     this.wss.close();
-    clearInterval(this.connectionCheckerId);
+    clearInterval(connectionCheckerId);
 };
 
 handleConnection = (ws) => {
-    let player = new Player(ws);
-    EventHandler.callEvent(EventHandler.Event.PLAYER_CONNECT, player);
+    ws.isAlive = true;
+    ws.addEventListener('pong', () => {
+        ws.isAlive = true;
+    });
+
+    EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
 };
 
 checkConnections = () => {
-    // for(let ws of this.wss.clients){
-    //     if(!ws.isAlive) ws.terminate();
-    //     ws.isAlive = false;
-    //     ws.ping();
-    // }
-    EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_CHECK);
+    for(let ws of this.wss.clients){
+        if(!ws.isAlive){
+            ws.terminate();
+            console.log('WS Terminated...');
+        }else{
+            ws.isAlive = false;
+            ws.ping();
+        }
+    }
 };
 
 verifyClient = (info) => {

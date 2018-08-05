@@ -1,26 +1,24 @@
-import EventHandler from 'EventHandler';
+const EventHandler = require('./EventHandler');
 const fs = require('fs');
 const path = require('path');
 
-export default class WorldLoader{
-
-    static loadInitialWorld = () => {
+module.exports.loadInitialArena = () => {
         const dirPath = path.join(process.cwd(), 'arenas');
         const arenaFiles = fs.readdirSync(dirPath);
         if(arenaFiles.length){
-            //let arena = arenaFiles[Math.floor(Math.random() * arenaFiles.length)];
             for(let arena of arenaFiles){
                 let arenaData = getArenaData(dirPath, arena);
                 if(arenaData){
-                    EventHandler.callEvent(EventHandler.Event.WORLDLOADER_WORLD_LOAD, arenaData);
+                    EventHandler.callEvent(EventHandler.Event.ARENALOADER_ARENA_LOAD, arenaData);
+                    return;
                 }
             }
-            EventHandler.callEvent(EventHandler.Event.WORLDLOADER_WORLD_LOAD);
+            EventHandler.callEvent(EventHandler.Event.ARENALOADER_ARENA_LOAD);
         }else{
-            EventHandler.callEvent(EventHandler.Event.WORLDLOADER_WORLD_LOAD);
+            EventHandler.callEvent(EventHandler.Event.ARENALOADER_ARENA_LOAD);
         }
     };
-}
+
 
 const getArenaData = (dirPath, fileName) => {
     const filePath = path.join(dirPath, fileName);
@@ -30,7 +28,9 @@ const getArenaData = (dirPath, fileName) => {
             let data = null;
             try{
                 data = JSON.parse(contents);
-            }catch(ex){}
+            }catch(ex){
+                return null;
+            }
             if(data.title && !isNaN(Number(data.height)) && !isNaN(Number(data.width)) && data.blockLocations){
                 return data;
             }
