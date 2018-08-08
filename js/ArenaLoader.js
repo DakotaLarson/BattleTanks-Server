@@ -2,7 +2,7 @@ const EventHandler = require('./EventHandler');
 const fs = require('fs');
 const path = require('path');
 
-module.exports.loadInitialArena = () => {
+module.exports.loadArena = () => {
         const dirPath = path.join(process.cwd(), 'arenas');
         const arenaFiles = fs.readdirSync(dirPath);
         if(arenaFiles.length){

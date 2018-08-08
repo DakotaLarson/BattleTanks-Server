@@ -38,7 +38,7 @@ createPlayer = (ws, name) => {
         PacketReceiver.handleMessage(message, player);
     });
     ws.addEventListener('close', (event) => {
-        EventHandler.callEvent(EventHandler.Event.PLAYER_DISCONNECT, {
+        EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, {
             player: player,
             code: event.code,
             reason: event.reason

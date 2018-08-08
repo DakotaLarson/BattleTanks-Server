@@ -2,8 +2,8 @@ const eventListeners = {};
 
 module.exports.Event = {
     //PLAYER
-    PLAYER_CONNECT: 0,
-    PLAYER_DISCONNECT: 5,
+    PLAYER_JOIN: 0,
+    PLAYER_LEAVE: 5,
 
     //WS
     WS_CONNECTION_CHECK: 1,
