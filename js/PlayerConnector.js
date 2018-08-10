@@ -51,5 +51,5 @@ createPlayer = (ws, name) => {
 
     PacketSender.addSocket(id, ws);
 
-    EventHandler.callEvent(EventHandler.Event.PLAYER_CONNECT, player);
+    EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
 };

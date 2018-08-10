@@ -11,4 +11,8 @@ module.exports = class Player {
     sendArena(arena){
         PacketSender.sendArena(this.id, arena);
     }
+
+    sendGameStatus(status){
+        PacketSender.sendGameStatus(this.id, status);
+    }
 };

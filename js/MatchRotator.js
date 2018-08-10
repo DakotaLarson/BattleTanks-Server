@@ -17,10 +17,20 @@ module.exports.enable = () => {
 onPlayerJoin = (player) => {
     if(players.indexOf(player) === -1){
         players.push(player);
-    }
 
-    if(arena){
-        player.sendArena(arena);
+        if(status === GameStatus.WAITING){
+            if(players.length >= MINIMUM_PLAYER_COUNT){
+                updateStatus(GameStatus.PREPARING)
+            }else{
+                player.sendGameStatus(status);
+            }
+        }else{
+            if(status === GameStatus.PREPARING || status === GameStatus.RUNNING){
+                player.sendArena(arena);
+            }
+            player.sendGameStatus(status);
+        }
+
     }
 
     console.log('Player: \'' + player.name + '\' connected');
@@ -43,19 +53,14 @@ onWorldLoad = (arenaData) => {
     }
 };
 
-updateStatus = (playerCount) => {
-    switch(status){
+updateStatus = (newStatus) => {
+    status = newStatus;
+    switch(newStatus){
         case GameStatus.WAITING:
-            if(playerCount >= MINIMUM_PLAYER_COUNT){
-                //start preparing
-                status = GameStatus.PREPARING;
-                ArenaLoader.loadArena();
-            }else{
-                //still waiting.
-                //todo send status
-            }
+
             break;
         case GameStatus.PREPARING:
+            ArenaLoader.loadArena();
             //todo send status and arena
             break;
         case GameStatus.RUNNING:
@@ -64,6 +69,9 @@ updateStatus = (playerCount) => {
         case GameStatus.FINISHING:
             //todo send status
             break;
+    }
+    for(let i = 0; i < players.length; i ++){
+        players[i].sendGameStatus(newStatus);
     }
 };
 
