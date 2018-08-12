@@ -26,12 +26,16 @@ module.exports.removeSocket = (id) => {
 constructData = (header, body) => {
     let bodyType = typeof body;
     if(bodyType === 'number'){
-        let buffer = Buffer.alloc(2);
+        let buffer = Buffer.alloc(3);
         buffer.writeUInt8(header, 0);
-        buffer.writeUInt8(body, 1);
+        buffer.writeUInt8(0x00, 1);
+        buffer.writeUInt8(body, 2);
         return buffer;
     }else{
-        let headerBuffer = Buffer.alloc(1, header);
+        let headerBuffer = Buffer.alloc(2);
+        headerBuffer.writeUInt8(header, 0);
+        headerBuffer.writeUInt8(0x01, 1);
+
         let bodyBuffer;
         if(bodyType === 'string'){
             bodyBuffer = Buffer.from(body, 'utf8');

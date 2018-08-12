@@ -9,8 +9,11 @@ module.exports.Event = {
     WS_CONNECTION_CHECK: 1,
     WS_CONNECTION_UNRESPONSIVE: 2,
     WS_CONNECTION_CLOSED: 3,
-    WS_CONNECTION_OPENED: 4
-};//Latest Event #: 5 (Update upon event addition!)
+    WS_CONNECTION_OPENED: 4,
+
+    //ARENA LOADER
+    ARENALOADER_ARENA_LOAD: 6,
+};//Latest Event #: 6 (Update upon event addition!)
 
 module.exports.addListener = (event, callback) => {
     if(event in eventListeners){
