@@ -14,13 +14,13 @@ module.exports.loadArena = () => {
                         return;
                     }
                 }
-                EventHandler.callEvent(EventHandler.Event.ARENALOADER_ARENA_LOAD);
+                EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
             }else{
-                EventHandler.callEvent(EventHandler.Event.ARENALOADER_ARENA_LOAD);
+                EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
             }
         }else{
             fs.mkdirSync(dirPath);
-
+            EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
         }
 
     };

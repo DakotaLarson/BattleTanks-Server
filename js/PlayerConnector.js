@@ -15,11 +15,11 @@ module.exports.disable = () => {
     EventHandler.removeListener(EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
 };
 
-onConnection = (ws) => {
+const onConnection = (ws) => {
     ws.addEventListener('message', checkMessage);
 };
 
-checkMessage = (event) => {
+const checkMessage = (event) => {
     let buffer = event.data;
     let header = buffer.readUInt8(0);
     if(header === CONNECTION_HEADER_CODE){
@@ -28,7 +28,7 @@ checkMessage = (event) => {
     }
 };
 
-createPlayer = (ws, name) => {
+const createPlayer = (ws, name) => {
     let id = playerID ++;
     let player = new Player(name, id);
 
