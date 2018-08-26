@@ -3,7 +3,7 @@ const ArenaLoader = require('./ArenaLoader');
 
 const MINIMUM_PLAYER_COUNT = 2;
 const PREPARING_TIME = 10000;
-const FINISHING_TIME = 50000;
+const FINISHING_TIME = 5000;
 
 let arena;
 let status;
@@ -14,7 +14,7 @@ module.exports.enable = () => {
     EventHandler.addListener(EventHandler.Event.PLAYER_LEAVE, onPlayerLeave);
     EventHandler.addListener(EventHandler.Event.ARENALOADER_ARENA_LOAD, onWorldLoad);
     EventHandler.addListener(EventHandler.Event.ARENALOADER_NO_ARENAS, onNoArenas);
-    status = GameStatus.WAITING;
+    setGameStatus(GameStatus.WAITING);
 };
 
 const onPlayerJoin = (player) => {
@@ -58,7 +58,7 @@ const startWaiting = () => {
         players[i].sendGameStatus(GameStatus.WAITING);
     }
 
-    status = GameStatus.WAITING;
+    setGameStatus(GameStatus.WAITING);
 };
 
 const startPreparing = () => {
@@ -76,7 +76,7 @@ const startPreparing = () => {
         }
     }, PREPARING_TIME);
 
-    status = GameStatus.PREPARING;
+    setGameStatus(GameStatus.PREPARING);
 };
 
 const startRunning = () => {
@@ -84,7 +84,7 @@ const startRunning = () => {
         players[i].sendGameStatus(GameStatus.RUNNING);
     }
 
-    status = GameStatus.RUNNING;
+    setGameStatus(GameStatus.RUNNING);
 };
 
 const startFinishing = () => {
@@ -100,7 +100,7 @@ const startFinishing = () => {
         }
     }, FINISHING_TIME);
 
-    status = GameStatus.FINISHING;
+    setGameStatus(GameStatus.FINISHING);
 };
 
 const onWorldLoad = (arenaData) => {
@@ -113,6 +113,11 @@ const onWorldLoad = (arenaData) => {
 
 const onNoArenas = () => {
     console.log('There are no arenas loaded to start a match.');
+};
+
+const setGameStatus = (newStatus) => {
+    console.log('GameStatus: ' + newStatus);
+    status = newStatus;
 };
 
 const GameStatus = {
