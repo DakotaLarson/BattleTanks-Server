@@ -37,10 +37,28 @@ const getArenaData = (dirPath, fileName) => {
             }catch(ex){
                 return null;
             }
-            if(data.title && !isNaN(Number(data.height)) && !isNaN(Number(data.width)) && data.blockLocations){
+            if(hasTitle(data) && hasDimensions(data) && hasBlockLocations(data) && hasSpawns(data)){
                 return data;
             }
         }
     }
     return null;
+};
+
+const hasDimensions = (data) => {
+     let height = Number(data.height);
+     let width = Number (data.width);
+     return !(isNaN(height) || isNaN(width) || height <= 0 || width <= 0);
+}
+
+const hasTitle = (data) => {
+    return data.title && data.title.length;
+}
+
+const hasBlockLocations = (data) => {
+    return data.blockLocations && data.blockLocations.length;
+};
+
+const hasSpawns = (data) => {
+    return data.gameSpawnLocations && data.gameSpawnLocations.length && data.initialSpawnLocations && data.initialSpawnLocations.length;
 };

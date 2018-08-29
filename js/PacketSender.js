@@ -3,6 +3,7 @@ const sockets = {};
 const Packets = {
     ARENA: 0x00,
     GAME_STATUS: 0x01,
+    ALERT: 0X02,
 };
 
 module.exports.sendArena = (id, arena) => {
@@ -15,6 +16,11 @@ module.exports.sendGameStatus = (id, status) => {
     sockets[id].send(data);
 };
 
+module.exports.sendAlert = (id, message) => {
+    let data = constructData(Packets.ALERT, message);
+    sockets[id].send(data);
+};
+
 module.exports.addSocket = (id, ws) => {
     sockets[id] = ws;
 };
@@ -23,7 +29,7 @@ module.exports.removeSocket = (id) => {
    delete sockets[id];
 };
 
-constructData = (header, body) => {
+const constructData = (header, body) => {
     let bodyType = typeof body;
     if(bodyType === 'number'){
         let buffer = Buffer.alloc(3);

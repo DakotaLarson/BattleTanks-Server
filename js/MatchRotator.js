@@ -66,6 +66,7 @@ const startPreparing = () => {
 
     for(let i = 0; i < players.length; i ++){
         players[i].sendGameStatus(GameStatus.PREPARING);
+        players[i].sendAlert('Match starting in 10 seconds!');
     }
 
     setTimeout(() => {
@@ -82,6 +83,8 @@ const startPreparing = () => {
 const startRunning = () => {
     for(let i = 0; i < players.length; i ++){
         players[i].sendGameStatus(GameStatus.RUNNING);
+        players[i].sendAlert('Match started!');
+
     }
 
     setGameStatus(GameStatus.RUNNING);
