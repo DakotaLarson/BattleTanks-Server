@@ -18,4 +18,8 @@ module.exports = class Player {
     sendAlert(message){
         PacketSender.sendAlert(this.id, message);
     }
+
+    sendAssignedInitialSpawn(loc){
+        PacketSender.sendAssignedInitialSpawn(this.id, loc);
+    }
 };

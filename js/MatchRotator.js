@@ -1,9 +1,10 @@
 const EventHandler = require('./EventHandler');
 const ArenaLoader = require('./ArenaLoader');
+const Arena = require('./Arena');
 
 const MINIMUM_PLAYER_COUNT = 2;
 const PREPARING_TIME = 10000;
-const FINISHING_TIME = 5000;
+const FINISHING_TIME = 3000;
 
 let arena;
 let status;
@@ -12,7 +13,7 @@ const players = [];
 module.exports.enable = () => {
     EventHandler.addListener(EventHandler.Event.PLAYER_JOIN, onPlayerJoin);
     EventHandler.addListener(EventHandler.Event.PLAYER_LEAVE, onPlayerLeave);
-    EventHandler.addListener(EventHandler.Event.ARENALOADER_ARENA_LOAD, onWorldLoad);
+    EventHandler.addListener(EventHandler.Event.ARENALOADER_ARENA_LOAD, onArenaLoad);
     EventHandler.addListener(EventHandler.Event.ARENALOADER_NO_ARENAS, onNoArenas);
     setGameStatus(GameStatus.WAITING);
 };
@@ -66,6 +67,7 @@ const startPreparing = () => {
 
     for(let i = 0; i < players.length; i ++){
         players[i].sendGameStatus(GameStatus.PREPARING);
+        players[i].sendAssignedInitialSpawn(Arena.getRandomInitialSpawn());
         players[i].sendAlert('Match starting in 10 seconds!');
     }
 
@@ -106,8 +108,9 @@ const startFinishing = () => {
     setGameStatus(GameStatus.FINISHING);
 };
 
-const onWorldLoad = (arenaData) => {
+const onArenaLoad = (arenaData) => {
     arena = arenaData;
+    Arena.update(arenaData);
     for(let i = 0; i < players.length; i ++){
         players[i].sendArena(arena);
     }
