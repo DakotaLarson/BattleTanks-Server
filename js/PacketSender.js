@@ -3,6 +3,8 @@ const sockets = {};
 const Packets = {
     ARENA: 0x00,
     GAME_STATUS: 0x01,
+    ALERT: 0X02,
+    ASSIGNED_INITIAL_SPAWN: 0X03
 };
 
 module.exports.sendArena = (id, arena) => {
@@ -15,6 +17,16 @@ module.exports.sendGameStatus = (id, status) => {
     sockets[id].send(data);
 };
 
+module.exports.sendAlert = (id, message) => {
+    let data = constructData(Packets.ALERT, message);
+    sockets[id].send(data);
+};
+
+module.exports.sendAssignedInitialSpawn = (id, loc) => {
+    let data = constructData(Packets.ASSIGNED_INITIAL_SPAWN, [loc.x, loc.y, loc.z]);
+    sockets[id].send(data);
+};
+
 module.exports.addSocket = (id, ws) => {
     sockets[id] = ws;
 };
@@ -23,7 +35,7 @@ module.exports.removeSocket = (id) => {
    delete sockets[id];
 };
 
-constructData = (header, body) => {
+const constructData = (header, body) => {
     let bodyType = typeof body;
     if(bodyType === 'number'){
         let buffer = Buffer.alloc(3);
@@ -38,8 +50,10 @@ constructData = (header, body) => {
 
         let bodyBuffer;
         if(bodyType === 'string'){
+            headerBuffer.writeUInt8(0x01, 1);
             bodyBuffer = Buffer.from(body, 'utf8');
         }else{
+            headerBuffer.writeUInt8(0x02, 1);
             bodyBuffer = Buffer.from(body);
         }
         return Buffer.concat([headerBuffer, bodyBuffer], headerBuffer.length + bodyBuffer.length);

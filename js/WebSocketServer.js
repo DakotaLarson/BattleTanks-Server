@@ -23,7 +23,7 @@ module.exports.disable = () => {
     clearInterval(connectionCheckerId);
 };
 
-handleConnection = (ws) => {
+const handleConnection = (ws) => {
     ws.isAlive = true;
     ws.addEventListener('pong', () => {
         ws.isAlive = true;
@@ -32,7 +32,7 @@ handleConnection = (ws) => {
     EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
 };
 
-checkConnections = () => {
+const checkConnections = () => {
     for(let ws of this.wss.clients){
         if(!ws.isAlive){
             ws.terminate();
@@ -44,7 +44,7 @@ checkConnections = () => {
     }
 };
 
-verifyClient = (info) => {
+const verifyClient = (info) => {
     return info.req.headers['sec-websocket-protocol'] === 'tanks-MP';
 };
 

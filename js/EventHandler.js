@@ -13,7 +13,8 @@ module.exports.Event = {
 
     //ARENA LOADER
     ARENALOADER_ARENA_LOAD: 6,
-};//Latest Event #: 6 (Update upon event addition!)
+    ARENALOADER_NO_ARENAS: 7,
+};//Latest Event #: 7 (Update upon event addition!)
 
 module.exports.addListener = (event, callback) => {
     if(event in eventListeners){

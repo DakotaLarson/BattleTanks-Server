@@ -1,4 +1,3 @@
-const EventHandler = require('./EventHandler');
 const PacketSender = require('./PacketSender');
 
 module.exports = class Player {
@@ -14,5 +13,13 @@ module.exports = class Player {
 
     sendGameStatus(status){
         PacketSender.sendGameStatus(this.id, status);
+    }
+
+    sendAlert(message){
+        PacketSender.sendAlert(this.id, message);
+    }
+
+    sendAssignedInitialSpawn(loc){
+        PacketSender.sendAssignedInitialSpawn(this.id, loc);
     }
 };
