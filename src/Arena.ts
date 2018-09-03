@@ -1,9 +1,9 @@
-const Vector3 = require('./Vector3');
+import Vector3 from './Vector3';
 
 let initialSpawnLocations = [];
 let gameSpawnLocations = [];
 
-module.exports.update = (data) => {
+export const update = (data) => {
     initialSpawnLocations.length = 0;
     gameSpawnLocations.length = 0;
 
@@ -22,7 +22,7 @@ module.exports.update = (data) => {
     }
 };
 
-module.exports.getRandomInitialSpawn = () => {
+export const getRandomInitialSpawn = () => {
     let length = initialSpawnLocations.length;
     if(length){
         return initialSpawnLocations[Math.floor(Math.random() * length)]

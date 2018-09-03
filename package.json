@@ -4,6 +4,8 @@
   "description": "Authoritative server responsible for Tanks multiplayer gameplay",
   "main": "App.js",
   "dependencies": {
+    "@types/node": "^10.9.4",
+    "@types/ws": "^6.0.0",
     "ws": "^5.2.1"
   },
   "devDependencies": {
@@ -12,8 +14,8 @@
     "supervisor": "^0.12.0"
   },
   "scripts": {
-    "start-supervisor": "supervisor --inspect ./js/App.js",
-    "start": "node --inspect ./js/App.js"
+    "start-supervisor": "supervisor --inspect ./build/App.js",
+    "start": "node --inspect ./build/App.js"
   },
   "repository": {
     "type": "git",

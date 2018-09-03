@@ -1,6 +1,9 @@
-const PacketSender = require('./PacketSender');
+import * as PacketSender from './PacketSender';
 
-module.exports = class Player {
+export default class Player {
+
+    name: string;
+    id: number;
 
     constructor(name, id){
         this.name = name;
