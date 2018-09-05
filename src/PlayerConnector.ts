@@ -1,17 +1,17 @@
-const EventHandler = require('./EventHandler');
-const Player = require('./Player');
-const PacketReceiver = require('./PacketReceiver');
-const PacketSender = require('./PacketSender');
+import * as EventHandler from './EventHandler';
+import Player from './Player';
+import * as PacketReceiver from './PacketReceiver';
+import * as PacketSender from './PacketSender';
 
 const CONNECTION_HEADER_CODE = 0X00;
 
 let playerID = 0;
 
-module.exports.enable = () => {
+export const enable = () => {
     EventHandler.addListener(EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
 };
 
-module.exports.disable = () => {
+export const disable = () => {
     EventHandler.removeListener(EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
 };
 

@@ -7,31 +7,31 @@ const Packets = {
     ASSIGNED_INITIAL_SPAWN: 0X03
 };
 
-module.exports.sendArena = (id, arena) => {
+export const sendArena = (id, arena) => {
     let data = constructData(Packets.ARENA, JSON.stringify(arena));
     sockets[id].send(data);
 };
 
-module.exports.sendGameStatus = (id, status) => {
+export const sendGameStatus = (id, status) => {
     let data = constructData(Packets.GAME_STATUS, status);
     sockets[id].send(data);
 };
 
-module.exports.sendAlert = (id, message) => {
+export const sendAlert = (id, message) => {
     let data = constructData(Packets.ALERT, message);
     sockets[id].send(data);
 };
 
-module.exports.sendAssignedInitialSpawn = (id, loc) => {
+export const sendAssignedInitialSpawn = (id, loc) => {
     let data = constructData(Packets.ASSIGNED_INITIAL_SPAWN, [loc.x, loc.y, loc.z]);
     sockets[id].send(data);
 };
 
-module.exports.addSocket = (id, ws) => {
+export const addSocket = (id, ws) => {
     sockets[id] = ws;
 };
 
-module.exports.removeSocket = (id) => {
+export const removeSocket = (id) => {
    delete sockets[id];
 };
 

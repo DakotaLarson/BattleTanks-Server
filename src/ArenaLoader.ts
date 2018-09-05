@@ -1,8 +1,9 @@
-const EventHandler = require('./EventHandler');
+import * as EventHandler from './EventHandler';
+
 const fs = require('fs');
 const path = require('path');
 
-module.exports.loadArena = () => {
+export const loadArena = () => {
         const dirPath = path.join(process.cwd(), 'arenas');
         if(fs.existsSync(dirPath)){
             const arenaFiles = fs.readdirSync(dirPath);
