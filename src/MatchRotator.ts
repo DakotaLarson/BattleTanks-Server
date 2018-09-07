@@ -31,6 +31,11 @@ const onPlayerJoin = (player) => {
         }else{
             if(status === GameStatus.PREPARING || status === GameStatus.RUNNING){
                 player.sendArena(arena);
+                
+                if(status === GameStatus.PREPARING){
+                    player.sendAssignedInitialSpawn(Arena.getRandomInitialSpawn());
+                    player.sendAlert('Match starting soon!');
+                }
             }
             player.sendGameStatus(status);
         }

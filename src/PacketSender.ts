@@ -1,11 +1,17 @@
 const sockets = {};
 
-const Packets = {
-    ARENA: 0x00,
-    GAME_STATUS: 0x01,
-    ALERT: 0X02,
-    ASSIGNED_INITIAL_SPAWN: 0X03
+enum Packets{
+    ARENA = 0x00,
+    GAME_STATUS =  0x01,
+    ALERT =  0X02,
+    ASSIGNED_INITIAL_SPAWN = 0X03
 };
+
+enum DataType{
+    NUMBER = 0X00,
+    STRING = 0X01,
+    ARRAY = 0x02
+}
 
 export const sendArena = (id, arena) => {
     let data = constructData(Packets.ARENA, JSON.stringify(arena));
@@ -40,7 +46,7 @@ const constructData = (header, body) => {
     if(bodyType === 'number'){
         let buffer = Buffer.alloc(3);
         buffer.writeUInt8(header, 0);
-        buffer.writeUInt8(0x00, 1);
+        buffer.writeUInt8(DataType.NUMBER, 1);
         buffer.writeUInt8(body, 2);
         return buffer;
     }else{
@@ -50,10 +56,10 @@ const constructData = (header, body) => {
 
         let bodyBuffer;
         if(bodyType === 'string'){
-            headerBuffer.writeUInt8(0x01, 1);
+            headerBuffer.writeUInt8(DataType.STRING, 1);
             bodyBuffer = Buffer.from(body, 'utf8');
         }else{
-            headerBuffer.writeUInt8(0x02, 1);
+            headerBuffer.writeUInt8(DataType.ARRAY, 1);
             bodyBuffer = Buffer.from(body);
         }
         return Buffer.concat([headerBuffer, bodyBuffer], headerBuffer.length + bodyBuffer.length);

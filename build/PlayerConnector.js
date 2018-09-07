@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const EventHandler = require("./EventHandler");
 const Player_1 = require("./Player");
-const PacketReceiver = require("./PacketReceiver");
+const PacketReceiver_1 = require("./PacketReceiver");
 const PacketSender = require("./PacketSender");
 const CONNECTION_HEADER_CODE = 0X00;
 let playerID = 0;
@@ -19,7 +19,7 @@ const checkMessage = (event) => {
     let buffer = event.data;
     let header = buffer.readUInt8(0);
     if (header === CONNECTION_HEADER_CODE) {
-        let name = buffer.toString('utf8', 1);
+        let name = buffer.toString('utf8', 2);
         createPlayer(event.target, name);
     }
 };
@@ -28,7 +28,7 @@ const createPlayer = (ws, name) => {
     let player = new Player_1.default(name, id);
     ws.removeEventListener('message', checkMessage);
     ws.addEventListener('message', (message) => {
-        PacketReceiver.handleMessage(message, player);
+        PacketReceiver_1.default.handleMessage(message.data, player);
     });
     ws.addEventListener('close', (event) => {
         EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, {

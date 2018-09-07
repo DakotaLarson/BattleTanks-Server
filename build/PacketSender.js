@@ -1,12 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const sockets = {};
-const Packets = {
-    ARENA: 0x00,
-    GAME_STATUS: 0x01,
-    ALERT: 0X02,
-    ASSIGNED_INITIAL_SPAWN: 0X03
-};
+var Packets;
+(function (Packets) {
+    Packets[Packets["ARENA"] = 0] = "ARENA";
+    Packets[Packets["GAME_STATUS"] = 1] = "GAME_STATUS";
+    Packets[Packets["ALERT"] = 2] = "ALERT";
+    Packets[Packets["ASSIGNED_INITIAL_SPAWN"] = 3] = "ASSIGNED_INITIAL_SPAWN";
+})(Packets || (Packets = {}));
+;
+var DataType;
+(function (DataType) {
+    DataType[DataType["NUMBER"] = 0] = "NUMBER";
+    DataType[DataType["STRING"] = 1] = "STRING";
+    DataType[DataType["ARRAY"] = 2] = "ARRAY";
+})(DataType || (DataType = {}));
 exports.sendArena = (id, arena) => {
     let data = constructData(Packets.ARENA, JSON.stringify(arena));
     sockets[id].send(data);
@@ -34,7 +42,7 @@ const constructData = (header, body) => {
     if (bodyType === 'number') {
         let buffer = Buffer.alloc(3);
         buffer.writeUInt8(header, 0);
-        buffer.writeUInt8(0x00, 1);
+        buffer.writeUInt8(DataType.NUMBER, 1);
         buffer.writeUInt8(body, 2);
         return buffer;
     }
@@ -44,11 +52,11 @@ const constructData = (header, body) => {
         headerBuffer.writeUInt8(0x01, 1);
         let bodyBuffer;
         if (bodyType === 'string') {
-            headerBuffer.writeUInt8(0x01, 1);
+            headerBuffer.writeUInt8(DataType.STRING, 1);
             bodyBuffer = Buffer.from(body, 'utf8');
         }
         else {
-            headerBuffer.writeUInt8(0x02, 1);
+            headerBuffer.writeUInt8(DataType.ARRAY, 1);
             bodyBuffer = Buffer.from(body);
         }
         return Buffer.concat([headerBuffer, bodyBuffer], headerBuffer.length + bodyBuffer.length);

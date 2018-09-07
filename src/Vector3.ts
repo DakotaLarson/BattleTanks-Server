@@ -4,9 +4,9 @@ export default class Vector3{
     y: number;
     z: number;
     
-    constructor(x, y, z){
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    constructor(x?, y?, z?){
+        this.x = x || 0;
+        this.y = y || 0;
+        this.z = z || 0;
     }
 }

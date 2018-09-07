@@ -1,7 +1,7 @@
 import Vector3 from './Vector3';
 
-let initialSpawnLocations = [];
-let gameSpawnLocations = [];
+let initialSpawnLocations: Array<Vector3> = [];
+let gameSpawnLocations: Array<Vector3> = [];
 
 export const update = (data) => {
     initialSpawnLocations.length = 0;
