@@ -19,11 +19,23 @@ class Player {
     sendAlert(message) {
         PacketSender.sendAlert(this.id, message);
     }
-    sendAssignedInitialSpawn(loc) {
-        this.pos.x = loc.x;
-        this.pos.y = loc.y;
-        this.pos.z = loc.z;
-        PacketSender.sendAssignedInitialSpawn(this.id, loc);
+    sendAssignedInitialSpawn(pos) {
+        this.pos.x = pos.x;
+        this.pos.y = pos.y;
+        this.pos.z = pos.z;
+        PacketSender.sendAssignedInitialSpawn(this.id, pos);
+    }
+    sendConnectedPlayerInitialSpawn(playerId, name, pos, headRot, bodyRot) {
+        PacketSender.sendConnectedPlayerInitialSpawn(this.id, {
+            id: playerId,
+            name: name,
+            pos: [pos.x, pos.y, pos.z],
+            headRot: headRot,
+            bodyRot: bodyRot
+        });
+    }
+    sendConnectedPlayerPositionUpdate(pos, bodyRot, headRot, playerId) {
+        PacketSender.sendConnectedPlayerPositionUpdate(this.id, pos, bodyRot, headRot, playerId);
     }
     handlePositionUpdate(data) {
         this.pos.x = data[0];
@@ -34,5 +46,4 @@ class Player {
     }
 }
 exports.default = Player;
-;
 //# sourceMappingURL=Player.js.map

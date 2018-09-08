@@ -14,6 +14,7 @@ exports.enable = () => {
     EventHandler.addListener(EventHandler.Event.PLAYER_LEAVE, onPlayerLeave);
     EventHandler.addListener(EventHandler.Event.ARENALOADER_ARENA_LOAD, onArenaLoad);
     EventHandler.addListener(EventHandler.Event.ARENALOADER_NO_ARENAS, onNoArenas);
+    EventHandler.addListener(EventHandler.Event.GAME_TICK, onTick);
     setGameStatus(GameStatus.WAITING);
 };
 const onPlayerJoin = (player) => {
@@ -31,7 +32,13 @@ const onPlayerJoin = (player) => {
             if (status === GameStatus.PREPARING || status === GameStatus.RUNNING) {
                 player.sendArena(arena);
                 if (status === GameStatus.PREPARING) {
-                    player.sendAssignedInitialSpawn(Arena.getRandomInitialSpawn());
+                    let spawn = Arena.getRandomInitialSpawn();
+                    player.sendAssignedInitialSpawn(spawn);
+                    for (let i = 0; i < players.length; i++) {
+                        if (players[i].id === player.id)
+                            continue;
+                        players[i].sendConnectedPlayerInitialSpawn(player.id, player.name, spawn, player.headRot, player.bodyRot);
+                    }
                     player.sendAlert('Match starting soon!');
                 }
             }
@@ -62,9 +69,16 @@ const startWaiting = () => {
 const startPreparing = () => {
     ArenaLoader.loadArena();
     for (let i = 0; i < players.length; i++) {
-        players[i].sendGameStatus(GameStatus.PREPARING);
-        players[i].sendAssignedInitialSpawn(Arena.getRandomInitialSpawn());
-        players[i].sendAlert('Match starting in 10 seconds!');
+        let player = players[i];
+        let spawn = Arena.getRandomInitialSpawn();
+        player.sendGameStatus(GameStatus.PREPARING);
+        player.sendAssignedInitialSpawn(spawn);
+        player.sendAlert('Match starting in 10 seconds!');
+        for (let j = 0; j < players.length; j++) {
+            if (players[j].id === player.id)
+                continue;
+            players[j].sendConnectedPlayerInitialSpawn(player.id, player.name, spawn, player.headRot, player.bodyRot);
+        }
     }
     setTimeout(() => {
         if (players.length >= MINIMUM_PLAYER_COUNT) {
@@ -105,6 +119,15 @@ const onArenaLoad = (arenaData) => {
     }
     console.log('Loaded Arena: ' + arena.title);
 };
+const onTick = () => {
+    for (let i = 0; i < players.length; i++) {
+        for (let j = 0; j < players.length; j++) {
+            if (players[i].id !== players[j].id) {
+                players[j].sendConnectedPlayerPositionUpdate(players[i].pos, players[i].bodyRot, players[i].headRot, players[i].id);
+            }
+        }
+    }
+};
 const onNoArenas = () => {
     console.log('There are no arenas loaded to start a match.');
 };
@@ -112,10 +135,12 @@ const setGameStatus = (newStatus) => {
     console.log('GameStatus: ' + newStatus);
     status = newStatus;
 };
-const GameStatus = {
-    WAITING: 0,
-    PREPARING: 1,
-    RUNNING: 2,
-    FINISHING: 3
-};
+var GameStatus;
+(function (GameStatus) {
+    GameStatus[GameStatus["WAITING"] = 0] = "WAITING";
+    GameStatus[GameStatus["PREPARING"] = 1] = "PREPARING";
+    GameStatus[GameStatus["RUNNING"] = 2] = "RUNNING";
+    GameStatus[GameStatus["FINISHING"] = 3] = "FINISHING";
+})(GameStatus || (GameStatus = {}));
+;
 //# sourceMappingURL=MatchRotator.js.map

@@ -1,19 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const eventListeners = {};
-exports.Event = {
+var Event;
+(function (Event) {
+    //GAME
+    Event[Event["GAME_TICK"] = 0] = "GAME_TICK";
     //PLAYER
-    PLAYER_JOIN: 0,
-    PLAYER_LEAVE: 5,
+    Event[Event["PLAYER_JOIN"] = 1] = "PLAYER_JOIN";
+    Event[Event["PLAYER_LEAVE"] = 2] = "PLAYER_LEAVE";
     //WS
-    WS_CONNECTION_CHECK: 1,
-    WS_CONNECTION_UNRESPONSIVE: 2,
-    WS_CONNECTION_CLOSED: 3,
-    WS_CONNECTION_OPENED: 4,
+    Event[Event["WS_CONNECTION_CHECK"] = 3] = "WS_CONNECTION_CHECK";
+    Event[Event["WS_CONNECTION_UNRESPONSIVE"] = 4] = "WS_CONNECTION_UNRESPONSIVE";
+    Event[Event["WS_CONNECTION_CLOSED"] = 5] = "WS_CONNECTION_CLOSED";
+    Event[Event["WS_CONNECTION_OPENED"] = 6] = "WS_CONNECTION_OPENED";
     //ARENA LOADER
-    ARENALOADER_ARENA_LOAD: 6,
-    ARENALOADER_NO_ARENAS: 7,
-}; //Latest Event #: 7 (Update upon event addition!)
+    Event[Event["ARENALOADER_ARENA_LOAD"] = 7] = "ARENALOADER_ARENA_LOAD";
+    Event[Event["ARENALOADER_NO_ARENAS"] = 8] = "ARENALOADER_NO_ARENAS";
+})(Event = exports.Event || (exports.Event = {}));
+;
 exports.addListener = (event, callback) => {
     if (event in eventListeners) {
         eventListeners[event].unshift(callback);

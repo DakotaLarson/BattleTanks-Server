@@ -21,20 +21,34 @@ export default class Player {
         PacketSender.sendArena(this.id, arena);
     }
 
-    sendGameStatus(status){
+    sendGameStatus(status: number){
         PacketSender.sendGameStatus(this.id, status);
     }
 
-    sendAlert(message){
+    sendAlert(message: string){
         PacketSender.sendAlert(this.id, message);
     }
 
-    sendAssignedInitialSpawn(loc: Vector3){
-        this.pos.x = loc.x;
-        this.pos.y = loc.y;
-        this.pos.z = loc.z;
+    sendAssignedInitialSpawn(pos: Vector3){
+        this.pos.x = pos.x;
+        this.pos.y = pos.y;
+        this.pos.z = pos.z;
 
-        PacketSender.sendAssignedInitialSpawn(this.id, loc);
+        PacketSender.sendAssignedInitialSpawn(this.id, pos);
+    }
+
+    sendConnectedPlayerInitialSpawn(playerId: number, name: string, pos: Vector3, headRot: number, bodyRot: number){
+        PacketSender.sendConnectedPlayerInitialSpawn(this.id, {
+            id: playerId,
+            name: name,
+            pos: [pos.x, pos.y, pos.z],
+            headRot: headRot,
+            bodyRot: bodyRot
+        });
+    }
+    
+    sendConnectedPlayerPositionUpdate(pos: Vector3, bodyRot: number, headRot: number, playerId: number){
+        PacketSender.sendConnectedPlayerPositionUpdate(this.id, pos, bodyRot, headRot, playerId);
     }
 
     handlePositionUpdate(data: Array<number>){
@@ -44,4 +58,4 @@ export default class Player {
         this.bodyRot = data[3];
         this.headRot = data[4];
     }
-};
+}

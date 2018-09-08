@@ -1,20 +1,24 @@
 const eventListeners = {};
 
-export const Event = {
+export enum Event{
+
+    //GAME
+    GAME_TICK,
+
     //PLAYER
-    PLAYER_JOIN: 0,
-    PLAYER_LEAVE: 5,
+    PLAYER_JOIN,
+    PLAYER_LEAVE,
 
     //WS
-    WS_CONNECTION_CHECK: 1,
-    WS_CONNECTION_UNRESPONSIVE: 2,
-    WS_CONNECTION_CLOSED: 3,
-    WS_CONNECTION_OPENED: 4,
+    WS_CONNECTION_CHECK,
+    WS_CONNECTION_UNRESPONSIVE,
+    WS_CONNECTION_CLOSED,
+    WS_CONNECTION_OPENED,
 
     //ARENA LOADER
-    ARENALOADER_ARENA_LOAD: 6,
-    ARENALOADER_NO_ARENAS: 7,
-};//Latest Event #: 7 (Update upon event addition!)
+    ARENALOADER_ARENA_LOAD,
+    ARENALOADER_NO_ARENAS,
+};
 
 export const addListener = (event, callback) => {
     if(event in eventListeners){
