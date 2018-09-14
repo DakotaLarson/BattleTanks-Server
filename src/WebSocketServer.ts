@@ -1,6 +1,6 @@
 import WebSocket = require('ws'); 
 
-import * as EventHandler from './EventHandler';
+import EventHandler from './EventHandler';
 
 let connectionCheckerId: NodeJS.Timer;
 

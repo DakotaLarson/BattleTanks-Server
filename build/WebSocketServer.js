@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const WebSocket = require("ws");
-const EventHandler = require("./EventHandler");
+const EventHandler_1 = require("./EventHandler");
 let connectionCheckerId;
 exports.enable = () => {
     this.wss = new WebSocket.Server({
@@ -23,7 +23,7 @@ const handleConnection = (ws) => {
     ws.addEventListener('pong', () => {
         ws.isAlive = true;
     });
-    EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
+    EventHandler_1.default.callEvent(EventHandler_1.default.Event.WS_CONNECTION_OPENED, ws);
 };
 const checkConnections = () => {
     for (let ws of this.wss.clients) {

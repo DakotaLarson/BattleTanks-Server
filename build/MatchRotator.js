@@ -1,87 +1,82 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const EventHandler = require("./EventHandler");
+const EventHandler_1 = require("./EventHandler");
 const ArenaLoader = require("./ArenaLoader");
 const Arena = require("./Arena");
+const PlayerHandler_1 = require("./PlayerHandler");
 const MINIMUM_PLAYER_COUNT = 2;
 const PREPARING_TIME = 10000;
 const FINISHING_TIME = 3000;
 let arena;
 let status;
-const players = [];
 exports.enable = () => {
-    EventHandler.addListener(EventHandler.Event.PLAYER_JOIN, onPlayerJoin);
-    EventHandler.addListener(EventHandler.Event.PLAYER_LEAVE, onPlayerLeave);
-    EventHandler.addListener(EventHandler.Event.ARENALOADER_ARENA_LOAD, onArenaLoad);
-    EventHandler.addListener(EventHandler.Event.ARENALOADER_NO_ARENAS, onNoArenas);
-    EventHandler.addListener(EventHandler.Event.GAME_TICK, onTick);
+    EventHandler_1.default.addListener(this, EventHandler_1.default.Event.PLAYER_JOIN, onPlayerJoin);
+    EventHandler_1.default.addListener(this, EventHandler_1.default.Event.PLAYER_LEAVE, onPlayerLeave);
+    EventHandler_1.default.addListener(this, EventHandler_1.default.Event.ARENALOADER_ARENA_LOAD, onArenaLoad);
+    EventHandler_1.default.addListener(this, EventHandler_1.default.Event.ARENALOADER_NO_ARENAS, onNoArenas);
+    EventHandler_1.default.addListener(this, EventHandler_1.default.Event.GAME_TICK, onTick);
     setGameStatus(GameStatus.WAITING);
 };
 const onPlayerJoin = (player) => {
-    if (players.indexOf(player) === -1) {
-        players.push(player);
-        if (status === GameStatus.WAITING) {
-            if (players.length >= MINIMUM_PLAYER_COUNT) {
-                startPreparing();
-            }
-            else {
-                player.sendGameStatus(status);
-            }
+    if (status === GameStatus.WAITING) {
+        if (PlayerHandler_1.default.getCount() >= MINIMUM_PLAYER_COUNT) {
+            startPreparing();
         }
         else {
-            if (status === GameStatus.PREPARING || status === GameStatus.RUNNING) {
-                player.sendArena(arena);
-                if (status === GameStatus.PREPARING) {
-                    let spawn = Arena.getRandomInitialSpawn();
-                    player.sendAssignedInitialSpawn(spawn);
-                    for (let i = 0; i < players.length; i++) {
-                        if (players[i].id === player.id)
-                            continue;
-                        players[i].sendConnectedPlayerInitialSpawn(player.id, player.name, spawn, player.headRot, player.bodyRot);
-                    }
-                    player.sendAlert('Match starting soon!');
-                }
-            }
             player.sendGameStatus(status);
         }
+    }
+    else {
+        if (status === GameStatus.PREPARING || status === GameStatus.RUNNING) {
+            player.sendArena(arena);
+            if (status === GameStatus.PREPARING) {
+                let spawn = Arena.getRandomInitialSpawn();
+                player.sendAssignedInitialSpawn(spawn);
+                for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+                    let otherPlayer = PlayerHandler_1.default.getPlayer(i);
+                    if (otherPlayer.id === player.id)
+                        continue;
+                    otherPlayer.sendConnectedPlayerInitialSpawn(otherPlayer.id, otherPlayer.name, spawn, otherPlayer.headRot, otherPlayer.bodyRot);
+                }
+                player.sendAlert('Match starting soon!');
+            }
+        }
+        player.sendGameStatus(status);
     }
     console.log('Player: \'' + player.name + '\' connected');
 };
 const onPlayerLeave = (data) => {
     let player = data.player;
-    let index = players.indexOf(player);
-    if (index > -1) {
-        players.splice(index, 1);
-        if (status === GameStatus.RUNNING) {
-            if (players.length < MINIMUM_PLAYER_COUNT) {
-                startFinishing();
-            }
+    if (status === GameStatus.RUNNING) {
+        if (PlayerHandler_1.default.getCount() < MINIMUM_PLAYER_COUNT) {
+            startFinishing();
         }
-        console.log('Player: \'' + player.name + '\' disconnected (' + data.code + ')');
     }
+    console.log('Player: \'' + player.name + '\' disconnected (' + data.code + ')');
 };
 const startWaiting = () => {
-    for (let i = 0; i < players.length; i++) {
-        players[i].sendGameStatus(GameStatus.WAITING);
+    for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+        PlayerHandler_1.default.getPlayer(i).sendGameStatus(GameStatus.WAITING);
     }
     setGameStatus(GameStatus.WAITING);
 };
 const startPreparing = () => {
     ArenaLoader.loadArena();
-    for (let i = 0; i < players.length; i++) {
-        let player = players[i];
+    for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+        let player = PlayerHandler_1.default.getPlayer(i);
         let spawn = Arena.getRandomInitialSpawn();
         player.sendGameStatus(GameStatus.PREPARING);
         player.sendAssignedInitialSpawn(spawn);
         player.sendAlert('Match starting in 10 seconds!');
-        for (let j = 0; j < players.length; j++) {
-            if (players[j].id === player.id)
+        for (let j = 0; j < PlayerHandler_1.default.getCount(); j++) {
+            let otherPlayer = PlayerHandler_1.default.getPlayer(j);
+            if (otherPlayer.id === player.id)
                 continue;
-            players[j].sendConnectedPlayerInitialSpawn(player.id, player.name, spawn, player.headRot, player.bodyRot);
+            otherPlayer.sendConnectedPlayerInitialSpawn(player.id, player.name, spawn, player.headRot, player.bodyRot);
         }
     }
     setTimeout(() => {
-        if (players.length >= MINIMUM_PLAYER_COUNT) {
+        if (PlayerHandler_1.default.getCount() >= MINIMUM_PLAYER_COUNT) {
             startRunning();
         }
         else {
@@ -91,18 +86,19 @@ const startPreparing = () => {
     setGameStatus(GameStatus.PREPARING);
 };
 const startRunning = () => {
-    for (let i = 0; i < players.length; i++) {
-        players[i].sendGameStatus(GameStatus.RUNNING);
-        players[i].sendAlert('Match started!');
+    for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+        let player = PlayerHandler_1.default.getPlayer(i);
+        player.sendGameStatus(GameStatus.RUNNING);
+        player.sendAlert('Match started!');
     }
     setGameStatus(GameStatus.RUNNING);
 };
 const startFinishing = () => {
-    for (let i = 0; i < players.length; i++) {
-        players[i].sendGameStatus(GameStatus.FINISHING);
+    for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+        PlayerHandler_1.default.getPlayer(i).sendGameStatus(GameStatus.FINISHING);
     }
     setTimeout(() => {
-        if (players.length >= MINIMUM_PLAYER_COUNT) {
+        if (PlayerHandler_1.default.getCount() >= MINIMUM_PLAYER_COUNT) {
             startPreparing();
         }
         else {
@@ -114,16 +110,18 @@ const startFinishing = () => {
 const onArenaLoad = (arenaData) => {
     arena = arenaData;
     Arena.update(arenaData);
-    for (let i = 0; i < players.length; i++) {
-        players[i].sendArena(arena);
+    for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+        PlayerHandler_1.default.getPlayer(i).sendArena(arena);
     }
     console.log('Loaded Arena: ' + arena.title);
 };
 const onTick = () => {
-    for (let i = 0; i < players.length; i++) {
-        for (let j = 0; j < players.length; j++) {
-            if (players[i].id !== players[j].id) {
-                players[j].sendConnectedPlayerPositionUpdate(players[i].pos, players[i].bodyRot, players[i].headRot, players[i].id);
+    for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+        for (let j = 0; j < PlayerHandler_1.default.getCount(); j++) {
+            let playerOne = PlayerHandler_1.default.getPlayer(i);
+            let playerTwo = PlayerHandler_1.default.getPlayer(j);
+            if (playerOne.id !== playerTwo.id) {
+                playerTwo.sendConnectedPlayerPositionUpdate(playerOne.pos, playerOne.bodyRot, playerOne.headRot, playerOne.id);
             }
         }
     }

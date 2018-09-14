@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const PacketSender = require("./PacketSender");
 const Vector3_1 = require("./Vector3");
+const EventHandler_1 = require("./EventHandler");
 class Player {
     constructor(name, id) {
         this.name = name;
@@ -43,6 +44,9 @@ class Player {
         this.pos.z = data[2];
         this.bodyRot = data[3];
         this.headRot = data[4];
+    }
+    shoot() {
+        EventHandler_1.default.callEvent(EventHandler_1.default.Event.PLAYER_SHOOT, this);
     }
 }
 exports.default = Player;

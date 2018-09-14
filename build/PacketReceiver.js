@@ -3,8 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const receivePosition = (player, data) => {
     player.handlePositionUpdate(data);
 };
+const receivePlayerShoot = (player) => {
+    player.shoot();
+};
 const handlers = new Map([
-    [0x01, receivePosition]
+    [0x01, receivePosition],
+    [0X02, receivePlayerShoot]
 ]);
 var DataType;
 (function (DataType) {
@@ -12,6 +16,7 @@ var DataType;
     DataType[DataType["STRING"] = 1] = "STRING";
     DataType[DataType["INT_ARRAY"] = 2] = "INT_ARRAY";
     DataType[DataType["FLOAT_ARRAY"] = 3] = "FLOAT_ARRAY";
+    DataType[DataType["HEADER_ONLY"] = 4] = "HEADER_ONLY";
 })(DataType || (DataType = {}));
 class PacketReceiver {
     static handleMessage(message, player) {
@@ -37,6 +42,10 @@ class PacketReceiver {
                 for (let i = 4; i < message.length; i += 4) {
                     body.push(message.readFloatLE(i));
                 }
+                break;
+            case DataType.HEADER_ONLY:
+                body = new Array();
+                break;
         }
         let handler = handlers.get(header);
         if (handler) {

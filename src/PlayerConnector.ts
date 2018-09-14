@@ -1,4 +1,4 @@
-import * as EventHandler from './EventHandler';
+import EventHandler from './EventHandler';
 import Player from './Player';
 import PacketReceiver from './PacketReceiver';
 import * as PacketSender from './PacketSender';
@@ -8,11 +8,11 @@ const CONNECTION_HEADER_CODE = 0X00;
 let playerID = 0;
 
 export const enable = () => {
-    EventHandler.addListener(EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
+    EventHandler.addListener(this, EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
 };
 
 export const disable = () => {
-    EventHandler.removeListener(EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
+    EventHandler.removeListener(this, EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
 };
 
 const onConnection = (ws) => {

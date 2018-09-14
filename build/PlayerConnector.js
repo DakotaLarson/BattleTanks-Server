@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const EventHandler = require("./EventHandler");
+const EventHandler_1 = require("./EventHandler");
 const Player_1 = require("./Player");
 const PacketReceiver_1 = require("./PacketReceiver");
 const PacketSender = require("./PacketSender");
 const CONNECTION_HEADER_CODE = 0X00;
 let playerID = 0;
 exports.enable = () => {
-    EventHandler.addListener(EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
+    EventHandler_1.default.addListener(this, EventHandler_1.default.Event.WS_CONNECTION_OPENED, onConnection);
 };
 exports.disable = () => {
-    EventHandler.removeListener(EventHandler.Event.WS_CONNECTION_OPENED, onConnection);
+    EventHandler_1.default.removeListener(this, EventHandler_1.default.Event.WS_CONNECTION_OPENED, onConnection);
 };
 const onConnection = (ws) => {
     ws.addEventListener('message', checkMessage);
@@ -31,7 +31,7 @@ const createPlayer = (ws, name) => {
         PacketReceiver_1.default.handleMessage(message.data, player);
     });
     ws.addEventListener('close', (event) => {
-        EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, {
+        EventHandler_1.default.callEvent(EventHandler_1.default.Event.PLAYER_LEAVE, {
             player: player,
             code: event.code,
             reason: event.reason
@@ -42,6 +42,6 @@ const createPlayer = (ws, name) => {
         console.log(error);
     });
     PacketSender.addSocket(id, ws);
-    EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
+    EventHandler_1.default.callEvent(EventHandler_1.default.Event.PLAYER_JOIN, player);
 };
 //# sourceMappingURL=PlayerConnector.js.map

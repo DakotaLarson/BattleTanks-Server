@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const EventHandler = require("./EventHandler");
+const EventHandler_1 = require("./EventHandler");
 const fs = require('fs');
 const path = require('path');
 exports.loadArena = () => {
@@ -11,19 +11,19 @@ exports.loadArena = () => {
             for (let arena of arenaFiles) {
                 let arenaData = getArenaData(dirPath, arena);
                 if (arenaData) {
-                    EventHandler.callEvent(EventHandler.Event.ARENALOADER_ARENA_LOAD, arenaData);
+                    EventHandler_1.default.callEvent(EventHandler_1.default.Event.ARENALOADER_ARENA_LOAD, arenaData);
                     return;
                 }
             }
-            EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
+            EventHandler_1.default.callEvent(EventHandler_1.default.Event.ARENALOADER_NO_ARENAS);
         }
         else {
-            EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
+            EventHandler_1.default.callEvent(EventHandler_1.default.Event.ARENALOADER_NO_ARENAS);
         }
     }
     else {
         fs.mkdirSync(dirPath);
-        EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
+        EventHandler_1.default.callEvent(EventHandler_1.default.Event.ARENALOADER_NO_ARENAS);
     }
 };
 const getArenaData = (dirPath, fileName) => {

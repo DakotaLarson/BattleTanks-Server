@@ -1,20 +1,25 @@
-import * as EventHandler from './EventHandler';
-import Vector3 from './Vector3';
 import Player from './Player';
+import EventHandler from './EventHandler';
 
 const receivePosition = (player: Player, data: Array<number>) => {
     player.handlePositionUpdate(data);
 }
 
+const receivePlayerShoot = (player: Player) => {
+    player.shoot();
+}
+
 const handlers = new Map([
-    [0x01, receivePosition]
+    [0x01, receivePosition],
+    [0X02, receivePlayerShoot]
 ]);
 
 enum DataType{
     NUMBER = 0X00,
     STRING = 0X01,
     INT_ARRAY = 0x02,
-    FLOAT_ARRAY = 0X03
+    FLOAT_ARRAY = 0X03,
+    HEADER_ONLY = 0X04
 }
 
 export default class PacketReceiver{
@@ -41,6 +46,10 @@ export default class PacketReceiver{
                 for(let i = 4; i < message.length; i += 4){
                     body.push(message.readFloatLE(i));
                 }
+                break;
+            case DataType.HEADER_ONLY:
+                body = new Array();
+                break;
         }
         let handler = handlers.get(header);
         if(handler){

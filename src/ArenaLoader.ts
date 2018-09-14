@@ -1,4 +1,4 @@
-import * as EventHandler from './EventHandler';
+import EventHandler from './EventHandler';
 
 const fs = require('fs');
 const path = require('path');

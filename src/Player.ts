@@ -1,5 +1,6 @@
 import * as PacketSender from './PacketSender';
 import Vector3 from './Vector3';
+import EventHandler from './EventHandler';
 
 export default class Player {
 
@@ -57,5 +58,9 @@ export default class Player {
         this.pos.z = data[2];
         this.bodyRot = data[3];
         this.headRot = data[4];
+    }
+
+    shoot(){
+        EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
     }
 }
