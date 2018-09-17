@@ -1,4 +1,4 @@
-import * as MatchRotator from './MatchRotator';
+import MatchRotator from './MatchRotator';
 import * as WebSocketServer from './WebSocketServer';
 import * as PlayerConnector from './PlayerConnector';
 import PlayerHandler from './PlayerHandler';

@@ -6,9 +6,10 @@ enum Packet{
     ARENA = 0x00,
     GAME_STATUS =  0x01,
     ALERT =  0X02,
-    ASSIGNED_INITIAL_SPAWN = 0X03,
-    CONNECTED_PLAYER_INITIAL_SPAWN = 0x04,
-    CONNECTED_PLAYER_POSITION_UPDATE = 0X05
+    PLAYER_ADD = 0X03,
+    CONNECTED_PLAYER_ADD = 0x04,
+    CONNECTED_PLAYER_MOVE = 0X05,
+    CONNECTED_PLAYER_REMOVE = 0X06,
 };
 
 enum DataType{
@@ -34,24 +35,31 @@ export const sendAlert = (id, message) => {
     sockets.get(id).send(data);
 };
 
-export const sendAssignedInitialSpawn = (id, pos) => {
+export const sendPlayerAdd = (id, pos) => {
     let dataObj = {
         id: id,
         pos: [pos.x, pos.y, pos.z]
     };
-    let data = constructData(Packet.ASSIGNED_INITIAL_SPAWN,JSON.stringify(dataObj) , DataType.STRING);
+    let data = constructData(Packet.PLAYER_ADD,JSON.stringify(dataObj) , DataType.STRING);
     sockets.get(id).send(data);
 };
 
-export const sendConnectedPlayerInitialSpawn = (id, playerData) => {
-    playerData
-    let data = constructData(Packet.CONNECTED_PLAYER_INITIAL_SPAWN, JSON.stringify(playerData), DataType.STRING);
+export const sendConnectedPlayerAddition = (id, playerData) => {
+    let data = constructData(Packet.CONNECTED_PLAYER_ADD, JSON.stringify(playerData), DataType.STRING);
 
     sockets.get(id).send(data);
 };
 
-export const sendConnectedPlayerPositionUpdate = (id: number, pos: Vector3, bodyRot: number, headRot: number, playerId: number) => {
-    let data = constructData(Packet.CONNECTED_PLAYER_POSITION_UPDATE, [pos.x, pos.y, pos.z, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+export const sendConnectedPlayerRemoval = (id, playerId) => {
+    let dataObj = {
+        id: playerId
+    };
+    let data = constructData(Packet.CONNECTED_PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
+    sockets.get(id).send(data);
+}
+
+export const sendConnectedPlayerMove = (id: number, pos: Vector3, bodyRot: number, headRot: number, playerId: number) => {
+    let data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
     sockets.get(id).send(data);
 }
 

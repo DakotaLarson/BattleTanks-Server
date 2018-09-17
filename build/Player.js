@@ -20,14 +20,15 @@ class Player {
     sendAlert(message) {
         PacketSender.sendAlert(this.id, message);
     }
-    sendAssignedInitialSpawn(pos) {
+    sendPlayerAdd(pos) {
         this.pos.x = pos.x;
         this.pos.y = pos.y;
         this.pos.z = pos.z;
-        PacketSender.sendAssignedInitialSpawn(this.id, pos);
+        this.bodyRot = this.headRot = 0;
+        PacketSender.sendPlayerAdd(this.id, pos);
     }
-    sendConnectedPlayerInitialSpawn(playerId, name, pos, headRot, bodyRot) {
-        PacketSender.sendConnectedPlayerInitialSpawn(this.id, {
+    sendConnectedPlayerAddition(playerId, name, pos, headRot, bodyRot) {
+        PacketSender.sendConnectedPlayerAddition(this.id, {
             id: playerId,
             name: name,
             pos: [pos.x, pos.y, pos.z],
@@ -35,8 +36,11 @@ class Player {
             bodyRot: bodyRot
         });
     }
-    sendConnectedPlayerPositionUpdate(pos, bodyRot, headRot, playerId) {
-        PacketSender.sendConnectedPlayerPositionUpdate(this.id, pos, bodyRot, headRot, playerId);
+    sendConnectedPlayerMove(pos, bodyRot, headRot, playerId) {
+        PacketSender.sendConnectedPlayerMove(this.id, pos, bodyRot, headRot, playerId);
+    }
+    sendConnectedPlayerRemoval(playerId) {
+        PacketSender.sendConnectedPlayerRemoval(this.id, playerId);
     }
     handlePositionUpdate(data) {
         this.pos.x = data[0];
