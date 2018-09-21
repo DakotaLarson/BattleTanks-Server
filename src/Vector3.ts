@@ -34,6 +34,17 @@ export default class Vector3{
         return this;
     }
 
+    clone(){
+        return new Vector3(this.x, this.y, this.z);
+    }
+
+    distanceSquared(vec: Vector3): number{
+        let xDiff = vec.x - this.x;
+        let yDiff = vec.y - this.y;
+        let zDiff = vec.z - this.z;
+        return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff;
+    }
+
     static fromAngleAboutY(angle: number): Vector3{
         return new Vector3(Math.sin(angle), 0, Math.cos(angle));
     }

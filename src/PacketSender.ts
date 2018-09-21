@@ -3,13 +3,21 @@ import Vector3 from "./Vector3";
 const sockets: Map<number, WebSocket> = new Map();
 
 enum Packet{
-    ARENA = 0x00,
-    GAME_STATUS =  0x01,
-    ALERT =  0X02,
-    PLAYER_ADD = 0X03,
-    CONNECTED_PLAYER_ADD = 0x04,
-    CONNECTED_PLAYER_MOVE = 0X05,
-    CONNECTED_PLAYER_REMOVE = 0X06,
+    ARENA,
+
+    GAME_STATUS,
+
+    ALERT,
+
+    PLAYER_ADD,
+    PLAYER_MOVE,
+    PLAYER_REMOVE,
+
+    CONNECTED_PLAYER_ADD,
+    CONNECTED_PLAYER_MOVE,
+    CONNECTED_PLAYER_REMOVE,
+
+    MATCH_STATISTICS
 };
 
 enum DataType{
@@ -25,24 +33,43 @@ export const sendArena = (id, arena) => {
     sockets.get(id).send(data);
 };
 
-export const sendGameStatus = (id, status) => {
+export const sendGameStatus = (id, status: number) => {
     let data = constructData(Packet.GAME_STATUS, status, DataType.NUMBER);
     sockets.get(id).send(data);
 };
 
-export const sendAlert = (id, message) => {
+export const sendAlert = (id, message: string) => {
     let data = constructData(Packet.ALERT, message, DataType.STRING);
     sockets.get(id).send(data);
 };
 
-export const sendPlayerAdd = (id, pos) => {
+export const sendPlayerAddition = (id, pos: Vector3) => {
     let dataObj = {
         id: id,
         pos: [pos.x, pos.y, pos.z]
     };
-    let data = constructData(Packet.PLAYER_ADD,JSON.stringify(dataObj) , DataType.STRING);
+    let data = constructData(Packet.PLAYER_ADD, JSON.stringify(dataObj), DataType.STRING);
     sockets.get(id).send(data);
 };
+
+export const sendPlayerRemoval = (id) => {
+    let dataObj = {
+        id: id,
+    };
+    let data = constructData(Packet.PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
+    sockets.get(id).send(data);
+};
+
+export const sendPlayerMove = (id, pos: Vector3, headRot: number, bodyRot: number) => {
+    let dataObj = {
+        id: id,
+        pos: [pos.x, pos.y, pos.z],
+        headRot: headRot,
+        bodyRot: bodyRot
+    };
+    let data = constructData(Packet.PLAYER_MOVE, JSON.stringify(dataObj), DataType.STRING);
+    sockets.get(id).send(data);
+}
 
 export const sendConnectedPlayerAddition = (id, playerData) => {
     let data = constructData(Packet.CONNECTED_PLAYER_ADD, JSON.stringify(playerData), DataType.STRING);
@@ -50,7 +77,7 @@ export const sendConnectedPlayerAddition = (id, playerData) => {
     sockets.get(id).send(data);
 };
 
-export const sendConnectedPlayerRemoval = (id, playerId) => {
+export const sendConnectedPlayerRemoval = (id, playerId: number) => {
     let dataObj = {
         id: playerId
     };
@@ -60,6 +87,11 @@ export const sendConnectedPlayerRemoval = (id, playerId) => {
 
 export const sendConnectedPlayerMove = (id: number, pos: Vector3, bodyRot: number, headRot: number, playerId: number) => {
     let data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+    sockets.get(id).send(data);
+}
+
+export const sendMatchStatistics = (id: number, statistics: string) => {
+    let data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.STRING);
     sockets.get(id).send(data);
 }
 

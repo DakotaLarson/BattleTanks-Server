@@ -19,6 +19,8 @@ export enum Event{
     //ARENA LOADER
     ARENALOADER_ARENA_LOAD,
     ARENALOADER_NO_ARENAS,
+
+    PLAYER_HIT_PLAYER,
 };
 
 enum Level{
@@ -26,8 +28,6 @@ enum Level{
     MEDIUM,
     HIGH
 }
-//Latest Event #: 64 (Append upon event addition.)
-//Missing Event #s: NONE (Append on event removal; Use and remove from list for event addition when available.)
 
 const lowListeners = new Map();
 const mediumListeners = new Map();

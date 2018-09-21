@@ -9,6 +9,7 @@ export default class Player {
     pos: Vector3;
     bodyRot: number;
     headRot: number;
+    isAlive: boolean;
 
     constructor(name, id){
         this.name = name;
@@ -16,6 +17,7 @@ export default class Player {
         this.pos = new Vector3();
         this.bodyRot = 0;
         this.headRot = 0;
+        this.isAlive = true;
     }
 
     sendArena(arena){
@@ -30,13 +32,25 @@ export default class Player {
         PacketSender.sendAlert(this.id, message);
     }
 
-    sendPlayerAdd(pos: Vector3){
+    sendPlayerAddition(pos: Vector3){
         this.pos.x = pos.x;
         this.pos.y = pos.y;
         this.pos.z = pos.z;
         this.bodyRot = this.headRot = 0;
 
-        PacketSender.sendPlayerAdd(this.id, pos);
+        PacketSender.sendPlayerAddition(this.id, pos);
+    }
+
+    sendPlayerRemoval(){
+        PacketSender.sendPlayerRemoval(this.id);
+    }
+
+    sendPlayerMove(pos: Vector3){
+        this.pos.x = pos.x;
+        this.pos.y = pos.y;
+        this.pos.z = pos.z;
+
+        PacketSender.sendPlayerMove(this.id, pos, this.headRot, this. bodyRot);
     }
 
     sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector3, headRot: number, bodyRot: number){
@@ -55,6 +69,10 @@ export default class Player {
 
     sendConnectedPlayerRemoval(playerId: number){
         PacketSender.sendConnectedPlayerRemoval(this.id, playerId);
+    }
+
+    sendMatchStatistics(stats){
+        PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
     }
 
     handlePositionUpdate(data: Array<number>){

@@ -7,9 +7,12 @@ var Packet;
     Packet[Packet["GAME_STATUS"] = 1] = "GAME_STATUS";
     Packet[Packet["ALERT"] = 2] = "ALERT";
     Packet[Packet["PLAYER_ADD"] = 3] = "PLAYER_ADD";
-    Packet[Packet["CONNECTED_PLAYER_ADD"] = 4] = "CONNECTED_PLAYER_ADD";
-    Packet[Packet["CONNECTED_PLAYER_MOVE"] = 5] = "CONNECTED_PLAYER_MOVE";
-    Packet[Packet["CONNECTED_PLAYER_REMOVE"] = 6] = "CONNECTED_PLAYER_REMOVE";
+    Packet[Packet["PLAYER_MOVE"] = 4] = "PLAYER_MOVE";
+    Packet[Packet["PLAYER_REMOVE"] = 5] = "PLAYER_REMOVE";
+    Packet[Packet["CONNECTED_PLAYER_ADD"] = 6] = "CONNECTED_PLAYER_ADD";
+    Packet[Packet["CONNECTED_PLAYER_MOVE"] = 7] = "CONNECTED_PLAYER_MOVE";
+    Packet[Packet["CONNECTED_PLAYER_REMOVE"] = 8] = "CONNECTED_PLAYER_REMOVE";
+    Packet[Packet["MATCH_STATISTICS"] = 9] = "MATCH_STATISTICS";
 })(Packet || (Packet = {}));
 ;
 var DataType;
@@ -33,12 +36,29 @@ exports.sendAlert = (id, message) => {
     let data = constructData(Packet.ALERT, message, DataType.STRING);
     sockets.get(id).send(data);
 };
-exports.sendPlayerAdd = (id, pos) => {
+exports.sendPlayerAddition = (id, pos) => {
     let dataObj = {
         id: id,
         pos: [pos.x, pos.y, pos.z]
     };
     let data = constructData(Packet.PLAYER_ADD, JSON.stringify(dataObj), DataType.STRING);
+    sockets.get(id).send(data);
+};
+exports.sendPlayerRemoval = (id) => {
+    let dataObj = {
+        id: id,
+    };
+    let data = constructData(Packet.PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
+    sockets.get(id).send(data);
+};
+exports.sendPlayerMove = (id, pos, headRot, bodyRot) => {
+    let dataObj = {
+        id: id,
+        pos: [pos.x, pos.y, pos.z],
+        headRot: headRot,
+        bodyRot: bodyRot
+    };
+    let data = constructData(Packet.PLAYER_MOVE, JSON.stringify(dataObj), DataType.STRING);
     sockets.get(id).send(data);
 };
 exports.sendConnectedPlayerAddition = (id, playerData) => {
@@ -54,6 +74,10 @@ exports.sendConnectedPlayerRemoval = (id, playerId) => {
 };
 exports.sendConnectedPlayerMove = (id, pos, bodyRot, headRot, playerId) => {
     let data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+    sockets.get(id).send(data);
+};
+exports.sendMatchStatistics = (id, statistics) => {
+    let data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.STRING);
     sockets.get(id).send(data);
 };
 exports.addSocket = (id, ws) => {

@@ -1,15 +1,16 @@
 import EventHandler from './EventHandler';
-import * as ArenaLoader from './ArenaLoader';
-import * as Arena from './Arena';
+import ArenaLoader from './ArenaLoader';
+import Arena from './Arena';
 import Player from './Player';
 import PlayerHandler from './PlayerHandler';
 import Vector3 from './Vector3';
+import PlayerKillHandler from './PlayerKillHandler';
+import PlayerShootHandler from './PlayerShootHandler';
 
 const MINIMUM_PLAYER_COUNT = 2;
-const PREPARING_TIME = 10000;
+const PREPARING_TIME = 3000;
 const FINISHING_TIME = 3000;
 
-let arena;
 let status: GameStatus;
 
 //Players joining during finishing stage. Need to sync these players.
@@ -29,6 +30,8 @@ export default class MatchRotator{
         EventHandler.addListener(MatchRotator, EventHandler.Event.ARENALOADER_ARENA_LOAD, MatchRotator.onArenaLoad);
         EventHandler.addListener(MatchRotator, EventHandler.Event.ARENALOADER_NO_ARENAS, MatchRotator.onNoArenas);
         EventHandler.addListener(MatchRotator, EventHandler.Event.GAME_TICK, MatchRotator.onTick);
+        EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_HIT_PLAYER, MatchRotator.onPlayerHitPlayer);
+
         MatchRotator.setGameStatus(GameStatus.WAITING);
     };
     
@@ -42,14 +45,15 @@ export default class MatchRotator{
             }
         }else{
             if(status === GameStatus.PREPARING || status === GameStatus.RUNNING){
-                player.sendArena(arena);
+                let arena = ArenaLoader.getLoadedArena();
+                player.sendArena(arena.getRawData());
                 let spawn;
                 if(status === GameStatus.PREPARING){
-                    spawn = Arena.getRandomInitialSpawn();
+                    spawn = arena.getRandomInitialSpawn();
                 }else{
-                    spawn = Arena.getRandomInitialSpawn(); //TODO CHANGE TO GAME SPAWN
+                    spawn = arena.getNextGameSpawn();
                 }
-                player.sendPlayerAdd(spawn);
+                player.sendPlayerAddition(spawn);
                 for(let i = 0; i < PlayerHandler.getCount(); i ++){
                     let otherPlayer = PlayerHandler.getPlayer(i);
                     if(otherPlayer.id === player.id) continue;
@@ -72,7 +76,7 @@ export default class MatchRotator{
     
         if(status === GameStatus.RUNNING){
             if(PlayerHandler.getCount() < MINIMUM_PLAYER_COUNT){
-                MatchRotator.startFinishing();
+                MatchRotator.startWaiting();
             }
         }
 
@@ -105,9 +109,9 @@ export default class MatchRotator{
     
         for(let i = 0; i < PlayerHandler.getCount(); i ++){
             let player: Player = PlayerHandler.getPlayer(i);
-            let spawn: Vector3 = Arena.getRandomInitialSpawn();
+            let spawn: Vector3 = ArenaLoader.getLoadedArena().getRandomInitialSpawn();
             player.sendGameStatus(GameStatus.PREPARING);
-            player.sendPlayerAdd(spawn);
+            player.sendPlayerAddition(spawn);
             player.sendAlert('Match starting in 10 seconds!');
     
             for(let j = 0; j < PlayerHandler.getCount(); j ++){
@@ -131,17 +135,32 @@ export default class MatchRotator{
     static startRunning(){
         for(let i = 0; i < PlayerHandler.getCount(); i ++){
             let player = PlayerHandler.getPlayer(i);
+            player.isAlive = true;
             player.sendGameStatus(GameStatus.RUNNING);
             player.sendAlert('Match started!');
+            player.sendPlayerMove(ArenaLoader.getLoadedArena().getNextGameSpawn());
     
         }
     
         MatchRotator.setGameStatus(GameStatus.RUNNING);
     };
     
-    static startFinishing(){
+    static startFinishing(winner?: Player){
         for(let i = 0; i < PlayerHandler.getCount(); i ++){
-            PlayerHandler.getPlayer(i).sendGameStatus(GameStatus.FINISHING);
+            let player = PlayerHandler.getPlayer(i);
+            player.sendGameStatus(GameStatus.FINISHING);
+            player.sendPlayerRemoval();
+            if(winner){
+                player.sendMatchStatistics({
+                    winner: winner.name
+                });
+            }
+            
+            for(let k = 0; k < PlayerHandler.getCount(); k ++){
+                let otherPlayer = PlayerHandler.getPlayer(k);
+                if(otherPlayer.id === player.id) continue;
+                otherPlayer.sendConnectedPlayerRemoval(player.id);
+            }
         }
     
         setTimeout(() => {
@@ -155,11 +174,9 @@ export default class MatchRotator{
         MatchRotator.setGameStatus(GameStatus.FINISHING);
     }
     
-    static onArenaLoad(arenaData){
-        arena = arenaData;
-        Arena.update(arenaData);
+    static onArenaLoad(arena: Arena){
         for(let i = 0; i < PlayerHandler.getCount(); i ++){
-            PlayerHandler.getPlayer(i).sendArena(arena);
+            PlayerHandler.getPlayer(i).sendArena(arena.getRawData());
         }
         console.log('Loaded Arena: ' + arena.title);
     }
@@ -182,8 +199,34 @@ export default class MatchRotator{
         console.log('There are no arenas loaded to start a match.');
     }
     
-    static setGameStatus(newStatus){
+    static setGameStatus(newStatus: GameStatus){
+        if(status === GameStatus.RUNNING){
+            PlayerShootHandler.disable();
+        }
+        if(newStatus === GameStatus.RUNNING){
+            PlayerShootHandler.enable();
+        }
         console.log('GameStatus: ' + newStatus);
         status = newStatus;
+    }
+
+    static onPlayerHitPlayer(){
+        let alivePlayerCount = 0;
+        let winner: Player;
+        for(let i = 0; i < PlayerHandler.getCount(); i ++){
+            let player = PlayerHandler.getPlayer(i);
+            if(player.isAlive){
+                alivePlayerCount ++;
+                winner = player;
+            }
+            console.log(player.isAlive);
+        }
+        if(alivePlayerCount < 2){
+            if(alivePlayerCount === 1){
+                MatchRotator.startFinishing(winner);
+            }else{
+                MatchRotator.startFinishing();
+            }
+        }
     }
 }

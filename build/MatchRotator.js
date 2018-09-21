@@ -1,13 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EventHandler_1 = require("./EventHandler");
-const ArenaLoader = require("./ArenaLoader");
-const Arena = require("./Arena");
+const ArenaLoader_1 = require("./ArenaLoader");
 const PlayerHandler_1 = require("./PlayerHandler");
+const PlayerShootHandler_1 = require("./PlayerShootHandler");
 const MINIMUM_PLAYER_COUNT = 2;
-const PREPARING_TIME = 10000;
+const PREPARING_TIME = 3000;
 const FINISHING_TIME = 3000;
-let arena;
 let status;
 //Players joining during finishing stage. Need to sync these players.
 let playerIdsToSync = new Array();
@@ -31,15 +30,16 @@ class MatchRotator {
         }
         else {
             if (status === GameStatus.PREPARING || status === GameStatus.RUNNING) {
-                player.sendArena(arena);
+                let arena = ArenaLoader_1.default.getLoadedArena();
+                player.sendArena(arena.getRawData());
                 let spawn;
                 if (status === GameStatus.PREPARING) {
-                    spawn = Arena.getRandomInitialSpawn();
+                    spawn = arena.getRandomInitialSpawn();
                 }
                 else {
-                    spawn = Arena.getRandomInitialSpawn(); //TODO CHANGE TO GAME SPAWN
+                    spawn = arena.getNextGameSpawn();
                 }
-                player.sendPlayerAdd(spawn);
+                player.sendPlayerAddition(spawn);
                 for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
                     let otherPlayer = PlayerHandler_1.default.getPlayer(i);
                     if (otherPlayer.id === player.id)
@@ -60,7 +60,7 @@ class MatchRotator {
         let player = data.player;
         if (status === GameStatus.RUNNING) {
             if (PlayerHandler_1.default.getCount() < MINIMUM_PLAYER_COUNT) {
-                MatchRotator.startFinishing();
+                MatchRotator.startWaiting();
             }
         }
         let syncIdIndex = playerIdsToSync.indexOf(player.id);
@@ -80,13 +80,13 @@ class MatchRotator {
         MatchRotator.setGameStatus(GameStatus.WAITING);
     }
     static startPreparing() {
-        ArenaLoader.loadArena();
+        ArenaLoader_1.default.loadArena();
         playerIdsToSync.splice(0, playerIdsToSync.length);
         for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
             let player = PlayerHandler_1.default.getPlayer(i);
-            let spawn = Arena.getRandomInitialSpawn();
+            let spawn = ArenaLoader_1.default.getLoadedArena().getRandomInitialSpawn();
             player.sendGameStatus(GameStatus.PREPARING);
-            player.sendPlayerAdd(spawn);
+            player.sendPlayerAddition(spawn);
             player.sendAlert('Match starting in 10 seconds!');
             for (let j = 0; j < PlayerHandler_1.default.getCount(); j++) {
                 let otherPlayer = PlayerHandler_1.default.getPlayer(j);
@@ -108,15 +108,30 @@ class MatchRotator {
     static startRunning() {
         for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
             let player = PlayerHandler_1.default.getPlayer(i);
+            player.isAlive = true;
             player.sendGameStatus(GameStatus.RUNNING);
             player.sendAlert('Match started!');
+            player.sendPlayerMove(ArenaLoader_1.default.getLoadedArena().getNextGameSpawn());
         }
         MatchRotator.setGameStatus(GameStatus.RUNNING);
     }
     ;
-    static startFinishing() {
+    static startFinishing(winner) {
         for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
-            PlayerHandler_1.default.getPlayer(i).sendGameStatus(GameStatus.FINISHING);
+            let player = PlayerHandler_1.default.getPlayer(i);
+            player.sendGameStatus(GameStatus.FINISHING);
+            player.sendPlayerRemoval();
+            if (winner) {
+                player.sendMatchStatistics({
+                    winner: winner.name
+                });
+            }
+            for (let k = 0; k < PlayerHandler_1.default.getCount(); k++) {
+                let otherPlayer = PlayerHandler_1.default.getPlayer(k);
+                if (otherPlayer.id === player.id)
+                    continue;
+                otherPlayer.sendConnectedPlayerRemoval(player.id);
+            }
         }
         setTimeout(() => {
             if (PlayerHandler_1.default.getCount() >= MINIMUM_PLAYER_COUNT) {
@@ -128,11 +143,9 @@ class MatchRotator {
         }, FINISHING_TIME);
         MatchRotator.setGameStatus(GameStatus.FINISHING);
     }
-    static onArenaLoad(arenaData) {
-        arena = arenaData;
-        Arena.update(arenaData);
+    static onArenaLoad(arena) {
         for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
-            PlayerHandler_1.default.getPlayer(i).sendArena(arena);
+            PlayerHandler_1.default.getPlayer(i).sendArena(arena.getRawData());
         }
         console.log('Loaded Arena: ' + arena.title);
     }
@@ -155,8 +168,34 @@ class MatchRotator {
         console.log('There are no arenas loaded to start a match.');
     }
     static setGameStatus(newStatus) {
+        if (status === GameStatus.RUNNING) {
+            PlayerShootHandler_1.default.disable();
+        }
+        if (newStatus === GameStatus.RUNNING) {
+            PlayerShootHandler_1.default.enable();
+        }
         console.log('GameStatus: ' + newStatus);
         status = newStatus;
+    }
+    static onPlayerHitPlayer() {
+        let alivePlayerCount = 0;
+        let winner;
+        for (let i = 0; i < PlayerHandler_1.default.getCount(); i++) {
+            let player = PlayerHandler_1.default.getPlayer(i);
+            if (player.isAlive) {
+                alivePlayerCount++;
+                winner = player;
+            }
+            console.log(player.isAlive);
+        }
+        if (alivePlayerCount < 2) {
+            if (alivePlayerCount === 1) {
+                MatchRotator.startFinishing(winner);
+            }
+            else {
+                MatchRotator.startFinishing();
+            }
+        }
     }
 }
 MatchRotator.enable = () => {
@@ -165,6 +204,7 @@ MatchRotator.enable = () => {
     EventHandler_1.default.addListener(MatchRotator, EventHandler_1.default.Event.ARENALOADER_ARENA_LOAD, MatchRotator.onArenaLoad);
     EventHandler_1.default.addListener(MatchRotator, EventHandler_1.default.Event.ARENALOADER_NO_ARENAS, MatchRotator.onNoArenas);
     EventHandler_1.default.addListener(MatchRotator, EventHandler_1.default.Event.GAME_TICK, MatchRotator.onTick);
+    EventHandler_1.default.addListener(MatchRotator, EventHandler_1.default.Event.PLAYER_HIT_PLAYER, MatchRotator.onPlayerHitPlayer);
     MatchRotator.setGameStatus(GameStatus.WAITING);
 };
 exports.default = MatchRotator;

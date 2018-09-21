@@ -10,6 +10,7 @@ class Player {
         this.pos = new Vector3_1.default();
         this.bodyRot = 0;
         this.headRot = 0;
+        this.isAlive = true;
     }
     sendArena(arena) {
         PacketSender.sendArena(this.id, arena);
@@ -20,12 +21,21 @@ class Player {
     sendAlert(message) {
         PacketSender.sendAlert(this.id, message);
     }
-    sendPlayerAdd(pos) {
+    sendPlayerAddition(pos) {
         this.pos.x = pos.x;
         this.pos.y = pos.y;
         this.pos.z = pos.z;
         this.bodyRot = this.headRot = 0;
-        PacketSender.sendPlayerAdd(this.id, pos);
+        PacketSender.sendPlayerAddition(this.id, pos);
+    }
+    sendPlayerRemoval() {
+        PacketSender.sendPlayerRemoval(this.id);
+    }
+    sendPlayerMove(pos) {
+        this.pos.x = pos.x;
+        this.pos.y = pos.y;
+        this.pos.z = pos.z;
+        PacketSender.sendPlayerMove(this.id, pos, this.headRot, this.bodyRot);
     }
     sendConnectedPlayerAddition(playerId, name, pos, headRot, bodyRot) {
         PacketSender.sendConnectedPlayerAddition(this.id, {
@@ -41,6 +51,9 @@ class Player {
     }
     sendConnectedPlayerRemoval(playerId) {
         PacketSender.sendConnectedPlayerRemoval(this.id, playerId);
+    }
+    sendMatchStatistics(stats) {
+        PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
     }
     handlePositionUpdate(data) {
         this.pos.x = data[0];

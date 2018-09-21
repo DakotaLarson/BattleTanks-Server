@@ -17,6 +17,7 @@ var Event;
     //ARENA LOADER
     Event[Event["ARENALOADER_ARENA_LOAD"] = 8] = "ARENALOADER_ARENA_LOAD";
     Event[Event["ARENALOADER_NO_ARENAS"] = 9] = "ARENALOADER_NO_ARENAS";
+    Event[Event["PLAYER_HIT_PLAYER"] = 10] = "PLAYER_HIT_PLAYER";
 })(Event = exports.Event || (exports.Event = {}));
 ;
 var Level;
@@ -25,8 +26,6 @@ var Level;
     Level[Level["MEDIUM"] = 1] = "MEDIUM";
     Level[Level["HIGH"] = 2] = "HIGH";
 })(Level || (Level = {}));
-//Latest Event #: 64 (Append upon event addition.)
-//Missing Event #s: NONE (Append on event removal; Use and remove from list for event addition when available.)
 const lowListeners = new Map();
 const mediumListeners = new Map();
 const highListeners = new Map();

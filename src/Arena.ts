@@ -1,32 +1,70 @@
 import Vector3 from './Vector3';
 
-let initialSpawnLocations: Array<Vector3> = [];
-let gameSpawnLocations: Array<Vector3> = [];
+export default class Arena{
+    initialSpawns: Array<Vector3>;
+    gameSpawns: Array<Vector3>;
+    blockPositions: Array<Vector3>;
 
-export const update = (data) => {
-    initialSpawnLocations.length = 0;
-    gameSpawnLocations.length = 0;
+    title: string;
 
-    for(let i = 0; i < data.initialSpawnLocations.length; i += 3){
-        let x = data.initialSpawnLocations[i * 3];
-        let y = data.initialSpawnLocations[i * 3 + 1];
-        let z = data.initialSpawnLocations[i * 3 + 2];
-        initialSpawnLocations.push(new Vector3(x, y, z));
+    rawData: any;
+
+    private nextGameSpawnIndex: number;
+
+    constructor(data){
+        this.rawData = data;
+
+        this.initialSpawns = new Array();
+        this.gameSpawns = new Array();
+        this.blockPositions = new Array();
+
+        this.title = data.title;
+
+        this.nextGameSpawnIndex = 0;
+
+        for(let i = 0; i < data.initialSpawnLocations.length; i += 3){
+            let x = data.initialSpawnLocations[i];
+            let y = data.initialSpawnLocations[i + 1];
+            let z = data.initialSpawnLocations[i + 2];
+            this.initialSpawns.push(new Vector3(x, y, z));
+        }
+        
+        for(let i = 0; i < data.gameSpawnLocations.length; i += 3){
+            let x = data.gameSpawnLocations[i];
+            let y = data.gameSpawnLocations[i + 1];
+            let z = data.gameSpawnLocations[i + 2];
+            this.gameSpawns.push(new Vector3(x, y, z));
+        }
+
+        for(let i = 0; i < data.blockLocations.length; i += 3){
+            let x = data.blockLocations[i];
+            let y = data.blockLocations[i + 1];
+            let z = data.blockLocations[i + 2];
+            this.blockPositions.push(new Vector3(x, y, z));
+        }
+    }
+    
+    getRandomInitialSpawn(): Vector3{
+        let length = this.initialSpawns.length;
+        if(length){
+            return this.initialSpawns[Math.floor(Math.random() * length)];
+        }else{
+            return undefined;
+        }
     }
 
-    for(let i = 0; i < data.gameSpawnLocations.length; i += 3){
-        let x = data.gameSpawnLocations[i * 3];
-        let y = data.gameSpawnLocations[i * 3 + 1];
-        let z = data.gameSpawnLocations[i * 3 + 2];
-        gameSpawnLocations.push(new Vector3(x, y, z));
+    getNextGameSpawn(): Vector3{
+        let length = this.gameSpawns.length;
+        if(length){
+            if(this.nextGameSpawnIndex >= this.gameSpawns.length){
+                this.nextGameSpawnIndex = 0;
+            }
+            return this.gameSpawns[this.nextGameSpawnIndex ++];
+        }else{
+            return undefined;
+        }
     }
-};
-
-export const getRandomInitialSpawn = () => {
-    let length = initialSpawnLocations.length;
-    if(length){
-        return initialSpawnLocations[Math.floor(Math.random() * length)]
-    }else{
-        return undefined;
+    getRawData(): string{
+        return this.rawData;
     }
-};
+}

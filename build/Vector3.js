@@ -24,6 +24,15 @@ class Vector3 {
         this.z += vec.z;
         return this;
     }
+    clone() {
+        return new Vector3(this.x, this.y, this.z);
+    }
+    distanceSquared(vec) {
+        let xDiff = vec.x - this.x;
+        let yDiff = vec.y - this.y;
+        let zDiff = vec.z - this.z;
+        return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff;
+    }
     static fromAngleAboutY(angle) {
         return new Vector3(Math.sin(angle), 0, Math.cos(angle));
     }
