@@ -12,6 +12,8 @@ enum Packet{
     PLAYER_ADD,
     PLAYER_MOVE,
     PLAYER_REMOVE,
+    PLAYER_SHOT_INVALID,
+    PLAYER_SHOOT, //Also for connected player; Additional packet unnecessary
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
@@ -21,11 +23,12 @@ enum Packet{
 };
 
 enum DataType{
-    NUMBER = 0X00,
-    STRING = 0X01,
-    INT_ARRAY = 0x02,
-    FLOAT_ARRAY = 0X03,
-    FLOAT_ARRAY_INT_HEADER = 0X04
+    NUMBER,
+    STRING,
+    INT_ARRAY,
+    FLOAT_ARRAY,
+    FLOAT_ARRAY_INT_HEADER,
+    HEADER_ONLY
 };
 
 export const sendArena = (id, arena) => {
@@ -68,6 +71,16 @@ export const sendPlayerMove = (id, pos: Vector3, headRot: number, bodyRot: numbe
         bodyRot: bodyRot
     };
     let data = constructData(Packet.PLAYER_MOVE, JSON.stringify(dataObj), DataType.STRING);
+    sockets.get(id).send(data);
+};
+
+export const sendPlayerShotInvalid = (id) => {
+    let data = constructData(Packet.PLAYER_SHOT_INVALID, undefined, DataType.HEADER_ONLY);
+    sockets.get(id).send(data);
+};
+
+export const sendPlayerShoot = (id, shooterId) => {
+    let data = constructData(Packet.PLAYER_SHOOT, shooterId, DataType.NUMBER);
     sockets.get(id).send(data);
 }
 
@@ -154,6 +167,11 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
                 buffer.writeFloatLE(body[i], i * 4);
             }
             break;
+        case DataType.HEADER_ONLY:
+
+            headerBuffer.writeUInt8(header, 0);
+            headerBuffer.writeUInt8(dataType, 1);
+            return headerBuffer; //No body to concatenate. 
     }
     return Buffer.concat([headerBuffer, buffer], headerBuffer.length + buffer.length);
 };

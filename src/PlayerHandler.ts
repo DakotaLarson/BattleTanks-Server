@@ -6,8 +6,9 @@ const players: Array<Player> = new Array();
 export default class PlayerHandler{
 
     static enable(){
-        EventHandler.addListener(null, EventHandler.Event.PLAYER_JOIN, PlayerHandler.onPlayerJoin, EventHandler.Level.LOW);
-        EventHandler.addListener(null, EventHandler.Event.PLAYER_LEAVE, PlayerHandler.onPlayerLeave, EventHandler.Level.LOW);
+        EventHandler.addListener(undefined, EventHandler.Event.PLAYER_JOIN, PlayerHandler.onPlayerJoin, EventHandler.Level.LOW);
+        EventHandler.addListener(undefined, EventHandler.Event.PLAYER_LEAVE, PlayerHandler.onPlayerLeave, EventHandler.Level.LOW);
+        EventHandler.addListener(undefined, EventHandler.Event.PLAYER_SHOOT, PlayerHandler.onShoot);
     }
 
     static onPlayerJoin(player: Player){
@@ -40,5 +41,11 @@ export default class PlayerHandler{
 
     static getIndex(player: Player): number{
         return players.indexOf(player);
+    }
+
+    private static onShoot(player: Player){
+        for(let i = 0; i < players.length; i ++){
+            players[i].sendPlayerShoot(player.id);
+        }
     }
 }

@@ -2,21 +2,32 @@ import * as PacketSender from './PacketSender';
 import Vector3 from './Vector3';
 import EventHandler from './EventHandler';
 
+const COOLDOWN_ITERVAL = 1000;
+
 export default class Player {
 
     name: string;
     id: number;
+
     pos: Vector3;
     bodyRot: number;
     headRot: number;
+
+    lastShotTime: number;
+
     isAlive: boolean;
+
 
     constructor(name, id){
         this.name = name;
         this.id = id;
+
         this.pos = new Vector3();
         this.bodyRot = 0;
         this.headRot = 0;
+
+        this.lastShotTime = 0;
+
         this.isAlive = true;
     }
 
@@ -75,6 +86,14 @@ export default class Player {
         PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
     }
 
+    sendInvalidShot(){
+        PacketSender.sendPlayerShotInvalid(this.id);
+    }
+
+    sendPlayerShoot(playerId: number){
+        PacketSender.sendPlayerShoot(this.id, playerId);
+    }
+
     handlePositionUpdate(data: Array<number>){
         this.pos.x = data[0];
         this.pos.y = data[1];
@@ -84,6 +103,12 @@ export default class Player {
     }
 
     shoot(){
-        EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
+        let currentTime = Date.now();
+        if(currentTime - this.lastShotTime > COOLDOWN_ITERVAL){
+            EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
+            this.lastShotTime = currentTime;
+        }else{
+            this.sendInvalidShot();
+        }
     }
 }
