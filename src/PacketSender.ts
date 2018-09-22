@@ -1,4 +1,5 @@
 import Vector3 from "./Vector3";
+import Audio from "./Audio";
 
 const sockets: Map<number, WebSocket> = new Map();
 
@@ -12,14 +13,16 @@ enum Packet{
     PLAYER_ADD,
     PLAYER_MOVE,
     PLAYER_REMOVE,
-    PLAYER_SHOT_INVALID,
+    PLAYER_SHOOT_INVALID,
     PLAYER_SHOOT, //Also for connected player; Additional packet unnecessary
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
     CONNECTED_PLAYER_REMOVE,
 
-    MATCH_STATISTICS
+    MATCH_STATISTICS,
+
+    AUDIO_REQUEST
 };
 
 enum DataType{
@@ -74,8 +77,8 @@ export const sendPlayerMove = (id, pos: Vector3, headRot: number, bodyRot: numbe
     sockets.get(id).send(data);
 };
 
-export const sendPlayerShotInvalid = (id) => {
-    let data = constructData(Packet.PLAYER_SHOT_INVALID, undefined, DataType.HEADER_ONLY);
+export const sendPlayerShootInvalid = (id) => {
+    let data = constructData(Packet.PLAYER_SHOOT_INVALID, undefined, DataType.HEADER_ONLY);
     sockets.get(id).send(data);
 };
 
@@ -105,6 +108,11 @@ export const sendConnectedPlayerMove = (id: number, pos: Vector3, bodyRot: numbe
 
 export const sendMatchStatistics = (id: number, statistics: string) => {
     let data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.STRING);
+    sockets.get(id).send(data);
+}
+
+export const sendAudioRequest = (id: number, audio: Audio) => {
+    let data = constructData(Packet.AUDIO_REQUEST, audio,  DataType.NUMBER);
     sockets.get(id).send(data);
 }
 

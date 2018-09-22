@@ -4,8 +4,8 @@ import Arena from './Arena';
 import Player from './Player';
 import PlayerHandler from './PlayerHandler';
 import Vector3 from './Vector3';
-import PlayerKillHandler from './PlayerKillHandler';
 import PlayerShootHandler from './PlayerShootHandler';
+import Audio from './Audio';
 
 const MINIMUM_PLAYER_COUNT = 2;
 const PREPARING_TIME = 3000;
@@ -224,6 +224,7 @@ export default class MatchRotator{
         if(alivePlayerCount < 2){
             if(alivePlayerCount === 1){
                 MatchRotator.startFinishing(winner);
+                winner.sendAudioRequest(Audio.WIN);
             }else{
                 MatchRotator.startFinishing();
             }

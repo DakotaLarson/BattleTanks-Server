@@ -1,6 +1,6 @@
 import EventHandler from './EventHandler';
-import Player from './Player';
 import PlayerHandler from './PlayerHandler';
+import Audio from './Audio';
 
 export default class PlayerKillHandler{
 
@@ -10,7 +10,9 @@ export default class PlayerKillHandler{
 
     static onHit(data){
         data.target.sendAlert('You were killed by: ' + data.player.name);
-        data.player.sendAlert('You killed: ' + data.target.name); 
+        data.player.sendAlert('You killed: ' + data.target.name);
+
+        data.target.sendAudioRequest(Audio.LOSE);
 
         data.target.isAlive = false;
         let targetId = data.target.id;

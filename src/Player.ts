@@ -1,6 +1,7 @@
 import * as PacketSender from './PacketSender';
 import Vector3 from './Vector3';
 import EventHandler from './EventHandler';
+import Audio from './Audio';
 
 const COOLDOWN_ITERVAL = 1000;
 
@@ -87,11 +88,15 @@ export default class Player {
     }
 
     sendInvalidShot(){
-        PacketSender.sendPlayerShotInvalid(this.id);
+        PacketSender.sendPlayerShootInvalid(this.id);
     }
 
     sendPlayerShoot(playerId: number){
         PacketSender.sendPlayerShoot(this.id, playerId);
+    }
+
+    sendAudioRequest(audio: Audio){
+        PacketSender.sendAudioRequest(this.id, audio);
     }
 
     handlePositionUpdate(data: Array<number>){
