@@ -4,9 +4,11 @@ import EventHandler from './EventHandler';
 
 let connectionCheckerId: NodeJS.Timer;
 
+const port = process.env.PORT || 8000;
+
 export const enable = () => {
     this.wss = new WebSocket.Server({
-        port: 8000,
+        port: port,
         verifyClient: verifyClient
     });
     this.wss.on('listening', () => {
