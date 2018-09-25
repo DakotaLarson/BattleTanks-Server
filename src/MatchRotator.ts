@@ -76,7 +76,7 @@ export default class MatchRotator{
     
         if(status === GameStatus.RUNNING){
             if(PlayerHandler.getCount() < MINIMUM_PLAYER_COUNT){
-                MatchRotator.startWaiting();
+                MatchRotator.startFinishing(); //change to start waiting??
             }
         }
 
@@ -138,6 +138,7 @@ export default class MatchRotator{
             player.isAlive = true;
             player.sendGameStatus(GameStatus.RUNNING);
             player.sendAlert('Match started!');
+            player.sendCooldownTime(1);
             player.sendPlayerMove(ArenaLoader.getLoadedArena().getNextGameSpawn());
     
         }

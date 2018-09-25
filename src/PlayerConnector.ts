@@ -5,7 +5,7 @@ import * as PacketSender from './PacketSender';
 
 const CONNECTION_HEADER_CODE = 0X00;
 
-let playerID = 0;
+let playerID = 1;
 
 export const enable = () => {
     EventHandler.addListener(this, EventHandler.Event.WS_CONNECTION_OPENED, onConnection);

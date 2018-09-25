@@ -91,12 +91,20 @@ export default class Player {
         PacketSender.sendPlayerShootInvalid(this.id);
     }
 
-    sendPlayerShoot(playerId: number){
-        PacketSender.sendPlayerShoot(this.id, playerId);
+    sendPlayerShoot(){
+        PacketSender.sendPlayerShoot(this.id);
+    }
+
+    sendConnectedPlayerShoot(playerId: number){
+        PacketSender.sendConnectedPlayerShoot(this.id, playerId);
     }
 
     sendAudioRequest(audio: Audio){
         PacketSender.sendAudioRequest(this.id, audio);
+    }
+
+    sendCooldownTime(time: number){
+        PacketSender.sendCooldownTime(this.id, time);
     }
 
     handlePositionUpdate(data: Array<number>){

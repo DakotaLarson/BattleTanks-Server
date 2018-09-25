@@ -14,15 +14,18 @@ enum Packet{
     PLAYER_MOVE,
     PLAYER_REMOVE,
     PLAYER_SHOOT_INVALID,
-    PLAYER_SHOOT, //Also for connected player; Additional packet unnecessary
+    PLAYER_SHOOT,
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
     CONNECTED_PLAYER_REMOVE,
+    CONNECTED_PLAYER_SHOOT,
 
     MATCH_STATISTICS,
 
-    AUDIO_REQUEST
+    AUDIO_REQUEST,
+
+    COOLDOWN_TIME
 };
 
 enum DataType{
@@ -48,6 +51,8 @@ export const sendAlert = (id, message: string) => {
     let data = constructData(Packet.ALERT, message, DataType.STRING);
     sockets.get(id).send(data);
 };
+
+
 
 export const sendPlayerAddition = (id, pos: Vector3) => {
     let dataObj = {
@@ -82,10 +87,12 @@ export const sendPlayerShootInvalid = (id) => {
     sockets.get(id).send(data);
 };
 
-export const sendPlayerShoot = (id, shooterId) => {
-    let data = constructData(Packet.PLAYER_SHOOT, shooterId, DataType.NUMBER);
+export const sendPlayerShoot = (id) => {
+    let data = constructData(Packet.PLAYER_SHOOT, undefined, DataType.HEADER_ONLY);
     sockets.get(id).send(data);
 }
+
+
 
 export const sendConnectedPlayerAddition = (id, playerData) => {
     let data = constructData(Packet.CONNECTED_PLAYER_ADD, JSON.stringify(playerData), DataType.STRING);
@@ -106,6 +113,13 @@ export const sendConnectedPlayerMove = (id: number, pos: Vector3, bodyRot: numbe
     sockets.get(id).send(data);
 }
 
+export const sendConnectedPlayerShoot = (id: number, playerId) => {
+    let data = constructData(Packet.CONNECTED_PLAYER_SHOOT, playerId, DataType.NUMBER);
+    sockets.get(id).send(data);
+}
+
+
+
 export const sendMatchStatistics = (id: number, statistics: string) => {
     let data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.STRING);
     sockets.get(id).send(data);
@@ -116,6 +130,13 @@ export const sendAudioRequest = (id: number, audio: Audio) => {
     sockets.get(id).send(data);
 }
 
+export const sendCooldownTime = (id: number, time: number) => {
+    let data = constructData(Packet.COOLDOWN_TIME, time, DataType.NUMBER);
+    sockets.get(id).send(data);
+}
+
+
+
 export const addSocket = (id: number, ws: WebSocket) => {
     sockets.set(id, ws);
 };
@@ -123,6 +144,8 @@ export const addSocket = (id: number, ws: WebSocket) => {
 export const removeSocket = (id) => {
     sockets.delete(id);
 };
+
+
 
 const constructData = (header: Packet, body: any, dataType: DataType, additionalHeader?: number) => {
 

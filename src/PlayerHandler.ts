@@ -45,7 +45,11 @@ export default class PlayerHandler{
 
     private static onShoot(player: Player){
         for(let i = 0; i < players.length; i ++){
-            players[i].sendPlayerShoot(player.id);
+            if(players[i].id === player.id){
+                players[i].sendPlayerShoot();
+            }else{
+                players[i].sendConnectedPlayerShoot(player.id);
+            }
         }
     }
 }
