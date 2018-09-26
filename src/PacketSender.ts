@@ -1,9 +1,9 @@
-import Vector3 from "./Vector3";
 import Audio from "./Audio";
+import Vector3 from "./vector/Vector3";
 
 const sockets: Map<number, WebSocket> = new Map();
 
-enum Packet{
+enum Packet {
     ARENA,
 
     GAME_STATUS,
@@ -25,134 +25,131 @@ enum Packet{
 
     AUDIO_REQUEST,
 
-    COOLDOWN_TIME
-};
+    COOLDOWN_TIME,
+}
 
-enum DataType{
+enum DataType {
     NUMBER,
     STRING,
     INT_ARRAY,
     FLOAT_ARRAY,
     FLOAT_ARRAY_INT_HEADER,
-    HEADER_ONLY
+    HEADER_ONLY,
+}
+
+export const sendArena = (id: number, arena: any) => {
+    const data = constructData(Packet.ARENA, JSON.stringify(arena), DataType.STRING);
+    send(id, data);
 };
 
-export const sendArena = (id, arena) => {
-    let data = constructData(Packet.ARENA, JSON.stringify(arena), DataType.STRING);
-    sockets.get(id).send(data);
+export const sendGameStatus = (id: number, status: number) => {
+    const data = constructData(Packet.GAME_STATUS, status, DataType.NUMBER);
+    send(id, data);
 };
 
-export const sendGameStatus = (id, status: number) => {
-    let data = constructData(Packet.GAME_STATUS, status, DataType.NUMBER);
-    sockets.get(id).send(data);
+export const sendAlert = (id: number, message: string) => {
+    const data = constructData(Packet.ALERT, message, DataType.STRING);
+    send(id, data);
 };
 
-export const sendAlert = (id, message: string) => {
-    let data = constructData(Packet.ALERT, message, DataType.STRING);
-    sockets.get(id).send(data);
-};
-
-
-
-export const sendPlayerAddition = (id, pos: Vector3) => {
-    let dataObj = {
-        id: id,
-        pos: [pos.x, pos.y, pos.z]
-    };
-    let data = constructData(Packet.PLAYER_ADD, JSON.stringify(dataObj), DataType.STRING);
-    sockets.get(id).send(data);
-};
-
-export const sendPlayerRemoval = (id) => {
-    let dataObj = {
-        id: id,
-    };
-    let data = constructData(Packet.PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
-    sockets.get(id).send(data);
-};
-
-export const sendPlayerMove = (id, pos: Vector3, headRot: number, bodyRot: number) => {
-    let dataObj = {
-        id: id,
+export const sendPlayerAddition = (id: number, pos: Vector3) => {
+    const dataObj = {
+        id,
         pos: [pos.x, pos.y, pos.z],
-        headRot: headRot,
-        bodyRot: bodyRot
     };
-    let data = constructData(Packet.PLAYER_MOVE, JSON.stringify(dataObj), DataType.STRING);
-    sockets.get(id).send(data);
+    const data = constructData(Packet.PLAYER_ADD, JSON.stringify(dataObj), DataType.STRING);
+    send(id, data);
 };
 
-export const sendPlayerShootInvalid = (id) => {
-    let data = constructData(Packet.PLAYER_SHOOT_INVALID, undefined, DataType.HEADER_ONLY);
-    sockets.get(id).send(data);
-};
-
-export const sendPlayerShoot = (id) => {
-    let data = constructData(Packet.PLAYER_SHOOT, undefined, DataType.HEADER_ONLY);
-    sockets.get(id).send(data);
-}
-
-
-
-export const sendConnectedPlayerAddition = (id, playerData) => {
-    let data = constructData(Packet.CONNECTED_PLAYER_ADD, JSON.stringify(playerData), DataType.STRING);
-
-    sockets.get(id).send(data);
-};
-
-export const sendConnectedPlayerRemoval = (id, playerId: number) => {
-    let dataObj = {
-        id: playerId
+export const sendPlayerRemoval = (id: number) => {
+    const dataObj = {
+        id,
     };
-    let data = constructData(Packet.CONNECTED_PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
-    sockets.get(id).send(data);
-}
+    const data = constructData(Packet.PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
+    send(id, data);
+};
+
+export const sendPlayerMove = (id: number, pos: Vector3, headRot: number, bodyRot: number) => {
+    const dataObj = {
+        id,
+        pos: [pos.x, pos.y, pos.z],
+        headRot,
+        bodyRot,
+    };
+    const data = constructData(Packet.PLAYER_MOVE, JSON.stringify(dataObj), DataType.STRING);
+    send(id, data);
+};
+
+export const sendPlayerShootInvalid = (id: number) => {
+    const data = constructData(Packet.PLAYER_SHOOT_INVALID, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
+export const sendPlayerShoot = (id: number) => {
+    const data = constructData(Packet.PLAYER_SHOOT, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
+export const sendConnectedPlayerAddition = (id: number, playerData: any) => {
+    const data = constructData(Packet.CONNECTED_PLAYER_ADD, JSON.stringify(playerData), DataType.STRING);
+
+    send(id, data);
+};
+
+export const sendConnectedPlayerRemoval = (id: number, playerId: number) => {
+    const dataObj = {
+        id: playerId,
+    };
+    const data = constructData(Packet.CONNECTED_PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
+    send(id, data);
+};
 
 export const sendConnectedPlayerMove = (id: number, pos: Vector3, bodyRot: number, headRot: number, playerId: number) => {
-    let data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
-    sockets.get(id).send(data);
-}
+    const data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+    send(id, data);
+};
 
-export const sendConnectedPlayerShoot = (id: number, playerId) => {
-    let data = constructData(Packet.CONNECTED_PLAYER_SHOOT, playerId, DataType.NUMBER);
-    sockets.get(id).send(data);
-}
-
-
+export const sendConnectedPlayerShoot = (id: number, playerId: number) => {
+    const data = constructData(Packet.CONNECTED_PLAYER_SHOOT, playerId, DataType.NUMBER);
+    send(id, data);
+};
 
 export const sendMatchStatistics = (id: number, statistics: string) => {
-    let data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.STRING);
-    sockets.get(id).send(data);
-}
+    const data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.STRING);
+    send(id, data);
+};
 
 export const sendAudioRequest = (id: number, audio: Audio) => {
-    let data = constructData(Packet.AUDIO_REQUEST, audio,  DataType.NUMBER);
-    sockets.get(id).send(data);
-}
+    const data = constructData(Packet.AUDIO_REQUEST, audio,  DataType.NUMBER);
+    send(id, data);
+};
 
 export const sendCooldownTime = (id: number, time: number) => {
-    let data = constructData(Packet.COOLDOWN_TIME, time, DataType.NUMBER);
-    sockets.get(id).send(data);
-}
-
-
+    const data = constructData(Packet.COOLDOWN_TIME, time, DataType.NUMBER);
+    send(id, data);
+};
 
 export const addSocket = (id: number, ws: WebSocket) => {
     sockets.set(id, ws);
 };
 
-export const removeSocket = (id) => {
+export const removeSocket = (id: number) => {
     sockets.delete(id);
 };
 
-
+const send = (id: number, data: any) => {
+    const socket: WebSocket | undefined = sockets.get(id);
+    if (socket) {
+        socket.send(data);
+    }
+};
 
 const constructData = (header: Packet, body: any, dataType: DataType, additionalHeader?: number) => {
 
     let headerBuffer: Buffer;
-    if(dataType === DataType.FLOAT_ARRAY || dataType === DataType.FLOAT_ARRAY_INT_HEADER){
+    if (dataType === DataType.FLOAT_ARRAY || dataType === DataType.FLOAT_ARRAY_INT_HEADER) {
         headerBuffer = Buffer.alloc(4);
-    }else{
+    } else {
         headerBuffer = Buffer.alloc(2);
     }
     headerBuffer.writeUInt8(header, 0);
@@ -160,41 +157,41 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
 
     let buffer: Buffer;
 
-    switch(dataType){
+    switch (dataType) {
         case DataType.NUMBER:
             buffer = Buffer.alloc(1);
             buffer.writeUInt8(body, 0);
 
             break;
         case DataType.STRING:
-            buffer = Buffer.from(body, 'utf8');
+            buffer = Buffer.from(body, "utf8");
 
             break;
         case DataType.INT_ARRAY:
 
             buffer = Buffer.alloc(body.length);
 
-            for(let i = 0; i < body.length; i += 1){
+            for (let i = 0; i < body.length; i += 1) {
                 buffer.writeUInt8(body[i], i);
             }
 
             break;
         case DataType.FLOAT_ARRAY:
-        
+
             buffer = Buffer.alloc(body.length * 4);
 
-            for(let i = 0; i < body.length; i += 4){
+            for (let i = 0; i < body.length; i += 4) {
                 buffer.writeFloatLE(body[i], i);
             }
 
             break;
         case DataType.FLOAT_ARRAY_INT_HEADER:
 
-            headerBuffer.writeUInt8(additionalHeader, 2);
+            headerBuffer.writeUInt8((additionalHeader as number), 2);
 
             buffer = Buffer.alloc(body.length * 4);
 
-            for(let i = 0; i < body.length; i += 1){
+            for (let i = 0; i < body.length; i += 1) {
                 buffer.writeFloatLE(body[i], i * 4);
             }
             break;
@@ -202,7 +199,9 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
 
             headerBuffer.writeUInt8(header, 0);
             headerBuffer.writeUInt8(dataType, 1);
-            return headerBuffer; //No body to concatenate. 
+            return headerBuffer; // No body to concatenate.
+        default:
+            throw Error("Unknown DataType: " + dataType);
     }
     return Buffer.concat([headerBuffer, buffer], headerBuffer.length + buffer.length);
 };

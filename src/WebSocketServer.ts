@@ -1,53 +1,58 @@
-import WebSocket = require('ws'); 
+import WebSocket = require("ws");
 
-import EventHandler from './EventHandler';
+import EventHandler from "./EventHandler";
 
 let connectionCheckerId: NodeJS.Timer;
+
+let wss: WebSocket.Server;
+
+const deadSockets: WebSocket[] = new Array();
 
 const port = process.env.PORT || 8000;
 
 export const enable = () => {
-    this.wss = new WebSocket.Server({
-        port: port,
-        verifyClient: verifyClient
+    wss = new WebSocket.Server({
+        port,
+        verifyClient,
+    } as WebSocket.ServerOptions);
+    wss.on("listening", () => {
+        console.log("WSS Listening...");
     });
-    this.wss.on('listening', () => {
-        console.log('WSS Listening...');
-    });
-    this.wss.on('connection', handleConnection);
+    wss.on("connection", handleConnection);
 
     connectionCheckerId = setInterval(checkConnections, 30000, 30000);
 
 };
 
 export const disable = () => {
-    this.wss.close();
+    wss.close();
     clearInterval(connectionCheckerId);
 };
 
-const handleConnection = (ws) => {
-    ws.isAlive = true;
-    ws.addEventListener('pong', () => {
-        ws.isAlive = true;
+const handleConnection = (ws: WebSocket) => {
+    ws.addEventListener("pong", () => {
+        const socketIndex = deadSockets.indexOf(ws);
+        if (socketIndex > -1) {
+            deadSockets.splice(socketIndex, 1);
+        }
     });
 
     EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
 };
 
 const checkConnections = () => {
-    for(let ws of this.wss.clients){
-        if(!ws.isAlive){
+    for (const ws of wss.clients) {
+        const socketIndex = deadSockets.indexOf(ws);
+        if (socketIndex > -1) {
             ws.terminate();
-            console.log('WS Terminated...');
-        }else{
-            ws.isAlive = false;
+            deadSockets.splice(socketIndex, 1);
+            console.log("WS Terminated...");
+        } else {
             ws.ping();
         }
     }
 };
 
-const verifyClient = (info) => {
-    return info.req.headers['sec-websocket-protocol'] === 'tanks-MP';
+const verifyClient = (info: any) => {
+    return info.req.headers["sec-websocket-protocol"] === "tanks-MP";
 };
-
-

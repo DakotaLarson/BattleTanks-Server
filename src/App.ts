@@ -1,9 +1,9 @@
-import MatchRotator from './MatchRotator';
-import * as WebSocketServer from './WebSocketServer';
-import * as PlayerConnector from './PlayerConnector';
-import PlayerHandler from './PlayerHandler';
-import EventHandler from './EventHandler';
-import PlayerKillHandler from './PlayerKillHandler';
+import EventHandler from "./EventHandler";
+import MatchRotator from "./MatchRotator";
+import * as PlayerConnector from "./PlayerConnector";
+import PlayerHandler from "./PlayerHandler";
+import PlayerKillHandler from "./PlayerKillHandler";
+import * as WebSocketServer from "./WebSocketServer";
 
 MatchRotator.enable();
 WebSocketServer.enable();

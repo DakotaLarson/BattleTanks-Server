@@ -1,25 +1,25 @@
-import * as PacketSender from './PacketSender';
-import Vector3 from './Vector3';
-import EventHandler from './EventHandler';
-import Audio from './Audio';
+import Vector3 from ".//vector/Vector3";
+import Audio from "./Audio";
+import EventHandler from "./EventHandler";
+import * as PacketSender from "./PacketSender";
+import Vector4 from "./vector/Vector4";
 
 const COOLDOWN_ITERVAL = 1000;
 
 export default class Player {
 
-    name: string;
-    id: number;
+    public name: string;
+    public id: number;
 
-    pos: Vector3;
-    bodyRot: number;
-    headRot: number;
+    public pos: Vector3;
+    public bodyRot: number;
+    public headRot: number;
 
-    lastShotTime: number;
+    public lastShotTime: number;
 
-    isAlive: boolean;
+    public isAlive: boolean;
 
-
-    constructor(name, id){
+    constructor(name: string, id: number) {
         this.name = name;
         this.id = id;
 
@@ -32,32 +32,33 @@ export default class Player {
         this.isAlive = true;
     }
 
-    sendArena(arena){
+    public sendArena(arena: any) {
         PacketSender.sendArena(this.id, arena);
     }
 
-    sendGameStatus(status: number){
+    public sendGameStatus(status: number) {
         PacketSender.sendGameStatus(this.id, status);
     }
 
-    sendAlert(message: string){
+    public sendAlert(message: string) {
         PacketSender.sendAlert(this.id, message);
     }
 
-    sendPlayerAddition(pos: Vector3){
+    public sendPlayerAddition(pos: Vector4) {
         this.pos.x = pos.x;
         this.pos.y = pos.y;
         this.pos.z = pos.z;
-        this.bodyRot = this.headRot = 0;
+        this.bodyRot = pos.w;
+        this.headRot = 0;
 
         PacketSender.sendPlayerAddition(this.id, pos);
     }
 
-    sendPlayerRemoval(){
+    public sendPlayerRemoval() {
         PacketSender.sendPlayerRemoval(this.id);
     }
 
-    sendPlayerMove(pos: Vector3){
+    public sendPlayerMove(pos: Vector3) {
         this.pos.x = pos.x;
         this.pos.y = pos.y;
         this.pos.z = pos.z;
@@ -65,49 +66,49 @@ export default class Player {
         PacketSender.sendPlayerMove(this.id, pos, this.headRot, this. bodyRot);
     }
 
-    sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector3, headRot: number, bodyRot: number){
+    public sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector3, headRot: number, bodyRot: number) {
         PacketSender.sendConnectedPlayerAddition(this.id, {
             id: playerId,
-            name: name,
+            name,
             pos: [pos.x, pos.y, pos.z],
-            headRot: headRot,
-            bodyRot: bodyRot
+            headRot,
+            bodyRot,
         });
     }
-    
-    sendConnectedPlayerMove(pos: Vector3, bodyRot: number, headRot: number, playerId: number){
+
+    public sendConnectedPlayerMove(pos: Vector3, bodyRot: number, headRot: number, playerId: number) {
         PacketSender.sendConnectedPlayerMove(this.id, pos, bodyRot, headRot, playerId);
     }
 
-    sendConnectedPlayerRemoval(playerId: number){
+    public sendConnectedPlayerRemoval(playerId: number) {
         PacketSender.sendConnectedPlayerRemoval(this.id, playerId);
     }
 
-    sendMatchStatistics(stats){
+    public sendMatchStatistics(stats: any) {
         PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
     }
 
-    sendInvalidShot(){
+    public sendInvalidShot() {
         PacketSender.sendPlayerShootInvalid(this.id);
     }
 
-    sendPlayerShoot(){
+    public sendPlayerShoot() {
         PacketSender.sendPlayerShoot(this.id);
     }
 
-    sendConnectedPlayerShoot(playerId: number){
+    public sendConnectedPlayerShoot(playerId: number) {
         PacketSender.sendConnectedPlayerShoot(this.id, playerId);
     }
 
-    sendAudioRequest(audio: Audio){
+    public sendAudioRequest(audio: Audio) {
         PacketSender.sendAudioRequest(this.id, audio);
     }
 
-    sendCooldownTime(time: number){
+    public sendCooldownTime(time: number) {
         PacketSender.sendCooldownTime(this.id, time);
     }
 
-    handlePositionUpdate(data: Array<number>){
+    public handlePositionUpdate(data: number[]) {
         this.pos.x = data[0];
         this.pos.y = data[1];
         this.pos.z = data[2];
@@ -115,12 +116,12 @@ export default class Player {
         this.headRot = data[4];
     }
 
-    shoot(){
-        let currentTime = Date.now();
-        if(currentTime - this.lastShotTime > COOLDOWN_ITERVAL){
+    public shoot() {
+        const currentTime = Date.now();
+        if (currentTime - this.lastShotTime > COOLDOWN_ITERVAL) {
             EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
             this.lastShotTime = currentTime;
-        }else{
+        } else {
             this.sendInvalidShot();
         }
     }
