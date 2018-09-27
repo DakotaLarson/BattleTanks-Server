@@ -213,18 +213,17 @@ export default class MatchRotator {
 
     public static onPlayerHitPlayer() {
         let alivePlayerCount = 0;
-        let winner: Player;
+        let winner: Player | undefined;
         for (let i = 0; i < PlayerHandler.getCount(); i ++) {
             const player = PlayerHandler.getPlayer(i);
             if (player.isAlive) {
                 alivePlayerCount ++;
                 winner = player;
             }
-            console.log(player.isAlive);
         }
         if (alivePlayerCount < 2) {
-            if (alivePlayerCount === 1) {
-                MatchRotator.startFinishing(winner );
+            if (alivePlayerCount === 1 && winner) {
+                MatchRotator.startFinishing(winner);
                 winner.sendAudioRequest(Audio.WIN);
             } else {
                 MatchRotator.startFinishing();

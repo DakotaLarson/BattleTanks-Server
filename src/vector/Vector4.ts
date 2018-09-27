@@ -10,7 +10,8 @@ export default class Vector4 {
     public y: number;
     public z: number;
     public w: number;
-    constructor(x?, y?, z?, w?) {
+
+    constructor(x?: number, y?: number, z?: number, w?: number) {
         this.x = x || 0;
         this.y = y || 0;
         this.z = z || 0;
@@ -23,12 +24,12 @@ export default class Vector4 {
 
     public cross(vec: Vector3): Vector3 {
 
-		const x = this.y * vec.z - this.z * vec.y;
-		const y = this.z * vec.x - this.x * vec.z;
-		const z = this.x * vec.y - this.y * vec.x;
+        const x = this.y * vec.z - this.z * vec.y;
+        const y = this.z * vec.x - this.x * vec.z;
+        const z = this.x * vec.y - this.y * vec.x;
 
-		return new Vector3(x, y , z);
-	}
+        return new Vector3(x, y , z);
+    }
 
     public getPerpendicularAboutY(): Vector3 {
         return new Vector3(this.z, this.y, this.x * -1);

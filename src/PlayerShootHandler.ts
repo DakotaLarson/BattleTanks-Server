@@ -60,7 +60,7 @@ export default class PlayerShootHandler {
         }
         return {
             player: closestPlayer,
-            distance: closestDistance? closestDistance : 0,
+            distance: closestDistance ? closestDistance : 0,
         };
     }
 
