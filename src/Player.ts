@@ -58,21 +58,20 @@ export default class Player {
         PacketSender.sendPlayerRemoval(this.id);
     }
 
-    public sendPlayerMove(pos: Vector3) {
+    public sendPlayerMove(pos: Vector4) {
         this.pos.x = pos.x;
         this.pos.y = pos.y;
         this.pos.z = pos.z;
 
-        PacketSender.sendPlayerMove(this.id, pos, this.headRot, this. bodyRot);
+        PacketSender.sendPlayerMove(this.id, pos, this.headRot, pos.w);
     }
 
-    public sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector3, headRot: number, bodyRot: number) {
+    public sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector4, headRot: number) {
         PacketSender.sendConnectedPlayerAddition(this.id, {
             id: playerId,
             name,
-            pos: [pos.x, pos.y, pos.z],
+            pos: [pos.x, pos.y, pos.z, pos.w],
             headRot,
-            bodyRot,
         });
     }
 

@@ -1,5 +1,6 @@
 import Audio from "./Audio";
 import Vector3 from "./vector/Vector3";
+import Vector4 from "./vector/Vector4";
 
 const sockets: Map<number, WebSocket> = new Map();
 
@@ -52,10 +53,12 @@ export const sendAlert = (id: number, message: string) => {
     send(id, data);
 };
 
-export const sendPlayerAddition = (id: number, pos: Vector3) => {
+// PLAYER
+
+export const sendPlayerAddition = (id: number, pos: Vector4) => {
     const dataObj = {
         id,
-        pos: [pos.x, pos.y, pos.z],
+        pos: [pos.x, pos.y, pos.z, pos.w],
     };
     const data = constructData(Packet.PLAYER_ADD, JSON.stringify(dataObj), DataType.STRING);
     send(id, data);
@@ -89,6 +92,8 @@ export const sendPlayerShoot = (id: number) => {
     const data = constructData(Packet.PLAYER_SHOOT, undefined, DataType.HEADER_ONLY);
     send(id, data);
 };
+
+// CONNECTED PLAYER
 
 export const sendConnectedPlayerAddition = (id: number, playerData: any) => {
     const data = constructData(Packet.CONNECTED_PLAYER_ADD, JSON.stringify(playerData), DataType.STRING);
@@ -141,6 +146,8 @@ const send = (id: number, data: any) => {
     const socket: WebSocket | undefined = sockets.get(id);
     if (socket) {
         socket.send(data);
+    } else {
+        console.warn("Attempting to send data without socket: " + id);
     }
 };
 

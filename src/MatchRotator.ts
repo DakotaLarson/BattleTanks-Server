@@ -56,9 +56,12 @@ export default class MatchRotator {
                 player.sendPlayerAddition(spawn);
                 for (let i = 0; i < PlayerHandler.getCount(); i ++) {
                     const otherPlayer = PlayerHandler.getPlayer(i);
+                    const otherPlayerPos = new Vector4(otherPlayer.pos.x, otherPlayer.pos.y, otherPlayer.pos.z, otherPlayer.bodyRot);
+
                     if (otherPlayer.id === player.id) { continue; }
-                    otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot, player.bodyRot);
-                    player.sendConnectedPlayerAddition(otherPlayer.id, otherPlayer.name, otherPlayer.pos, otherPlayer.headRot, otherPlayer.bodyRot);
+
+                    otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
+                    player.sendConnectedPlayerAddition(otherPlayer.id, otherPlayer.name, otherPlayerPos, otherPlayer.headRot);
                 }
 
                 player.sendAlert("Match starting soon!");
@@ -117,7 +120,7 @@ export default class MatchRotator {
             for (let j = 0; j < PlayerHandler.getCount(); j ++) {
                 const otherPlayer = PlayerHandler.getPlayer(j);
                 if (otherPlayer.id === player.id) { continue; }
-                otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot, player.bodyRot);
+                otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
             }
         }
 
@@ -139,7 +142,9 @@ export default class MatchRotator {
             player.sendGameStatus(GameStatus.RUNNING);
             player.sendAlert("Match started!");
             player.sendCooldownTime(1);
-            player.sendPlayerMove(ArenaLoader.getLoadedArena().getNextGameSpawn());
+            const gameSpawn = ArenaLoader.getLoadedArena().getNextGameSpawn();
+            console.log(gameSpawn);
+            player.sendPlayerMove(gameSpawn);
 
         }
 
