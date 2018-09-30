@@ -27,7 +27,7 @@ export default class Arena {
             const x = data.initialSpawnPositions[i];
             const y = data.initialSpawnPositions[i + 1];
             const z = data.initialSpawnPositions[i + 2];
-            const w = data.initialSpawnPositions[i + 3];
+            const w = data.initialSpawnPositions[i + 3] + Math.PI / 2;
             this.initialSpawns.push(new Vector4(x, y, z, w));
         }
 
@@ -35,7 +35,7 @@ export default class Arena {
             const x = data.gameSpawnPositions[i];
             const y = data.gameSpawnPositions[i + 1];
             const z = data.gameSpawnPositions[i + 2];
-            const w = data.gameSpawnPositions[i + 3];
+            const w = data.gameSpawnPositions[i + 3] + Math.PI / 2;
             this.gameSpawns.push(new Vector4(x, y, z, w));
         }
 

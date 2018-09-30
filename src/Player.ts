@@ -62,8 +62,9 @@ export default class Player {
         this.pos.x = pos.x;
         this.pos.y = pos.y;
         this.pos.z = pos.z;
+        this.bodyRot = pos.w;
 
-        PacketSender.sendPlayerMove(this.id, pos, this.headRot, pos.w);
+        PacketSender.sendPlayerMove(this.id, pos, this.headRot, this.bodyRot);
     }
 
     public sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector4, headRot: number) {
