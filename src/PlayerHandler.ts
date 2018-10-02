@@ -15,7 +15,6 @@ export default class PlayerHandler {
         const index = players.indexOf(player);
         if (index === -1) {
             players.push(player);
-            console.log("player added");
         } else {
             console.warn("Attempting to add player to list that is already in list");
         }
