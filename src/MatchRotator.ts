@@ -143,7 +143,6 @@ export default class MatchRotator {
             player.sendAlert("Match started!");
             player.sendCooldownTime(1);
             const gameSpawn = ArenaLoader.getLoadedArena().getNextGameSpawn();
-            console.log(gameSpawn);
             player.sendPlayerMove(gameSpawn);
 
         }

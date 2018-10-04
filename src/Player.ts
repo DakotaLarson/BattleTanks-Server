@@ -12,8 +12,12 @@ export default class Player {
     public id: number;
 
     public pos: Vector3;
+
     public bodyRot: number;
     public headRot: number;
+
+    public movementVelocity: number;
+    public rotationVelocity: number;
 
     public lastShotTime: number;
 
@@ -24,8 +28,12 @@ export default class Player {
         this.id = id;
 
         this.pos = new Vector3();
+
         this.bodyRot = 0;
         this.headRot = 0;
+
+        this.movementVelocity = 0;
+        this.rotationVelocity = 0;
 
         this.lastShotTime = 0;
 
@@ -108,12 +116,14 @@ export default class Player {
         PacketSender.sendCooldownTime(this.id, time);
     }
 
-    public handlePositionUpdate(data: number[]) {
+    public onMove(data: number[]) {
         this.pos.x = data[0];
         this.pos.y = data[1];
         this.pos.z = data[2];
-        this.bodyRot = data[3];
-        this.headRot = data[4];
+        this.movementVelocity = data[3];
+        this.rotationVelocity = data[4];
+        this.bodyRot = data[5];
+        this.headRot = data[6];
     }
 
     public shoot() {

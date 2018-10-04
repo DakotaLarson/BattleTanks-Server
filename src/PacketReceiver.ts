@@ -1,7 +1,7 @@
 import Player from "./Player";
 
-const receivePosition = (player: Player, data: number[]) => {
-    player.handlePositionUpdate(data);
+const receivePlayerMove = (player: Player, data: number[]) => {
+    player.onMove(data);
 };
 
 const receivePlayerShoot = (player: Player) => {
@@ -9,7 +9,7 @@ const receivePlayerShoot = (player: Player) => {
 };
 
 const handlers = new Map([
-    [0x01, receivePosition],
+    [0x01, receivePlayerMove],
     [0X02, receivePlayerShoot],
 ]);
 
