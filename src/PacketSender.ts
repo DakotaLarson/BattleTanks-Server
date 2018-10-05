@@ -109,8 +109,8 @@ export const sendConnectedPlayerRemoval = (id: number, playerId: number) => {
     send(id, data);
 };
 
-export const sendConnectedPlayerMove = (id: number, pos: Vector3, bodyRot: number, headRot: number, playerId: number) => {
-    const data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+export const sendConnectedPlayerMove = (id: number, pos: Vector3, movementVelocity: number, rotationVelocity: number, bodyRot: number, headRot: number, playerId: number) => {
+    const data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, movementVelocity, rotationVelocity, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
     send(id, data);
 };
 

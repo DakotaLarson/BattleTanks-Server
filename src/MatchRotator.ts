@@ -194,7 +194,7 @@ export default class MatchRotator {
                 const playerTwo = PlayerHandler.getPlayer(j);
                 if (playerIdsToSync.indexOf(playerTwo.id) > -1) { continue; }
                 if (playerOne.id !== playerTwo.id) {
-                    playerTwo.sendConnectedPlayerMove(playerOne.pos, playerOne.bodyRot, playerOne.headRot, playerOne.id);
+                    playerTwo.sendConnectedPlayerMove(playerOne);
                 }
             }
         }

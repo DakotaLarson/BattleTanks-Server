@@ -84,8 +84,8 @@ export default class Player {
         });
     }
 
-    public sendConnectedPlayerMove(pos: Vector3, bodyRot: number, headRot: number, playerId: number) {
-        PacketSender.sendConnectedPlayerMove(this.id, pos, bodyRot, headRot, playerId);
+    public sendConnectedPlayerMove(player: Player) {
+        PacketSender.sendConnectedPlayerMove(this.id, player.pos, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
     }
 
     public sendConnectedPlayerRemoval(playerId: number) {
