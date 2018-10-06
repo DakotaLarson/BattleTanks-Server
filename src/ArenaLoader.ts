@@ -1,32 +1,56 @@
 import Arena from "./Arena";
-import EventHandler from "./EventHandler";
 
 import * as fs from "fs";
 import * as path from "path";
 
 export default class ArenaLoader {
 
-    public static loadArena() {
-        const dirPath = path.join(process.cwd(), "arenas");
-        if (fs.existsSync(dirPath)) {
-            const arenaFiles = fs.readdirSync(dirPath);
-            if (arenaFiles.length) {
-                for (const arena of arenaFiles) {
-                    const arenaData = ArenaLoader.getArenaData(dirPath, arena);
-                    if (arenaData) {
-                        ArenaLoader.loadedArena = new Arena(arenaData);
-                        EventHandler.callEvent(EventHandler.Event.ARENALOADER_ARENA_LOAD, ArenaLoader.loadedArena);
-                        return;
-                    }
+    public static loadArena(): Promise<string> {
+        return new Promise((resolve, reject) => {
+
+            const dirPath = path.join(process.cwd(), "arenas");
+
+            fs.exists(dirPath, (exists) => {
+
+                if (exists) {
+                    fs.readdir(dirPath, (err: NodeJS.ErrnoException, arenaFiles: string[]) => {
+                        if (err) {
+
+                            console.error(err);
+                            resolve("Error reading from 'arenas' directory");
+
+                        } else {
+
+                            if (arenaFiles.length) {
+                                for (const arena of arenaFiles) {
+
+                                    const arenaData = ArenaLoader.getArenaData(dirPath, arena);
+
+                                    if (arenaData) {
+                                        ArenaLoader.loadedArena = new Arena(arenaData);
+                                        resolve();
+                                    }
+                                }
+                                reject("No valid arenas on server");
+                            } else {
+
+                                reject("No arenas on server");
+
+                            }
+                        }
+                    });
+                } else {
+
+                    fs.mkdir(dirPath, undefined, (err: NodeJS.ErrnoException) => {
+                        if (err) {
+                            console.error(err);
+                        }
+                    });
+                    reject("No 'arenas' directory nor arenas on server");
+
                 }
-                EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
-            } else {
-                EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
-            }
-        } else {
-            fs.mkdirSync(dirPath);
-            EventHandler.callEvent(EventHandler.Event.ARENALOADER_NO_ARENAS);
-        }
+            });
+        });
     }
 
     public static getLoadedArena() {

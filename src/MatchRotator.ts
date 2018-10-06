@@ -27,8 +27,6 @@ export default class MatchRotator {
     public static enable = () => {
         EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_JOIN, MatchRotator.onPlayerJoin);
         EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_LEAVE, MatchRotator.onPlayerLeave);
-        EventHandler.addListener(MatchRotator, EventHandler.Event.ARENALOADER_ARENA_LOAD, MatchRotator.onArenaLoad);
-        EventHandler.addListener(MatchRotator, EventHandler.Event.ARENALOADER_NO_ARENAS, MatchRotator.onNoArenas);
         EventHandler.addListener(MatchRotator, EventHandler.Event.GAME_TICK, MatchRotator.onTick);
         EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_HIT_PLAYER, MatchRotator.onPlayerHitPlayer);
 
@@ -106,33 +104,49 @@ export default class MatchRotator {
     }
 
     public static startPreparing() {
-        ArenaLoader.loadArena();
+        ArenaLoader.loadArena().then(() => {
+            const arena = ArenaLoader.getLoadedArena();
 
-        playerIdsToSync.splice(0, playerIdsToSync.length);
-
-        for (let i = 0; i < PlayerHandler.getCount(); i ++) {
-            const player: Player = PlayerHandler.getPlayer(i);
-            const spawn: Vector4 = ArenaLoader.getLoadedArena().getRandomInitialSpawn();
-            player.sendGameStatus(GameStatus.PREPARING);
-            player.sendPlayerAddition(spawn);
-            player.sendAlert("Match starting in 10 seconds!");
-
-            for (let j = 0; j < PlayerHandler.getCount(); j ++) {
-                const otherPlayer = PlayerHandler.getPlayer(j);
-                if (otherPlayer.id === player.id) { continue; }
-                otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
+            for (let i = 0; i < PlayerHandler.getCount(); i ++) {
+                PlayerHandler.getPlayer(i).sendArena(arena.getRawData());
             }
-        }
 
-        setTimeout(() => {
-            if (PlayerHandler.getCount() >= MINIMUM_PLAYER_COUNT) {
-                MatchRotator.startRunning();
-            } else {
-                MatchRotator.startWaiting();
+            playerIdsToSync.splice(0, playerIdsToSync.length);
+
+            for (let i = 0; i < PlayerHandler.getCount(); i ++) {
+                const player: Player = PlayerHandler.getPlayer(i);
+                const spawn: Vector4 = ArenaLoader.getLoadedArena().getRandomInitialSpawn();
+                player.sendGameStatus(GameStatus.PREPARING);
+                player.sendPlayerAddition(spawn);
+                player.sendAlert("Match starting in 10 seconds!");
+
+                for (let j = 0; j < PlayerHandler.getCount(); j ++) {
+                    const otherPlayer = PlayerHandler.getPlayer(j);
+                    if (otherPlayer.id === player.id) { continue; }
+                    otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
+                }
             }
-        }, PREPARING_TIME);
 
-        MatchRotator.setGameStatus(GameStatus.PREPARING);
+            setTimeout(() => {
+                if (PlayerHandler.getCount() >= MINIMUM_PLAYER_COUNT) {
+                    MatchRotator.startRunning();
+                } else {
+                    MatchRotator.startWaiting();
+                }
+            }, PREPARING_TIME);
+
+            MatchRotator.setGameStatus(GameStatus.PREPARING);
+
+            console.log("Loaded Arena: " + arena.title);
+        }).catch((message: string) => {
+            console.error(message);
+
+            for (let i = 0; i < PlayerHandler.getCount(); i ++) {
+                PlayerHandler.getPlayer(i).sendAlert(message);
+            }
+
+            MatchRotator.startWaiting();
+        });
     }
 
     public static startRunning() {
