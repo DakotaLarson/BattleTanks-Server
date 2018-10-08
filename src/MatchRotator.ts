@@ -28,7 +28,7 @@ export default class MatchRotator {
         EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_JOIN, MatchRotator.onPlayerJoin);
         EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_LEAVE, MatchRotator.onPlayerLeave);
         EventHandler.addListener(MatchRotator, EventHandler.Event.GAME_TICK, MatchRotator.onTick);
-        EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_HIT_PLAYER, MatchRotator.onPlayerHitPlayer);
+        EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_DEATH, MatchRotator.onPlayerDeath);
 
         MatchRotator.setGameStatus(GameStatus.WAITING);
     }
@@ -167,8 +167,10 @@ export default class MatchRotator {
     public static startFinishing(winner?: Player) {
         for (let i = 0; i < PlayerHandler.getCount(); i ++) {
             const player = PlayerHandler.getPlayer(i);
+            player.health = 1;
             player.sendGameStatus(GameStatus.FINISHING);
             player.sendPlayerRemoval();
+            player.sendPlayerHealth(player.health);
             if (winner) {
                 player.sendMatchStatistics({
                     winner: winner.name,
@@ -178,6 +180,7 @@ export default class MatchRotator {
             for (let k = 0; k < PlayerHandler.getCount(); k ++) {
                 const otherPlayer = PlayerHandler.getPlayer(k);
                 if (otherPlayer.id === player.id) { continue; }
+                otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
                 otherPlayer.sendConnectedPlayerRemoval(player.id);
             }
         }
@@ -229,7 +232,7 @@ export default class MatchRotator {
         status = newStatus;
     }
 
-    public static onPlayerHitPlayer() {
+    public static onPlayerDeath() {
         let alivePlayerCount = 0;
         let winner: Player | undefined;
         for (let i = 0; i < PlayerHandler.getCount(); i ++) {

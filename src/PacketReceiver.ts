@@ -29,7 +29,7 @@ export default class PacketReceiver {
         let body: any;
         switch (dataType) {
             case DataType.NUMBER:
-                body = message.readUInt8(2);
+                body = message.readFloatLE(4);
                 break;
             case DataType.STRING:
                 body = message.toString("utf8", 2);

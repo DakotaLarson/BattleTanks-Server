@@ -22,6 +22,7 @@ export default class Player {
     public lastShotTime: number;
 
     public isAlive: boolean;
+    public health: number;
 
     constructor(name: string, id: number) {
         this.name = name;
@@ -38,18 +39,7 @@ export default class Player {
         this.lastShotTime = 0;
 
         this.isAlive = true;
-    }
-
-    public sendArena(arena: any) {
-        PacketSender.sendArena(this.id, arena);
-    }
-
-    public sendGameStatus(status: number) {
-        PacketSender.sendGameStatus(this.id, status);
-    }
-
-    public sendAlert(message: string) {
-        PacketSender.sendAlert(this.id, message);
+        this.health = 1;
     }
 
     public sendPlayerAddition(pos: Vector4) {
@@ -75,6 +65,14 @@ export default class Player {
         PacketSender.sendPlayerMove(this.id, pos, this.headRot, this.bodyRot);
     }
 
+    public sendPlayerShoot() {
+        PacketSender.sendPlayerShoot(this.id);
+    }
+
+    public sendPlayerHealth(health: number) {
+        PacketSender.sendPlayerHealth(this.id, health);
+    }
+
     public sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector4, headRot: number) {
         PacketSender.sendConnectedPlayerAddition(this.id, {
             id: playerId,
@@ -82,6 +80,10 @@ export default class Player {
             pos: [pos.x, pos.y, pos.z, pos.w],
             headRot,
         });
+    }
+
+    public sendConnectedPlayerShoot(playerId: number) {
+        PacketSender.sendConnectedPlayerShoot(this.id, playerId);
     }
 
     public sendConnectedPlayerMove(player: Player) {
@@ -92,20 +94,28 @@ export default class Player {
         PacketSender.sendConnectedPlayerRemoval(this.id, playerId);
     }
 
+    public sendConnectedPlayerHealth(playerId: number, health: number) {
+        PacketSender.sendConnectedPlayerHealth(this.id, playerId, health);
+    }
+
     public sendMatchStatistics(stats: any) {
         PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
     }
 
+    public sendArena(arena: any) {
+        PacketSender.sendArena(this.id, arena);
+    }
+
+    public sendGameStatus(status: number) {
+        PacketSender.sendGameStatus(this.id, status);
+    }
+
+    public sendAlert(message: string) {
+        PacketSender.sendAlert(this.id, message);
+    }
+
     public sendInvalidShot() {
         PacketSender.sendPlayerShootInvalid(this.id);
-    }
-
-    public sendPlayerShoot() {
-        PacketSender.sendPlayerShoot(this.id);
-    }
-
-    public sendConnectedPlayerShoot(playerId: number) {
-        PacketSender.sendConnectedPlayerShoot(this.id, playerId);
     }
 
     public sendAudioRequest(audio: Audio) {

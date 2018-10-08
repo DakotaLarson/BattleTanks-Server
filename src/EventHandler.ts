@@ -19,6 +19,7 @@ export enum Event {
     ARENALOADER_NO_ARENAS,
 
     PLAYER_HIT_PLAYER,
+    PLAYER_DEATH,
 }
 
 enum Level {

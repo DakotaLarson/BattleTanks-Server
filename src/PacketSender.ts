@@ -16,11 +16,13 @@ enum Packet {
     PLAYER_REMOVE,
     PLAYER_SHOOT_INVALID,
     PLAYER_SHOOT,
+    PLAYER_HEALTH,
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
     CONNECTED_PLAYER_REMOVE,
     CONNECTED_PLAYER_SHOOT,
+    CONNECTED_PLAYER_HEALTH,
 
     MATCH_STATISTICS,
 
@@ -93,6 +95,11 @@ export const sendPlayerShoot = (id: number) => {
     send(id, data);
 };
 
+export const sendPlayerHealth = (id: number, health: number) => {
+    const data = constructData(Packet.PLAYER_HEALTH, health, DataType.NUMBER);
+    send(id, data);
+};
+
 // CONNECTED PLAYER
 
 export const sendConnectedPlayerAddition = (id: number, playerData: any) => {
@@ -116,6 +123,12 @@ export const sendConnectedPlayerMove = (id: number, pos: Vector3, movementVeloci
 
 export const sendConnectedPlayerShoot = (id: number, playerId: number) => {
     const data = constructData(Packet.CONNECTED_PLAYER_SHOOT, playerId, DataType.NUMBER);
+    send(id, data);
+};
+
+export const sendConnectedPlayerHealth = (id: number, playerId: number, health: number) => {
+    const data = constructData(Packet.CONNECTED_PLAYER_HEALTH, [health], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+
     send(id, data);
 };
 
@@ -154,7 +167,7 @@ const send = (id: number, data: any) => {
 const constructData = (header: Packet, body: any, dataType: DataType, additionalHeader?: number) => {
 
     let headerBuffer: Buffer;
-    if (dataType === DataType.FLOAT_ARRAY || dataType === DataType.FLOAT_ARRAY_INT_HEADER) {
+    if (dataType === DataType.FLOAT_ARRAY || dataType === DataType.FLOAT_ARRAY_INT_HEADER || dataType === DataType.NUMBER) {
         headerBuffer = Buffer.alloc(4);
     } else {
         headerBuffer = Buffer.alloc(2);
@@ -166,8 +179,8 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
 
     switch (dataType) {
         case DataType.NUMBER:
-            buffer = Buffer.alloc(1);
-            buffer.writeUInt8(body, 0);
+            buffer = Buffer.alloc(4);
+            buffer.writeFloatLE(body, 0);
 
             break;
         case DataType.STRING:
@@ -187,8 +200,8 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
 
             buffer = Buffer.alloc(body.length * 4);
 
-            for (let i = 0; i < body.length; i += 4) {
-                buffer.writeFloatLE(body[i], i);
+            for (let i = 0; i < body.length; i += 1) {
+                buffer.writeFloatLE(body[i], i * 4);
             }
 
             break;
