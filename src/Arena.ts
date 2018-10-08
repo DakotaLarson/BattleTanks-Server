@@ -11,6 +11,7 @@ export default class Arena {
     public rawData: any;
 
     private nextGameSpawnIndex: number;
+    private nextInitialSpawnIndex: number;
 
     constructor(data: any) {
         this.rawData = data;
@@ -22,6 +23,7 @@ export default class Arena {
         this.title = data.title;
 
         this.nextGameSpawnIndex = 0;
+        this.nextInitialSpawnIndex = 0;
 
         for (let i = 0; i < data.initialSpawnPositions.length; i += 4) {
             const x = data.initialSpawnPositions[i];
@@ -47,10 +49,13 @@ export default class Arena {
         }
     }
 
-    public getRandomInitialSpawn(): Vector4 {
+    public getNextInitialSpawn(): Vector4 {
         const length = this.initialSpawns.length;
         if (length) {
-            return this.initialSpawns[Math.floor(Math.random() * length)];
+            if (this.nextInitialSpawnIndex >= this.initialSpawns.length) {
+                this.nextInitialSpawnIndex = 0;
+            }
+            return this.initialSpawns[this.nextInitialSpawnIndex ++];
         } else {
             return new Vector4();
         }

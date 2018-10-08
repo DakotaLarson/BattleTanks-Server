@@ -47,7 +47,7 @@ export default class MatchRotator {
                 player.sendArena(arena.getRawData());
                 let spawn: Vector4;
                 if (status === GameStatus.PREPARING) {
-                    spawn = arena.getRandomInitialSpawn();
+                    spawn = arena.getNextInitialSpawn();
                 } else {
                     spawn = arena.getNextGameSpawn();
                 }
@@ -115,7 +115,7 @@ export default class MatchRotator {
 
             for (let i = 0; i < PlayerHandler.getCount(); i ++) {
                 const player: Player = PlayerHandler.getPlayer(i);
-                const spawn: Vector4 = ArenaLoader.getLoadedArena().getRandomInitialSpawn();
+                const spawn: Vector4 = ArenaLoader.getLoadedArena().getNextInitialSpawn();
                 player.sendGameStatus(GameStatus.PREPARING);
                 player.sendPlayerAddition(spawn);
                 player.sendAlert("Match starting in 10 seconds!");
