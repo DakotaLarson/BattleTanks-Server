@@ -4,14 +4,14 @@ import Player from "./Player";
 import PlayerHandler from "./PlayerHandler";
 import Vector3 from "./vector/Vector3";
 
-export default class PlayerShootHandler {
+export default class HitscanHandler {
 
     public static enable() {
-        EventHandler.addListener(PlayerShootHandler, EventHandler.Event.PLAYER_SHOOT, PlayerShootHandler.onPlayerShoot);
+        EventHandler.addListener(HitscanHandler, EventHandler.Event.PLAYER_SHOOT, HitscanHandler.onPlayerShoot);
     }
 
     public static disable() {
-        EventHandler.removeListener(PlayerShootHandler, EventHandler.Event.PLAYER_SHOOT, PlayerShootHandler.onPlayerShoot);
+        EventHandler.removeListener(HitscanHandler, EventHandler.Event.PLAYER_SHOOT, HitscanHandler.onPlayerShoot);
     }
 
     public static onPlayerShoot(player: Player) {
@@ -19,14 +19,14 @@ export default class PlayerShootHandler {
         const parallelAxis = Vector3.fromAngleAboutY(player.headRot);
         const perpendicularAxis = parallelAxis.cross(new Vector3(0, 1, 0));
 
-        const projectedTurretPosition = player.pos.dot(perpendicularAxis);
+        const projectedTurretPosition = player.position.dot(perpendicularAxis);
 
-        const playerPos = player.pos.clone().add(new Vector3(0.5, 0, 0.5));
+        const playerPos = player.position.clone().add(new Vector3(0.5, 0, 0.5));
 
-        const hitPlayerData = PlayerShootHandler.getHitPlayer(player, perpendicularAxis, projectedTurretPosition);
+        const hitPlayerData = HitscanHandler.getHitPlayer(player, perpendicularAxis, projectedTurretPosition);
 
         if (hitPlayerData.player) {
-            const closestBlockDistance = this.getHitBlockDistance(perpendicularAxis, projectedTurretPosition, playerPos, hitPlayerData.player.pos.clone().add(new Vector3(0.5, 0, 0.5)));
+            const closestBlockDistance = this.getHitBlockDistance(perpendicularAxis, projectedTurretPosition, playerPos, hitPlayerData.player.position.clone().add(new Vector3(0.5, 0, 0.5)));
 
             if (hitPlayerData.distance < closestBlockDistance || closestBlockDistance === -1) {
                 EventHandler.callEvent(EventHandler.Event.PLAYER_HIT_PLAYER, {
@@ -43,14 +43,14 @@ export default class PlayerShootHandler {
         let closestPlayer: Player | undefined;
         let closestDistance: number | undefined;
 
-        const playerPos = player.pos.clone().add(new Vector3(0.5, 0, 0.5));
+        const playerPos = player.position.clone().add(new Vector3(0.5, 0, 0.5));
         for (let i = 0; i < PlayerHandler.getCount(); i ++) {
             const otherPlayer = PlayerHandler.getPlayer(i);
             if (otherPlayer.id === player.id || !otherPlayer.isAlive) { continue; }
 
-            const corners = PlayerShootHandler.getPlayerCorners(otherPlayer.bodyRot, otherPlayer.pos);
+            const corners = HitscanHandler.getPlayerCorners(otherPlayer.bodyRot, otherPlayer.position);
             if (this.testCorners(corners, axis, turretProjection)) {
-                const otherPlayerPos = otherPlayer.pos.clone().add(new Vector3(0.5, 0, 0.5));
+                const otherPlayerPos = otherPlayer.position.clone().add(new Vector3(0.5, 0, 0.5));
                 const distance = playerPos.distanceSquared(otherPlayerPos);
                 if (!(closestPlayer && closestDistance) || distance < closestDistance) {
                     closestDistance = distance;
@@ -73,14 +73,14 @@ export default class PlayerShootHandler {
         const targetZDiff = targetPos.z - playerPos.z;
 
         for (const blockPosition of blockPositions) {
-            const corners = PlayerShootHandler.getBlockCorners(blockPosition);
-            if (PlayerShootHandler.testCorners(corners, axis, turretProjection)) {
+            const corners = HitscanHandler.getBlockCorners(blockPosition);
+            if (HitscanHandler.testCorners(corners, axis, turretProjection)) {
                 const testBlockPosition = blockPosition.clone().add(new Vector3(0.5, 0, 0.5));
 
                 const blockXDiff = testBlockPosition.x - playerPos.x;
                 const blockZDiff = testBlockPosition.z - playerPos.z;
 
-                if (PlayerShootHandler.areSignsEqual(blockXDiff, targetXDiff) && PlayerShootHandler.areSignsEqual(blockZDiff, targetZDiff)) {
+                if (HitscanHandler.areSignsEqual(blockXDiff, targetXDiff) && HitscanHandler.areSignsEqual(blockZDiff, targetZDiff)) {
                     if (closestPosition && closestDistance) {
 
                         const testDistance = testBlockPosition.distanceSquared(playerPos);
@@ -118,10 +118,10 @@ export default class PlayerShootHandler {
 
     private static getPlayerCorners(rot: number, pos: Vector3): Vector3[] {
         const theta = Math.atan(0.5 / 0.75);
-        const frontLeft = PlayerShootHandler.getPlayerCorner(rot + theta, pos);
-        const frontRight = PlayerShootHandler.getPlayerCorner(rot - theta, pos);
-        const backLeft = PlayerShootHandler.getPlayerCorner(Math.PI + rot + theta, pos);
-        const backRight = PlayerShootHandler.getPlayerCorner(Math.PI + rot - theta, pos);
+        const frontLeft = HitscanHandler.getPlayerCorner(rot + theta, pos);
+        const frontRight = HitscanHandler.getPlayerCorner(rot - theta, pos);
+        const backLeft = HitscanHandler.getPlayerCorner(Math.PI + rot + theta, pos);
+        const backRight = HitscanHandler.getPlayerCorner(Math.PI + rot - theta, pos);
 
         return new Array(frontRight, frontLeft, backLeft, backRight);
     }

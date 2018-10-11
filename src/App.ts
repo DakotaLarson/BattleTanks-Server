@@ -1,3 +1,4 @@
+import {performance} from "perf_hooks";
 import EventHandler from "./EventHandler";
 import MatchRotator from "./MatchRotator";
 import * as PlayerConnector from "./PlayerConnector";
@@ -11,6 +12,10 @@ PlayerConnector.enable();
 PlayerHandler.enable();
 PlayerDamageHandler.enable();
 
+let time = performance.now();
 setInterval(() => {
-    EventHandler.callEvent(EventHandler.Event.GAME_TICK);
+    const currentTime = performance.now();
+    const delta = (currentTime - time) / 1000;
+    time = currentTime;
+    EventHandler.callEvent(EventHandler.Event.GAME_TICK, delta);
 }, 50);

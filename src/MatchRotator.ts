@@ -1,10 +1,11 @@
-import Arena from "./Arena";
 import ArenaLoader from "./ArenaLoader";
 import Audio from "./Audio";
+import CollisionHandler from "./CollisionHandler";
 import EventHandler from "./EventHandler";
+import HitscanHandler from "./HitscanHandler";
 import Player from "./Player";
 import PlayerHandler from "./PlayerHandler";
-import PlayerShootHandler from "./PlayerShootHandler";
+import ProjectileHandler from "./projectile/ProjectileHandler";
 import Vector4 from "./vector/Vector4";
 
 const MINIMUM_PLAYER_COUNT = 2;
@@ -54,7 +55,7 @@ export default class MatchRotator {
                 player.sendPlayerAddition(spawn);
                 for (let i = 0; i < PlayerHandler.getCount(); i ++) {
                     const otherPlayer = PlayerHandler.getPlayer(i);
-                    const otherPlayerPos = new Vector4(otherPlayer.pos.x, otherPlayer.pos.y, otherPlayer.pos.z, otherPlayer.bodyRot);
+                    const otherPlayerPos = new Vector4(otherPlayer.position.x, otherPlayer.position.y, otherPlayer.position.z, otherPlayer.bodyRot);
 
                     if (otherPlayer.id === player.id) { continue; }
 
@@ -106,6 +107,7 @@ export default class MatchRotator {
     public static startPreparing() {
         ArenaLoader.loadArena().then(() => {
             const arena = ArenaLoader.getLoadedArena();
+            CollisionHandler.updateBlockPositions(arena.blockPositions);
 
             for (let i = 0; i < PlayerHandler.getCount(); i ++) {
                 PlayerHandler.getPlayer(i).sendArena(arena.getRawData());
@@ -196,13 +198,6 @@ export default class MatchRotator {
         MatchRotator.setGameStatus(GameStatus.FINISHING);
     }
 
-    public static onArenaLoad(arena: Arena) {
-        for (let i = 0; i < PlayerHandler.getCount(); i ++) {
-            PlayerHandler.getPlayer(i).sendArena(arena.getRawData());
-        }
-        console.log("Loaded Arena: " + arena.title);
-    }
-
     public static onTick() {
         for (let i = 0; i < PlayerHandler.getCount(); i ++) {
             const playerOne = PlayerHandler.getPlayer(i);
@@ -223,10 +218,13 @@ export default class MatchRotator {
 
     public static setGameStatus(newStatus: GameStatus) {
         if (status === GameStatus.RUNNING) {
-            PlayerShootHandler.disable();
+            ProjectileHandler.disable();
+            HitscanHandler.disable();
+
         }
         if (newStatus === GameStatus.RUNNING) {
-            PlayerShootHandler.enable();
+            ProjectileHandler.enable();
+            HitscanHandler.enable();
         }
         console.log("GameStatus: " + newStatus);
         status = newStatus;

@@ -28,13 +28,21 @@ export default class Vector3 {
     }
 
     public getPerpendicularAboutY(): Vector3 {
-        return new Vector3(this.z, this.y, this.x * -1);
+        return this.cross(new Vector3(0, 1, 0));
+
     }
 
     public add(vec: Vector3): Vector3 {
         this.x += vec.x;
         this.y += vec.y;
         this.z += vec.z;
+        return this;
+    }
+
+    public sub(vec: Vector3): Vector3 {
+        this.x -= vec.x;
+        this.y -= vec.y;
+        this.z -= vec.z;
         return this;
     }
 
@@ -47,6 +55,36 @@ export default class Vector3 {
         const yDiff = vec.y - this.y;
         const zDiff = vec.z - this.z;
         return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff;
+    }
+
+    public multiplyScalar(scalar: number): Vector3 {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+        return this;
+    }
+
+    public floor(): Vector3 {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        this.z = Math.floor(this.z);
+        return this;
+    }
+
+    public lengthSq(): number {
+        return this.x * this.x + this.y * this.y + this.z * this.z;
+    }
+
+    public equals(vec: Vector3): boolean {
+        return this.x === vec.x && this.y === vec.y && this.z === vec.z;
+    }
+
+    public distance(vec: Vector3): number {
+        const xDiff = vec.x - this.x;
+        const yDiff = vec.y - this.y;
+        const zDiff = vec.z - this.z;
+
+        return Math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff);
     }
 
 }

@@ -29,6 +29,9 @@ enum Packet {
     AUDIO_REQUEST,
 
     COOLDOWN_TIME,
+
+    PROJECTILE_LAUNCH,
+    PROJECTILE_MOVE,
 }
 
 enum DataType {
@@ -144,6 +147,16 @@ export const sendAudioRequest = (id: number, audio: Audio) => {
 
 export const sendCooldownTime = (id: number, time: number) => {
     const data = constructData(Packet.COOLDOWN_TIME, time, DataType.NUMBER);
+    send(id, data);
+};
+
+export const sendProjectileLaunch = (id: number, packetData: number[]) => {
+    const data = constructData(Packet.PROJECTILE_LAUNCH, packetData, DataType.FLOAT_ARRAY);
+    send(id, data);
+};
+
+export const sendProjectileMove = (id: number, packetData: number[]) => {
+    const data = constructData(Packet.PROJECTILE_MOVE, packetData, DataType.FLOAT_ARRAY);
     send(id, data);
 };
 

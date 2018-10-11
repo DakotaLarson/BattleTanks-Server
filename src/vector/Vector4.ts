@@ -35,10 +35,17 @@ export default class Vector4 {
         return new Vector3(this.z, this.y, this.x * -1);
     }
 
-    public add(vec: Vector3): Vector3 {
+    public add(vec: Vector3): Vector4 {
         this.x += vec.x;
         this.y += vec.y;
         this.z += vec.z;
+        return this;
+    }
+
+    public multiplyScalar(scalar: number): Vector4 {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
         return this;
     }
 
@@ -51,6 +58,21 @@ export default class Vector4 {
         const yDiff = vec.y - this.y;
         const zDiff = vec.z - this.z;
         return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff;
+    }
+
+    public floor(): Vector4 {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        this.z = Math.floor(this.z);
+        return this;
+    }
+
+    public lengthSq(): number {
+        return this.x * this.x + this.y * this.y + this.z * this.z;
+    }
+
+    public equals(vec: Vector3): boolean {
+        return this.x === vec.x && this.y === vec.y && this.z === vec.z;
     }
 
 }

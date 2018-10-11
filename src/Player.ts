@@ -11,7 +11,7 @@ export default class Player {
     public name: string;
     public id: number;
 
-    public pos: Vector3;
+    public position: Vector3;
 
     public bodyRot: number;
     public headRot: number;
@@ -28,7 +28,7 @@ export default class Player {
         this.name = name;
         this.id = id;
 
-        this.pos = new Vector3();
+        this.position = new Vector3();
 
         this.bodyRot = 0;
         this.headRot = 0;
@@ -43,9 +43,9 @@ export default class Player {
     }
 
     public sendPlayerAddition(pos: Vector4) {
-        this.pos.x = pos.x;
-        this.pos.y = pos.y;
-        this.pos.z = pos.z;
+        this.position.x = pos.x;
+        this.position.y = pos.y;
+        this.position.z = pos.z;
         this.bodyRot = pos.w;
         this.headRot = 0;
 
@@ -57,12 +57,12 @@ export default class Player {
     }
 
     public sendPlayerMove(pos: Vector4) {
-        this.pos.x = pos.x;
-        this.pos.y = pos.y;
-        this.pos.z = pos.z;
+        this.position.x = pos.x;
+        this.position.y = pos.y;
+        this.position.z = pos.z;
         this.bodyRot = pos.w;
 
-        PacketSender.sendPlayerMove(this.id, pos, this.headRot, this.bodyRot);
+        PacketSender.sendPlayerMove(this.id, this.position, this.headRot, this.bodyRot);
     }
 
     public sendPlayerShoot() {
@@ -87,7 +87,7 @@ export default class Player {
     }
 
     public sendConnectedPlayerMove(player: Player) {
-        PacketSender.sendConnectedPlayerMove(this.id, player.pos, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
+        PacketSender.sendConnectedPlayerMove(this.id, player.position, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
     }
 
     public sendConnectedPlayerRemoval(playerId: number) {
@@ -127,9 +127,9 @@ export default class Player {
     }
 
     public onMove(data: number[]) {
-        this.pos.x = data[0];
-        this.pos.y = data[1];
-        this.pos.z = data[2];
+        this.position.x = data[0];
+        this.position.y = data[1];
+        this.position.z = data[2];
         this.movementVelocity = data[3];
         this.rotationVelocity = data[4];
         this.bodyRot = data[5];
