@@ -42,6 +42,15 @@ export default class PlayerHandler {
         return players.indexOf(player);
     }
 
+    public static getPlayerById(id: number): Player {
+        for (const player of players) {
+            if (player.id === id) {
+                return player;
+            }
+        }
+        throw new Error("Player does not exist with id: " + id);
+    }
+
     private static onShoot(player: Player) {
         for (const otherPlayer of players) {
             if (otherPlayer.id === player.id) {

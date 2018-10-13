@@ -8,7 +8,8 @@ const DAMAGE = 0.25;
 export default class PlayerDamageHandler {
 
     public static enable() {
-        EventHandler.addListener(PlayerDamageHandler, EventHandler.Event.PLAYER_HIT_PLAYER, PlayerDamageHandler.onHit);
+        EventHandler.addListener(PlayerDamageHandler, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, PlayerDamageHandler.onHit);
+        EventHandler.addListener(PlayerDamageHandler, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, PlayerDamageHandler.onHit);
 
     }
 

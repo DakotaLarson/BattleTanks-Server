@@ -32,6 +32,8 @@ enum Packet {
 
     PROJECTILE_LAUNCH,
     PROJECTILE_MOVE,
+    PROJECTILE_REMOVAL,
+    PROJECTILE_CLEAR,
 }
 
 enum DataType {
@@ -157,6 +159,16 @@ export const sendProjectileLaunch = (id: number, packetData: number[]) => {
 
 export const sendProjectileMove = (id: number, packetData: number[]) => {
     const data = constructData(Packet.PROJECTILE_MOVE, packetData, DataType.FLOAT_ARRAY);
+    send(id, data);
+};
+
+export const sendProjectileRemoval = (id: number, projId: number) => {
+    const data = constructData(Packet.PROJECTILE_REMOVAL, projId, DataType.NUMBER);
+    send(id, data);
+};
+
+export const sendProjectileClear = (id: number) => {
+    const data = constructData(Packet.PROJECTILE_CLEAR, undefined, DataType.HEADER_ONLY);
     send(id, data);
 };
 

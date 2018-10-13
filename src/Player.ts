@@ -126,6 +126,22 @@ export default class Player {
         PacketSender.sendCooldownTime(this.id, time);
     }
 
+    public sendProjectileLaunch(data: number[]) {
+        PacketSender.sendProjectileLaunch(this.id, data);
+    }
+
+    public sendProjectileMove(data: number[]) {
+        PacketSender.sendProjectileMove(this.id, data);
+    }
+
+    public sendProjectileRemoval(projId: number) {
+        PacketSender.sendProjectileRemoval(this.id, projId);
+    }
+
+    public sendProjectileClear() {
+        PacketSender.sendProjectileClear(this.id);
+    }
+
     public onMove(data: number[]) {
         this.position.x = data[0];
         this.position.y = data[1];

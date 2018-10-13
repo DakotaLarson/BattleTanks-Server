@@ -1,3 +1,4 @@
+import EventHandler from "./EventHandler";
 import Player from "./Player";
 import PlayerHandler from "./PlayerHandler";
 import Projectile from "./projectile/Projectile";
@@ -7,59 +8,13 @@ let blockPositions: Vector3[] = [];
 
 export default class CollisionHandler {
 
-    // public static getCollision(pos: Vector3, rot: number): Vector3 {
-
-    //     pos.add(new Vector3(0.5, 0, 0.5));
-    //     const offsetX = 0.5;
-    //     const offsetZ = 0.75;
-
-    //     const blockPos = pos.clone().floor();
-
-    //     const testBlockPositions: Vector3[] = new Array();
-    //     for (let x = blockPos.x - 1; x <= blockPos.x + 1; x ++) {
-    //         for (let z = blockPos.z - 1; z <= blockPos.z + 1; z ++) {
-    //             const testPos = new Vector3(x, 0, z);
-    //             if (CollisionHandler.isPositionBlock(testPos)) {
-    //                 testBlockPositions.push(testPos);
-    //             }
-    //         }
-    //     }
-    //     if (testBlockPositions.length) {
-    //         const playerCornerPositions = CollisionHandler.getPlayerCorners(pos, rot, offsetX, offsetZ);
-
-    //         const axes = CollisionHandler.getAllAxes(rot, 0);
-
-    //         const totalCorrection = new Vector3();
-
-    //         for (const blockPosition of testBlockPositions) {
-
-    //             const blockCornerPositions = CollisionHandler.getBlockCorners(blockPosition);
-
-    //             const overlaps = CollisionHandler.getOverlaps(axes, playerCornerPositions, blockCornerPositions);
-
-    //             if (overlaps) {
-
-    //                 let distance = overlaps[0].lengthSq();
-    //                 let shortestVec = overlaps[0];
-    //                 for (let k = 1; k < overlaps.length; k++) {
-    //                     const squareLength = overlaps[k].lengthSq();
-    //                     if (squareLength < distance) {
-    //                         distance = squareLength;
-    //                         shortestVec = overlaps[k];
-    //                     }
-    //                 }
-    //                 totalCorrection.add(shortestVec);
-    //             }
-    //         }
-    //         return totalCorrection;
-    //     }
-    //     return new Vector3();
-    // }
-
     public static getProjectileCollision(proj: Projectile, projectileCorners: Vector3[], distanceCovered: number) {
 
         const offsetX = 0.5;
         const offsetZ = 0.75;
+
+        const blockRadius = 0.75;
+        const playerRadius = 1.25;
 
         distanceCovered = Math.ceil(distanceCovered);
 
@@ -67,13 +22,14 @@ export default class CollisionHandler {
         const testPlayers: Player[] = [];
 
         for (const blockPos of blockPositions) {
-            if (blockPos.distanceSquared(proj.position) <= distanceCovered) {
+            if (blockPos.clone().add(new Vector3(0.5, 0, 0.5)).distanceSquared(proj.position) <= distanceCovered + blockRadius) {
                 testBlockPositions.push(blockPos);
             }
         }
         for (let i = 0; i < PlayerHandler.getCount(); i ++) {
             const player = PlayerHandler.getPlayer(i);
-            if (player.position.distanceSquared(proj.position) <= distanceCovered) {
+
+            if (player.position.clone().add(new Vector3(0.5, 0, 0.5)).distanceSquared(proj.position) <= distanceCovered + playerRadius) {
                 if (player.id !== proj.shooterId) {
                     testPlayers.push(player);
                 }
@@ -85,12 +41,17 @@ export default class CollisionHandler {
             const projectileParallelAxis = proj.velocity.clone();
             const projectilePerpendicularAxis = proj.perpendicularAxis.clone();
 
-            for (const player of testPlayers) {
-                const playerCorners = CollisionHandler.getPlayerCorners(player.position, player.bodyRot, offsetX, offsetZ);
-                const playerAxes = this.getAxes(player.bodyRot);
+            for (const target of testPlayers) {
+                const playerCorners = CollisionHandler.getPlayerCorners(target.position.clone().add(new Vector3(0.5, 0, 0.5)), target.bodyRot, offsetX, offsetZ);
+                const playerAxes = this.getAxes(target.bodyRot);
                 const collides = this.getOverlaps([projectileParallelAxis, projectilePerpendicularAxis, playerAxes[0], playerAxes[1]], projectileCorners, playerCorners);
                 if (collides) {
-                    console.log(proj.position);
+                    EventHandler.callEvent(EventHandler.Event.PROJECTILE_COLLISION, proj);
+                    EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, {
+                        player: PlayerHandler.getPlayerById(proj.shooterId),
+                        target,
+                    });
+                    return;
                 }
             }
 
@@ -99,7 +60,8 @@ export default class CollisionHandler {
             for (const blockPos of blockPositions) {
                 const collides = this.getOverlaps([projectileParallelAxis, projectilePerpendicularAxis, blockAxes[0], blockAxes[1]], projectileCorners, CollisionHandler.getBlockCorners(blockPos));
                 if (collides) {
-                    console.log(proj.position);
+                    EventHandler.callEvent(EventHandler.Event.PROJECTILE_COLLISION, proj);
+                    return;
                 }
             }
         }
@@ -122,19 +84,11 @@ export default class CollisionHandler {
         return overlaps;
     }
 
-    private static isPositionBlock(pos: Vector3) {
-        for (const blockPosition of blockPositions) {
-            if (blockPosition.equals(pos)) { return true; }
-        }
-        return false;
-    }
-
     private static getPlayerCorners(pos: Vector3, rot: number, offsetX: number, offsetZ: number) {
         const otherCorners = [];
 
         otherCorners.push(CollisionHandler.getCorner(pos, rot, -offsetX, -offsetZ));
         otherCorners.push(CollisionHandler.getCorner(pos, rot, offsetX, -offsetZ));
-
         otherCorners.push(CollisionHandler.getCorner(pos, rot, offsetX, offsetZ));
         otherCorners.push(CollisionHandler.getCorner(pos, rot, -offsetX, offsetZ));
 
@@ -150,16 +104,6 @@ export default class CollisionHandler {
         blockCornerPositions.push(pos.clone().add(new Vector3(1, 0, 0)));
 
         return blockCornerPositions;
-    }
-
-    private static getAllAxes(rotA: number, rotB: number) {
-        const aParallelAxis = new Vector3(Math.sin(rotA), 0, Math.cos(rotA));
-        const aPerpendicularAxis = aParallelAxis.clone().cross(new Vector3(0, -1, 0));
-
-        const bParallelAxis = new Vector3(Math.sin(rotB), 0, Math.cos(rotB));
-        const bPerpendicularAxis = bParallelAxis.clone().cross(new Vector3(0, -1, 0));
-
-        return [aParallelAxis, aPerpendicularAxis, bParallelAxis, bPerpendicularAxis];
     }
 
     private static getAxes(rot: number) {

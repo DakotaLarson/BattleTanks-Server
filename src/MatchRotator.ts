@@ -2,7 +2,6 @@ import ArenaLoader from "./ArenaLoader";
 import Audio from "./Audio";
 import CollisionHandler from "./CollisionHandler";
 import EventHandler from "./EventHandler";
-import HitscanHandler from "./HitscanHandler";
 import Player from "./Player";
 import PlayerHandler from "./PlayerHandler";
 import ProjectileHandler from "./projectile/ProjectileHandler";
@@ -219,12 +218,12 @@ export default class MatchRotator {
     public static setGameStatus(newStatus: GameStatus) {
         if (status === GameStatus.RUNNING) {
             ProjectileHandler.disable();
-            HitscanHandler.disable();
+            // HitscanHandler.disable();
 
         }
         if (newStatus === GameStatus.RUNNING) {
             ProjectileHandler.enable();
-            HitscanHandler.enable();
+           // HitscanHandler.enable();
         }
         console.log("GameStatus: " + newStatus);
         status = newStatus;

@@ -29,7 +29,7 @@ export default class HitscanHandler {
             const closestBlockDistance = this.getHitBlockDistance(perpendicularAxis, projectedTurretPosition, playerPos, hitPlayerData.player.position.clone().add(new Vector3(0.5, 0, 0.5)));
 
             if (hitPlayerData.distance < closestBlockDistance || closestBlockDistance === -1) {
-                EventHandler.callEvent(EventHandler.Event.PLAYER_HIT_PLAYER, {
+                EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_HITSCAN, {
                     player,
                     target: hitPlayerData.player,
                 });

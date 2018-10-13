@@ -37,9 +37,12 @@ export default class Projectile {
         const corner3 = currentPosition.clone().add(this.perpendicularAxis.clone().multiplyScalar(Projectile.radius));
         const corner4 = currentPosition.clone().sub(this.perpendicularAxis.clone().multiplyScalar(Projectile.radius));
 
-        const distanceCovered = previousPosition.distanceSquared(currentPosition) + 0.5;
+        const distanceCovered = previousPosition.distanceSquared(currentPosition);
 
         CollisionHandler.getProjectileCollision(this, [corner1, corner2, corner3, corner4], distanceCovered);
 
+    }
+    public destroy() {
+        EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.move);
     }
 }
