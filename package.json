@@ -4,14 +4,19 @@
   "description": "Authoritative server responsible for Battle Tanks multiplayer gameplay",
   "main": "./build/App.js",
   "dependencies": {
-    "ws": "^5.2.1"
+    "express": "latest",
+    "express-session": "latest",
+    "uuid": "latest",
+    "ws": "latest"
   },
   "devDependencies": {
-    "@types/node": "^10.9.4",
-    "@types/ws": "^6.0.1",
-    "eslint": "^5.3.0",
-    "jshint": "^2.9.6",
-    "supervisor": "^0.12.0"
+    "@types/express": "latest",
+    "@types/express-session": "latest",
+    "@types/node": "latest",
+    "@types/uuid": "latest",
+    "@types/ws": "latest",
+    "eslint": "latest",
+    "supervisor": "latest"
   },
   "scripts": {
     "start-supervisor": "supervisor --inspect ./build/App.js",

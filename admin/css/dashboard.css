@@ -1,0 +1,21 @@
+h1 {
+    margin-top: 0;
+}
+
+.logout-parent {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+.logout-child {
+    outline: none;
+    background: none;
+    border: solid 1px white;
+    font-size: 2vmin;
+    color: white;
+}
+
+.logout-child:hover {
+    cursor: pointer;
+    border-color: green;
+}

@@ -1,0 +1,7 @@
+{
+  "users": [
+  	["admin1", "password1"],
+	["admin2", "password2"]
+  ],
+  "enabled": true
+}

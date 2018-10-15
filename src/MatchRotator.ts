@@ -23,6 +23,8 @@ enum GameStatus {
     FINISHING,
 }
 
+let arenasLoaded = false;
+
 export default class MatchRotator {
     public static enable = () => {
         EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_JOIN, MatchRotator.onPlayerJoin);
@@ -31,6 +33,13 @@ export default class MatchRotator {
         EventHandler.addListener(MatchRotator, EventHandler.Event.PLAYER_DEATH, MatchRotator.onPlayerDeath);
 
         MatchRotator.setGameStatus(GameStatus.WAITING);
+
+        ArenaLoader.loadArenas().then((message) => {
+            arenasLoaded = true;
+            console.log(message);
+        }).catch((message) => {
+            console.error(message);
+        }) ;
     }
 
     public static onPlayerJoin(player: Player) {
@@ -104,7 +113,8 @@ export default class MatchRotator {
     }
 
     public static startPreparing() {
-        ArenaLoader.loadArena().then(() => {
+
+        if (arenasLoaded && ArenaLoader.loadArena()) {
             const arena = ArenaLoader.getLoadedArena();
             CollisionHandler.updateBlockPositions(arena.blockPositions);
 
@@ -139,15 +149,16 @@ export default class MatchRotator {
             MatchRotator.setGameStatus(GameStatus.PREPARING);
 
             console.log("Loaded Arena: " + arena.title);
-        }).catch((message: string) => {
+        } else {
+            const message = "No valid arenas available";
             console.error(message);
+
+            MatchRotator.startWaiting();
 
             for (let i = 0; i < PlayerHandler.getCount(); i ++) {
                 PlayerHandler.getPlayer(i).sendAlert(message);
             }
-
-            MatchRotator.startWaiting();
-        });
+        }
     }
 
     public static startRunning() {

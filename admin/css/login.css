@@ -1,0 +1,30 @@
+form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+input {
+    background: none;
+    border: none;
+    border-bottom: solid 1px white;
+    margin: 10px;
+    font-size: 3vmin;
+    color: white;
+    outline: none;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-bottom-color: green;
+}
+
+input[type="submit"] {
+    border: solid 1px white;
+}
+input[type="submit"]:hover {
+    cursor: pointer;
+    border-color: green;
+}

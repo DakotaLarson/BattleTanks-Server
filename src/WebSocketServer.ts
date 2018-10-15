@@ -1,7 +1,7 @@
-import http = require("http");
 import WebSocket = require("ws");
 
 import EventHandler from "./EventHandler";
+import WebServer from "./WebServer";
 
 let connectionCheckerId: NodeJS.Timer;
 
@@ -9,21 +9,13 @@ let wss: WebSocket.Server;
 
 const deadSockets: WebSocket[] = new Array();
 
-const port = process.env.PORT || 8000;
-
 export const enable = () => {
 
-    const server = http.createServer((req, res) => {
-        const body = http.STATUS_CODES[426] as string;
+    const webServer = new WebServer();
+    webServer.start();
 
-        res.writeHead(426, {
-          "Content-Length": body.length,
-          "Content-Type": "text/plain",
-        });
-        res.end(body);
-      }).listen(port);
     wss = new WebSocket.Server({
-        server,
+        server: webServer.server,
         verifyClient,
     } as WebSocket.ServerOptions);
     wss.on("listening", () => {

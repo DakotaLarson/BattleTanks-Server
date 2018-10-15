@@ -5,8 +5,10 @@ import * as path from "path";
 
 export default class ArenaLoader {
 
-    public static loadArena(): Promise<string> {
+    public static loadArenas(): Promise<string> {
         return new Promise((resolve, reject) => {
+
+            ArenaLoader.arenas = [];
 
             const dirPath = path.join(process.cwd(), "arenas");
 
@@ -17,25 +19,29 @@ export default class ArenaLoader {
                         if (err) {
 
                             console.error(err);
-                            resolve("Error reading from 'arenas' directory");
+                            reject("Error reading from 'arenas' directory");
 
                         } else {
+                            let expectedArenaCount = arenaFiles.length;
+                            if (expectedArenaCount) {
+                                let loadedArenaCount = 0;
 
-                            if (arenaFiles.length) {
                                 for (const arena of arenaFiles) {
 
-                                    const arenaData = ArenaLoader.getArenaData(dirPath, arena);
-
-                                    if (arenaData) {
-                                        ArenaLoader.loadedArena = new Arena(arenaData);
-                                        resolve();
-                                    }
+                                    ArenaLoader.getArenaData(dirPath, arena).then((arenaData: string) => {
+                                        this.arenas.push(new Arena(arenaData));
+                                        if (++ loadedArenaCount === expectedArenaCount) {
+                                            resolve(loadedArenaCount + " arena(s) loaded");
+                                        }
+                                    }).catch((message: string) => {
+                                        console.error(message);
+                                        if (-- expectedArenaCount === loadedArenaCount) {
+                                            resolve(loadedArenaCount + " arena(s) loaded");
+                                        }
+                                    });
                                 }
-                                reject("No valid arenas on server");
                             } else {
-
                                 reject("No arenas on server");
-
                             }
                         }
                     });
@@ -57,25 +63,43 @@ export default class ArenaLoader {
         return ArenaLoader.loadedArena;
     }
 
-    private static loadedArena: Arena;
-
-    private static getArenaData(dirPath: string, fileName: string) {
-        const filePath = path.join(dirPath, fileName);
-        if (fileName.endsWith(".json")) {
-            if (fs.lstatSync(filePath).isFile()) {
-                const contents = fs.readFileSync(filePath, "utf8");
-                let data;
-                try {
-                    data = JSON.parse(contents);
-                } catch (ex) {
-                    return undefined;
-                }
-                if (ArenaLoader.hasTitle(data) && ArenaLoader.hasDimensions(data) && ArenaLoader.hasBlockPositions(data) && ArenaLoader.hasPlayerSpawns(data)) {
-                    return data;
-                }
-            }
+    public static loadArena(): boolean {
+        const arenaCount = ArenaLoader.arenas.length;
+        if (arenaCount) {
+            const index = Math.floor(Math.random() * arenaCount);
+            ArenaLoader.loadedArena = ArenaLoader.arenas[index];
+            return true;
         }
-        return undefined;
+        return false;
+    }
+    private static loadedArena: Arena;
+    private static arenas: Arena[] = [];
+
+    private static getArenaData(dirPath: string, fileName: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const filePath = path.join(dirPath, fileName);
+            if (fileName.endsWith(".json")) {
+                fs.readFile(filePath, (err: NodeJS.ErrnoException, rawData: Buffer) => {
+                    if (err) {
+                        console.error(err);
+                        reject("Error reading file " + fileName);
+                    }
+
+                    let data;
+                    try {
+                        data = JSON.parse(rawData.toString());
+                    } catch (ex) {
+                        console.error(ex);
+                        reject("Error parsing content in " + fileName);
+                    }
+                    if (ArenaLoader.hasTitle(data) && ArenaLoader.hasDimensions(data) && ArenaLoader.hasBlockPositions(data) && ArenaLoader.hasPlayerSpawns(data)) {
+                        resolve(data);
+                    }
+                });
+            } else {
+                reject(fileName + " has improper file extension");
+            }
+        });
     }
 
     private static hasDimensions(data: any) {
