@@ -28,7 +28,7 @@ export default class ProjectileHandler {
     private static projectiles: Projectile[] = [];
 
     private static onShoot(shooter: Player) {
-        const position = shooter.position.clone().add(new Vector3(0.5, 0.75, 0.5));
+        const position = shooter.position.clone().add(new Vector3(0.5, 0.725, 0.5));
         const rotation = shooter.headRot;
         const id = ++ ProjectileHandler.projectileId;
         const data = [position.x, position.y, position.z, rotation, id];
