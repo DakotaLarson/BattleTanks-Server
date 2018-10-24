@@ -63,7 +63,17 @@ export default class ArenaLoader {
         return ArenaLoader.loadedArena;
     }
 
-    public static loadArena(): boolean {
+    public static getRandomArena(): Arena {
+        const arenaCount = ArenaLoader.arenas.length;
+        if (arenaCount) {
+            const index = Math.floor(Math.random() * arenaCount);
+            return ArenaLoader.arenas[index];
+        } else {
+            throw new Error("No arenas loaded on server");
+        }
+    }
+
+    public static loadRandomArena(): boolean {
         const arenaCount = ArenaLoader.arenas.length;
         if (arenaCount) {
             const index = Math.floor(Math.random() * arenaCount);

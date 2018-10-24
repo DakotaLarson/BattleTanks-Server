@@ -1,4 +1,4 @@
-export enum Event {
+enum Event {
 
     // GAME
     GAME_TICK,

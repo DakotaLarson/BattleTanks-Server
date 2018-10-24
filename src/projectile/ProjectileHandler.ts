@@ -1,4 +1,6 @@
+import CollisionHandler from "../CollisionHandler";
 import EventHandler from "../EventHandler";
+import Match from "../Match";
 import Player from "../Player";
 import PlayerHandler from "../PlayerHandler";
 import Vector3 from "../vector/Vector3";
@@ -6,58 +8,79 @@ import Projectile from "./Projectile";
 
 export default class ProjectileHandler {
 
-    public static enable() {
-        EventHandler.addListener(undefined, EventHandler.Event.PLAYER_SHOOT, ProjectileHandler.onShoot);
-        EventHandler.addListener(undefined, EventHandler.Event.GAME_TICK, ProjectileHandler.onTick);
-        EventHandler.addListener(undefined, EventHandler.Event.PROJECTILE_COLLISION, ProjectileHandler.onCollision);
+    private match: Match;
+
+    private collisionHandler: CollisionHandler;
+
+    private projectileId: number;
+    private projectiles: Projectile[];
+
+    constructor(match: Match) {
+        this.match = match;
+
+        this.collisionHandler = new CollisionHandler(this.match);
+
+        this.projectileId = 0;
+        this.projectiles = [];
     }
 
-    public static disable() {
-        EventHandler.removeListener(undefined, EventHandler.Event.PLAYER_SHOOT, ProjectileHandler.onShoot);
-        EventHandler.removeListener(undefined, EventHandler.Event.GAME_TICK, ProjectileHandler.onTick);
-        EventHandler.removeListener(undefined, EventHandler.Event.PROJECTILE_COLLISION, ProjectileHandler.onCollision);
+    public enable() {
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_SHOOT, this.onShoot);
+        EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        EventHandler.addListener(this, EventHandler.Event.PROJECTILE_COLLISION, this.onCollision);
+    }
 
-        ProjectileHandler.projectiles = [];
+    public disable() {
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_SHOOT, this.onShoot);
+        EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        EventHandler.removeListener(this, EventHandler.Event.PROJECTILE_COLLISION, this.onCollision);
+
+        this.projectiles = [];
         for (let i = 0; i < PlayerHandler.getCount(); i++) {
             const player = PlayerHandler.getPlayer(i);
             player.sendProjectileClear();
         }
     }
 
-    private static projectileId = 0;
-    private static projectiles: Projectile[] = [];
+    private onShoot(shooter: Player) {
+        if (this.match.hasPlayer(shooter)) {
 
-    private static onShoot(shooter: Player) {
-        const position = shooter.position.clone().add(new Vector3(0.5, 0.725, 0.5));
-        const rotation = shooter.headRot;
-        const id = ++ ProjectileHandler.projectileId;
-        const data = [position.x, position.y, position.z, rotation, id];
-        for (let i = 0; i < PlayerHandler.getCount(); i ++) {
-            const player = PlayerHandler.getPlayer(i);
-            player.sendProjectileLaunch(data);
+            const position = shooter.position.clone().add(new Vector3(0.5, 0.725, 0.5));
+            const rotation = shooter.headRot;
+            const id = ++ this.projectileId;
+            const data = [position.x, position.y, position.z, rotation, id];
+
+            for (const player of this.match.players) {
+                if (player.id === shooter.id) {
+                    player.sendPlayerShoot();
+                } else {
+                    player.sendConnectedPlayerShoot(player.id);
+                }
+                player.sendProjectileLaunch(data);
+            }
+            this.projectiles.push(new Projectile(this.collisionHandler, position, rotation, id, shooter.id));
         }
-        ProjectileHandler.projectiles.push(new Projectile(position, rotation, id, shooter.id));
     }
 
-    private static onTick(delta: number) {
-        for (const projectile of ProjectileHandler.projectiles) {
+    private onTick(delta: number) {
+        for (const projectile of this.projectiles) {
             projectile.move(delta);
             const projPos = projectile.position;
             const data = [projPos.x, projPos.y, projPos.z, projectile.id];
-            for (let i = 0; i < PlayerHandler.getCount(); i ++) {
-                const player = PlayerHandler.getPlayer(i);
+            for (const player of this.match.players) {
                 player.sendProjectileMove(data);
             }
         }
     }
 
-    private static onCollision(proj: Projectile) {
-        const index = ProjectileHandler.projectiles.indexOf(proj);
-        ProjectileHandler.projectiles.splice(index, 1);
-        proj.destroy();
-        for (let i = 0; i < PlayerHandler.getCount(); i ++) {
-            const player = PlayerHandler.getPlayer(i);
-            player.sendProjectileRemoval(proj.id);
+    private onCollision(proj: Projectile) {
+        const index = this.projectiles.indexOf(proj);
+        if (index > -1) {
+            this.projectiles.splice(index, 1);
+            proj.destroy();
+            for (const player of this.match.players) {
+                player.sendProjectileRemoval(proj.id);
+            }
         }
     }
 }

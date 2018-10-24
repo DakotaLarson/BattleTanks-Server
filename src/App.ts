@@ -1,16 +1,24 @@
 import {performance} from "perf_hooks";
+import ArenaLoader from "./ArenaLoader";
 import EventHandler from "./EventHandler";
-import MatchRotator from "./MatchRotator";
-import * as PlayerConnector from "./PlayerConnector";
-import PlayerDamageHandler from "./PlayerDamageHandler";
-import PlayerHandler from "./PlayerHandler";
-import * as WebSocketServer from "./WebSocketServer";
+import PlayerConnector from "./PlayerConnector";
+import InfiniteMultiplayerService from "./service/InfiniteMultiplayerService";
+import WebSocketServer from "./WebSocketServer";
 
-MatchRotator.enable();
-WebSocketServer.enable();
-PlayerConnector.enable();
-PlayerHandler.enable();
-PlayerDamageHandler.enable();
+const wss = new WebSocketServer();
+const playerConnector = new PlayerConnector();
+const infiniteService = new InfiniteMultiplayerService();
+
+wss.start();
+playerConnector.start();
+
+ArenaLoader.loadArenas().then((message) => {
+    console.log(message);
+
+    infiniteService.start();
+}).catch((message) => {
+    console.error(message);
+});
 
 let time = performance.now();
 setInterval(() => {

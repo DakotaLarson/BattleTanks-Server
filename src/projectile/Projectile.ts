@@ -14,10 +14,16 @@ export default class Projectile {
     public perpendicularAxis: Vector3;
     public id: number;
 
-    constructor(position: Vector3, rotation: number, id: number, shooterId: number) {
+    private collisionHandler: CollisionHandler;
+
+    constructor(collisionHandler: CollisionHandler, position: Vector3, rotation: number, id: number, shooterId: number) {
+        this.collisionHandler = collisionHandler;
+
         this.position = position;
-        this.velocity = Vector3.fromAngleAboutY(rotation),
+        this.velocity = Vector3.fromAngleAboutY(rotation);
+
         this.perpendicularAxis = this.velocity.clone().cross(new Vector3(0, -1, 0));
+
         this.id = id;
         this.shooterId = shooterId;
 
@@ -39,7 +45,7 @@ export default class Projectile {
 
         const distanceCovered = previousPosition.distanceSquared(currentPosition);
 
-        CollisionHandler.getProjectileCollision(this, [corner1, corner2, corner3, corner4], distanceCovered);
+        this.collisionHandler.getProjectileCollision(this, [corner1, corner2, corner3, corner4], distanceCovered);
 
     }
     public destroy() {

@@ -10,6 +10,9 @@ export default class Arena {
 
     public rawData: any;
 
+    public minimumPlayerCount: number;
+    public maximumPlayerCount: number;
+
     private nextGameSpawnIndex: number;
     private nextInitialSpawnIndex: number;
 
@@ -24,6 +27,9 @@ export default class Arena {
 
         this.nextGameSpawnIndex = 0;
         this.nextInitialSpawnIndex = 0;
+
+        this.minimumPlayerCount = 2;
+        this.maximumPlayerCount = 4;
 
         for (let i = 0; i < data.initialSpawnPositions.length; i += 4) {
             const x = data.initialSpawnPositions[i];

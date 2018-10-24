@@ -1,61 +1,68 @@
 import WebSocket = require("ws");
 
+import DomEventHandler from "./DomEventHandler";
 import EventHandler from "./EventHandler";
 import WebServer from "./WebServer";
 
-let connectionCheckerId: NodeJS.Timer;
+export default class WebSocketServer {
+    private connectionCheckerId: NodeJS.Timer;
 
-let wss: WebSocket.Server;
+    private webServer: WebServer;
+    private wss: WebSocket.Server;
 
-const deadSockets: WebSocket[] = new Array();
+    private deadSockets: WebSocket[];
 
-export const enable = () => {
+    constructor() {
+        this.connectionCheckerId = setInterval(this.checkConnections.bind(this), 30000, 30000);
 
-    const webServer = new WebServer();
-    webServer.start();
+        this.webServer = new WebServer();
+        this.wss = new WebSocket.Server({
+            server: this.webServer.server,
+            verifyClient: this.verifyClient,
+        } as WebSocket.ServerOptions);
+        this.wss.on("listening", () => {
+            console.log("WSS Listening...");
+        });
+        this.wss.on("connection", this.handleConnection.bind(this));
 
-    wss = new WebSocket.Server({
-        server: webServer.server,
-        verifyClient,
-    } as WebSocket.ServerOptions);
-    wss.on("listening", () => {
-        console.log("WSS Listening...");
-    });
-    wss.on("connection", handleConnection);
+        this.deadSockets = [];
+    }
 
-    connectionCheckerId = setInterval(checkConnections, 30000, 30000);
+    public start() {
+        this.webServer.start();
+    }
 
-};
+    public stop() {
+        this.wss.close();
+        clearInterval(this.connectionCheckerId);
+    }
 
-export const disable = () => {
-    wss.close();
-    clearInterval(connectionCheckerId);
-};
+    private handleConnection(ws: WebSocket) {
+        DomEventHandler.addListener(this, ws, "pong", () => {
+            const socketIndex = this.deadSockets.indexOf(ws);
+            if (socketIndex > -1) {
+                this.deadSockets.splice(socketIndex, 1);
+            }
+        });
 
-const handleConnection = (ws: WebSocket) => {
-    ws.addEventListener("pong", () => {
-        const socketIndex = deadSockets.indexOf(ws);
-        if (socketIndex > -1) {
-            deadSockets.splice(socketIndex, 1);
-        }
-    });
+        EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
+    }
 
-    EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
-};
-
-const checkConnections = () => {
-    for (const ws of wss.clients) {
-        const socketIndex = deadSockets.indexOf(ws);
-        if (socketIndex > -1) {
-            ws.terminate();
-            deadSockets.splice(socketIndex, 1);
-            console.log("WS Terminated...");
-        } else {
-            ws.ping();
+    private checkConnections() {
+        for (const ws of this.wss.clients) {
+            const socketIndex = this.deadSockets.indexOf(ws);
+            if (socketIndex > -1) {
+                ws.terminate();
+                this.deadSockets.splice(socketIndex, 1);
+                console.log("WS Terminated...");
+            } else {
+                ws.ping();
+                this.deadSockets.push(ws);
+            }
         }
     }
-};
 
-const verifyClient = (info: any) => {
-    return info.req.headers["sec-websocket-protocol"] === "tanks-MP";
-};
+    private verifyClient(info: any) {
+        return info.req.headers["sec-websocket-protocol"] === "tanks-MP";
+    }
+}
