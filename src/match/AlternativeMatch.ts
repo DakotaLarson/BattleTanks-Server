@@ -1,48 +1,17 @@
-import Arena from "./Arena";
-import EventHandler from "./EventHandler";
-import Gamemode from "./gamemode/Gamemode";
-import InfiniteGamemode from "./gamemode/InfiniteGamemode";
-import MatchStatus from "./MatchStatus";
-import Player from "./Player";
-import ProjectileHandler from "./projectile/ProjectileHandler";
-import Vector4 from "./vector/Vector4";
+import MatchStatus from "../MatchStatus";
+import Player from "../Player";
+import Vector4 from "../vector/Vector4";
+import Match from "./Match";
 
 const PREPARING_TIME = 3000;
 
-export default class Match {
+export default class AlternativeMatch extends Match {
 
-    public arena: Arena;
-    public players: Player[];
-
-    private gamemode: Gamemode;
-    private matchStatus: MatchStatus;
-
-    private projectileHandler: ProjectileHandler;
-
-    constructor(arena: Arena) {
-        this.arena = arena;
-        this.gamemode = new InfiniteGamemode(this);
-
-        this.players = [];
-        this.matchStatus = MatchStatus.WAITING;
-
-        this.projectileHandler = new ProjectileHandler(this);
-
-        EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+    public wait(): void {
+        throw new Error("Method not implemented.");
     }
 
-    // public wait() {
-
-    //     this.matchStatus = MatchStatus.WAITING;
-
-    //     for (const player of this.players) {
-    //         player.sendGameStatus(this.matchStatus);
-    //     }
-    // }
-
     public prepare() {
-
-        // CollisionHandler.updateBlockPositions(arena.blockPositions);
 
         this.matchStatus = MatchStatus.PREPARING;
 
@@ -73,7 +42,7 @@ export default class Match {
 
         this.projectileHandler.enable();
 
-        this.gamemode.start();
+        this.gamemode.enable();
     }
 
     public finish(winner?: Player) {
@@ -100,7 +69,7 @@ export default class Match {
 
         this.projectileHandler.disable();
 
-        EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        this.disable();
     }
 
     public addPlayer(player: Player) {
@@ -141,42 +110,6 @@ export default class Match {
 
         for (const otherPlayer of this.players) {
             otherPlayer.sendConnectedPlayerRemoval(player.id);
-        }
-    }
-
-    public hasPlayer(player: Player) {
-        const index = this.players.indexOf(player);
-        return index > -1;
-    }
-
-    public getPlayerById(id: number): Player {
-        for (const player of this.players) {
-            if (player.id === id) {
-                return player;
-            }
-        }
-        throw new Error("Player does not exist with id: " + id);
-    }
-
-    public isFull() {
-        return this.players.length >= this.arena.maximumPlayerCount;
-    }
-
-    public isFinished() {
-        return this.matchStatus === MatchStatus.FINISHED;
-    }
-
-    public isRunning() {
-        return this.matchStatus === MatchStatus.RUNNING;
-    }
-
-    private onTick() {
-        for (const player of this.players) {
-            for (const otherPlayer of this.players) {
-                if (player.id !== otherPlayer.id) {
-                    otherPlayer.sendConnectedPlayerMove(player);
-                }
-            }
         }
     }
 }

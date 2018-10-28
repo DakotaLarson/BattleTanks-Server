@@ -1,6 +1,6 @@
 import Audio from "../Audio";
 import EventHandler from "../EventHandler";
-import Match from "../Match";
+import Match from "../match/Match";
 import Player from "../Player";
 import Gamemode from "./Gamemode";
 
@@ -12,15 +12,15 @@ export default class InfiniteGamemode extends Gamemode {
         super(match);
     }
 
-    public start(): void {
-
-        for (const player of this.match.players) {
-            const gameSpawn = this.match.arena.getNextGameSpawn();
-            player.sendPlayerMove(gameSpawn);
-        }
+    public enable(): void {
 
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
+    }
+
+    public disable() {
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
     }
 
     protected onDeath(target: Player, player: Player): void {
@@ -75,7 +75,7 @@ export default class InfiniteGamemode extends Gamemode {
                     player.sendPlayerHealth(player.health);
                 } else {
                     otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
-                    player.sendConnectedPlayerHealth(player.id, player.health);
+                    otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
                 }
             }
         }, 3000);

@@ -1,6 +1,6 @@
 import Audio from "../Audio";
 import EventHandler from "../EventHandler";
-import Match from "../Match";
+import Match from "../match/Match";
 import Player from "../Player";
 import Gamemode from "./Gamemode";
 
@@ -12,7 +12,7 @@ export default class EliminationGamemode extends Gamemode {
         super(match);
     }
 
-    public start(): void {
+    public enable(): void {
 
         for (const player of this.match.players) {
             const gameSpawn = this.match.arena.getNextGameSpawn();
@@ -21,6 +21,11 @@ export default class EliminationGamemode extends Gamemode {
 
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
+    }
+
+    public disable(): void {
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
     }
 
     protected onDeath(target: Player, player: Player): void {
@@ -50,9 +55,13 @@ export default class EliminationGamemode extends Gamemode {
         }
         if (alivePlayerCount < 2) {
             if (alivePlayerCount === 1 && winner) {
+                        // @ts-ignore DUMBASS ERROR
+
                 this.match.finish(winner);
                 winner.sendAudioRequest(Audio.WIN);
             } else {
+                        // @ts-ignore DUMBASS ERROR
+
                 this.match.finish();
             }
         }

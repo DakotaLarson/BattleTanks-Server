@@ -1,5 +1,5 @@
 import EventHandler from "../EventHandler";
-import Match from "../Match";
+import Match from "../match/Match";
 import Player from "../Player";
 
 export default abstract class MultiplayerService {
@@ -12,6 +12,7 @@ export default abstract class MultiplayerService {
 
     public start() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
     }
 
     protected abstract onPlayerJoin(player: Player): void;

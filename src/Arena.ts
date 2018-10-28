@@ -29,7 +29,7 @@ export default class Arena {
         this.nextInitialSpawnIndex = 0;
 
         this.minimumPlayerCount = 2;
-        this.maximumPlayerCount = 4;
+        this.maximumPlayerCount = 2;
 
         for (let i = 0; i < data.initialSpawnPositions.length; i += 4) {
             const x = data.initialSpawnPositions[i];

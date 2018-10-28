@@ -1,6 +1,6 @@
 import CollisionHandler from "../CollisionHandler";
 import EventHandler from "../EventHandler";
-import Match from "../Match";
+import Match from "../match/Match";
 import Player from "../Player";
 import PlayerHandler from "../PlayerHandler";
 import Vector3 from "../vector/Vector3";
