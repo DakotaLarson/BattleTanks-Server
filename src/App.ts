@@ -2,12 +2,11 @@ import {performance} from "perf_hooks";
 import ArenaLoader from "./ArenaLoader";
 import EventHandler from "./EventHandler";
 import PlayerConnector from "./PlayerConnector";
-import InfiniteMultiplayerService from "./service/InfiniteMultiplayerService";
 import WebSocketServer from "./WebSocketServer";
 
 const wss = new WebSocketServer();
 const playerConnector = new PlayerConnector();
-const infiniteService = new InfiniteMultiplayerService();
+// const infiniteService = new InfiniteMultiplayerService();
 
 wss.start();
 playerConnector.start();
@@ -15,7 +14,7 @@ playerConnector.start();
 ArenaLoader.loadArenas().then((message) => {
     console.log(message);
 
-    infiniteService.start();
+    // infiniteService.start();
 }).catch((message) => {
     console.error(message);
 });

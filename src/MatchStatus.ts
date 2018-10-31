@@ -2,6 +2,7 @@ enum MatchStatus {
     WAITING,
     PREPARING,
     RUNNING,
+    FINISHING,
     FINISHED,
 }
 
