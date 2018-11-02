@@ -17,6 +17,7 @@ enum Packet {
     PLAYER_SHOOT_INVALID,
     PLAYER_SHOOT,
     PLAYER_HEALTH,
+    PLAYER_SPECTATING,
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
@@ -105,6 +106,11 @@ export const sendPlayerHealth = (id: number, health: number) => {
     send(id, data);
 };
 
+export const sendPlayerSpectating = (id: number) => {
+    const data = constructData(Packet.PLAYER_SPECTATING, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
 // CONNECTED PLAYER
 
 export const sendConnectedPlayerAddition = (id: number, playerData: any) => {
@@ -183,7 +189,11 @@ export const removeSocket = (id: number) => {
 const send = (id: number, data: any) => {
     const socket: WebSocket | undefined = sockets.get(id);
     if (socket) {
-        socket.send(data);
+        if (socket.readyState !== socket.OPEN) {
+            console.warn("socket is closed, but not removed.");
+        } else {
+            socket.send(data);
+        }
     } else {
         console.warn("Attempting to send data without socket: " + id);
     }

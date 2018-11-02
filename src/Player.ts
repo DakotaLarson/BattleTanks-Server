@@ -73,6 +73,10 @@ export default class Player {
         PacketSender.sendPlayerHealth(this.id, health);
     }
 
+    public sendPlayerSpectating() {
+        PacketSender.sendPlayerSpectating(this.id);
+    }
+
     public sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector4, headRot: number) {
         PacketSender.sendConnectedPlayerAddition(this.id, {
             id: playerId,

@@ -47,8 +47,8 @@ export default class PlayerConnector {
         });
         ws.addEventListener("close", (event) => {
             console.log("Player disconnected " + event.code);
-            EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, player);
             PacketSender.removeSocket(id);
+            EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, player);
         });
         ws.addEventListener("error", (error) => {
             console.log(error);

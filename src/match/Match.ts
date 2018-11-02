@@ -4,12 +4,12 @@ import Gamemode from "../gamemode/Gamemode";
 import Lobby from "../lobby/Lobby";
 import Player from "../Player";
 import ProjectileHandler from "../projectile/ProjectileHandler";
+import Vector4 from "../vector/Vector4";
 
 export default abstract class Match {
 
     public arena: Arena;
-
-    protected lobby: Lobby;
+    public lobby: Lobby;
 
     protected abstract gamemode: Gamemode;
 
@@ -20,21 +20,62 @@ export default abstract class Match {
         this.lobby = lobby;
 
         this.projectileHandler = new ProjectileHandler(this);
+    }
+
+    public run() {
         EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        for (const player of this.lobby.players) {
+            player.sendArena(this.arena.getRawData());
+
+            player.isAlive = true;
+            player.health = 1;
+            player.sendAlert("Match started!");
+        }
+        this.projectileHandler.enable();
+        this.gamemode.enable();
     }
 
     public finish() {
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
-        this.projectileHandler.disable();
 
-        this.lobby.finishMatch();
+        for (const player of this.lobby.players) {
+            for (const otherPlayer of this.lobby.players) {
+                if (player === otherPlayer) {
+                    player.sendPlayerRemoval();
+                } else {
+                    player.sendConnectedPlayerRemoval(otherPlayer.id);
+                }
+            }
+        }
+        this.projectileHandler.disable();
+        this.gamemode.disable();
     }
 
-    public abstract run(): void;
+    public hasPlayer(player: Player) {
+        for (const otherPlayer of this.lobby.players) {
+            if (otherPlayer === player) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public getPlayerById(playerId: number): Player {
+        for (const player of this.lobby.players) {
+            if (player.id === playerId) {
+                return player;
+            }
+        }
+        throw new Error("Player not found with id: " + playerId);
+    }
 
     public abstract addPlayer(player: Player): void;
 
     public abstract removePlayer(player: Player): void;
+
+    public abstract getSpawn(player: Player): Vector4;
+
+    public abstract getActivePlayerCount(): number;
 
     private onTick() {
         for (const player of this.lobby.players) {

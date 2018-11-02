@@ -1,14 +1,10 @@
 import EventHandler from "../EventHandler";
-import Match from "../match/Match";
+import Lobby from "../lobby/Lobby";
 import Player from "../Player";
 
 export default abstract class MultiplayerService {
 
-    protected matches: Match[];
-
-    constructor() {
-        this.matches = [];
-    }
+    protected abstract lobby: Lobby;
 
     public start() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);

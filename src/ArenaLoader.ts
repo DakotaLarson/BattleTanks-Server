@@ -127,6 +127,12 @@ export default class ArenaLoader {
     }
 
     private static hasPlayerSpawns(data: any) {
-        return data.gameSpawnPositions && data.gameSpawnPositions.length && data.initialSpawnPositions && data.initialSpawnPositions.length;
+
+        const hasGameSpawns = data.gameSpawnPositions && data.gameSpawnPositions.length;
+        const hasTeamASpawns = data.teamASpawnPositions && data.teamASpawnPositions.length;
+        const hasTeamBSpawns = data.teamBSpawnPositions && data.teamBSpawnPositions.length;
+        const hasInitialSpawns = data.initialSpawnPositions && data.initialSpawnPositions.length;
+
+        return hasInitialSpawns && (hasGameSpawns || hasTeamASpawns && hasTeamBSpawns);
     }
 }

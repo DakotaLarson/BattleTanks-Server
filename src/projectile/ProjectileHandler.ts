@@ -1,9 +1,8 @@
-import CollisionHandler from "../CollisionHandler";
 import EventHandler from "../EventHandler";
 import Match from "../match/Match";
 import Player from "../Player";
-import PlayerHandler from "../PlayerHandler";
 import Vector3 from "../vector/Vector3";
+import CollisionHandler from "./CollisionHandler";
 import Projectile from "./Projectile";
 
 export default class ProjectileHandler {
@@ -36,8 +35,7 @@ export default class ProjectileHandler {
         EventHandler.removeListener(this, EventHandler.Event.PROJECTILE_COLLISION, this.onCollision);
 
         this.projectiles = [];
-        for (let i = 0; i < PlayerHandler.getCount(); i++) {
-            const player = PlayerHandler.getPlayer(i);
+        for (const player of this.match.lobby.players) {
             player.sendProjectileClear();
         }
     }
@@ -50,7 +48,7 @@ export default class ProjectileHandler {
             const id = ++ this.projectileId;
             const data = [position.x, position.y, position.z, rotation, id];
 
-            for (const player of this.match.players) {
+            for (const player of this.match.lobby.players) {
                 if (player.id === shooter.id) {
                     player.sendPlayerShoot();
                 } else {
@@ -67,7 +65,7 @@ export default class ProjectileHandler {
             projectile.move(delta);
             const projPos = projectile.position;
             const data = [projPos.x, projPos.y, projPos.z, projectile.id];
-            for (const player of this.match.players) {
+            for (const player of this.match.lobby.players) {
                 player.sendProjectileMove(data);
             }
         }
@@ -78,7 +76,7 @@ export default class ProjectileHandler {
         if (index > -1) {
             this.projectiles.splice(index, 1);
             proj.destroy();
-            for (const player of this.match.players) {
+            for (const player of this.match.lobby.players) {
                 player.sendProjectileRemoval(proj.id);
             }
         }

@@ -1,6 +1,6 @@
-import CollisionHandler from "../CollisionHandler";
 import EventHandler from "../EventHandler";
 import Vector3 from "../vector/Vector3";
+import CollisionHandler from "./CollisionHandler";
 
 export default class Projectile {
 
