@@ -38,7 +38,7 @@ export default class Player {
 
         this.lastShotTime = 0;
 
-        this.isAlive = true;
+        this.isAlive = false;
         this.health = 1;
     }
 
@@ -157,12 +157,14 @@ export default class Player {
     }
 
     public shoot() {
-        const currentTime = Date.now();
-        if (currentTime - this.lastShotTime > COOLDOWN_ITERVAL) {
-            EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
-            this.lastShotTime = currentTime;
-        } else {
-            this.sendInvalidShot();
+        if (this.isAlive) {
+            const currentTime = Date.now();
+            if (currentTime - this.lastShotTime > COOLDOWN_ITERVAL) {
+                EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
+                this.lastShotTime = currentTime;
+            } else {
+                this.sendInvalidShot();
+            }
         }
     }
 }

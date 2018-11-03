@@ -22,7 +22,6 @@ enum Event {
 
     PLAYER_DAMAGE_HITSCAN,
     PLAYER_DAMAGE_PROJECTILE,
-    PLAYER_DEATH,
 }
 
 enum Level {

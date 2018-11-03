@@ -39,6 +39,7 @@ export default abstract class Match {
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
 
         for (const player of this.lobby.players) {
+            player.isAlive = false;
             for (const otherPlayer of this.lobby.players) {
                 if (player === otherPlayer) {
                     player.sendPlayerRemoval();

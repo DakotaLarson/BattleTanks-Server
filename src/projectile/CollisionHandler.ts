@@ -32,7 +32,7 @@ export default class CollisionHandler {
         }
         for (const player of this.match.lobby.players) {
             if (player.position.clone().add(new Vector3(0.5, 0, 0.5)).distanceSquared(proj.position) <= distanceCovered + playerRadius) {
-                if (player.id !== proj.shooterId) {
+                if (player.id !== proj.shooterId && player.isAlive) {
                     testPlayers.push(player);
                 }
             }

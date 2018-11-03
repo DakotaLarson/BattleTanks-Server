@@ -52,7 +52,7 @@ export default class ProjectileHandler {
                 if (player.id === shooter.id) {
                     player.sendPlayerShoot();
                 } else {
-                    player.sendConnectedPlayerShoot(player.id);
+                    player.sendConnectedPlayerShoot(shooter.id);
                 }
                 player.sendProjectileLaunch(data);
             }

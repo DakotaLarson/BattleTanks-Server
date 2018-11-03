@@ -40,12 +40,11 @@ export default class TeamEliminationGamemode extends Gamemode {
         target.sendAudioRequest(Audio.LOSE);
 
         target.isAlive = false;
-        const targetId = target.id;
+        target.sendPlayerRemoval();
+
         for (const otherPlayer of this.match.lobby.players) {
-            if (otherPlayer.id === targetId) {
-                otherPlayer.sendPlayerRemoval();
-            } else {
-                otherPlayer.sendConnectedPlayerRemoval(targetId);
+            if (otherPlayer !== target) {
+                otherPlayer.sendConnectedPlayerRemoval(target.id);
             }
         }
 
@@ -83,8 +82,7 @@ export default class TeamEliminationGamemode extends Gamemode {
 
                 if (targetHealth === 0) {
                     this.onDeath(data.target, data.player);
-                    EventHandler.callEvent(EventHandler.Event.PLAYER_DEATH, data);
-                }
+                 }
             }
 
         }
