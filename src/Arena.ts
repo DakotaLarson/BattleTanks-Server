@@ -61,7 +61,7 @@ export default class Arena {
             const x = data.teamASpawnPositions[i];
             const y = data.teamASpawnPositions[i + 1];
             const z = data.teamASpawnPositions[i + 2];
-            const w = data.teamASpawnPositions[i + 3];
+            const w = -data.teamASpawnPositions[i + 3] + Math.PI / 2;
             this.teamASpawns.push(new Vector4(x, y, z, w));
         }
 
@@ -69,7 +69,7 @@ export default class Arena {
             const x = data.teamBSpawnPositions[i];
             const y = data.teamBSpawnPositions[i + 1];
             const z = data.teamBSpawnPositions[i + 2];
-            const w = data.teamBSpawnPositions[i + 3];
+            const w = -data.teamBSpawnPositions[i + 3] + Math.PI / 2;
             this.teamBSpawns.push(new Vector4(x, y, z, w));
         }
 

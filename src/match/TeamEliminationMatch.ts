@@ -35,10 +35,10 @@ export default class TeamEliminationMatch extends Match {
                 this.teamBPlayers.push(player.id);
                 spawn = this.arena.getNextTeamBSpawn();
             }
+            player.sendPlayerAddition(spawn);
+
             for (const otherPlayer of this.lobby.players) {
-                if (otherPlayer === player) {
-                    player.sendPlayerAddition(spawn);
-                } else {
+                if (otherPlayer !== player) {
                     otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
                 }
             }
