@@ -61,14 +61,16 @@ export default class ProjectileHandler {
     }
 
     private onTick(delta: number) {
-        for (const projectile of this.projectiles) {
-            projectile.move(delta);
-            const projPos = projectile.position;
-            const data = [projPos.x, projPos.y, projPos.z, projectile.id];
-            for (const player of this.match.lobby.players) {
-                player.sendProjectileMove(data);
-            }
-        }
+
+        // Removed as velocity is currently constant. There is no tangible benefit to sending updates which are ultimately also out of date.
+        // for (const projectile of this.projectiles) {
+        //     projectile.move(delta);
+        //     const projPos = projectile.position;
+        //     const data = [projPos.x, projPos.y, projPos.z, projectile.id];
+        //     for (const player of this.match.lobby.players) {
+        //         player.sendProjectileMove(data);
+        //     }
+        // }
     }
 
     private onCollision(proj: Projectile) {
