@@ -4,8 +4,6 @@ import * as PacketSender from "./PacketSender";
 import Vector3 from "./vector/Vector3";
 import Vector4 from "./vector/Vector4";
 
-const COOLDOWN_ITERVAL = 1000;
-
 export default class Player {
 
     public name: string;
@@ -24,6 +22,8 @@ export default class Player {
     public isAlive: boolean;
     public health: number;
 
+    public color: number;
+
     constructor(name: string, id: number) {
         this.name = name;
         this.id = id;
@@ -40,6 +40,8 @@ export default class Player {
 
         this.isAlive = false;
         this.health = 1;
+
+        this.color = 0x000000;
     }
 
     public sendPlayerAddition(pos: Vector4) {
@@ -49,7 +51,7 @@ export default class Player {
         this.bodyRot = pos.w;
         this.headRot = 0;
 
-        PacketSender.sendPlayerAddition(this.id, pos);
+        PacketSender.sendPlayerAddition(this.id, pos, this.color);
     }
 
     public sendPlayerRemoval() {
@@ -77,12 +79,13 @@ export default class Player {
         PacketSender.sendPlayerSpectating(this.id);
     }
 
-    public sendConnectedPlayerAddition(playerId: number, name: string, pos: Vector4, headRot: number) {
+    public sendConnectedPlayerAddition(player: Player) {
         PacketSender.sendConnectedPlayerAddition(this.id, {
-            id: playerId,
-            name,
-            pos: [pos.x, pos.y, pos.z, pos.w],
-            headRot,
+            id: player.id,
+            name: player.name,
+            pos: [player.position.x, player.position.y, player.position.z, player.bodyRot],
+            headRot: player.headRot,
+            color: player.color,
         });
     }
 

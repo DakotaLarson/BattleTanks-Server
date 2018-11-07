@@ -7,6 +7,9 @@ import Match from "./Match";
 
 export default class TeamEliminationMatch extends Match {
 
+    private static readonly TEAM_A_COLOR = 0x009247;
+    private static readonly TEAM_B_COLOR = 0xcf2b36;
+
     protected gamemode: TeamEliminationGamemode;
 
     private teamAPlayers: number[];
@@ -30,16 +33,18 @@ export default class TeamEliminationMatch extends Match {
 
             if (addToTeamA) {
                 this.teamAPlayers.push(player.id);
+                player.color = TeamEliminationMatch.TEAM_A_COLOR;
                 spawn = this.arena.getNextTeamASpawn();
             } else {
                 this.teamBPlayers.push(player.id);
+                player.color = TeamEliminationMatch.TEAM_B_COLOR;
                 spawn = this.arena.getNextTeamBSpawn();
             }
             player.sendPlayerAddition(spawn);
 
             for (const otherPlayer of this.lobby.players) {
                 if (otherPlayer !== player) {
-                    otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
+                    otherPlayer.sendConnectedPlayerAddition(player);
                 }
             }
             addToTeamA = !addToTeamA;
@@ -51,8 +56,7 @@ export default class TeamEliminationMatch extends Match {
 
         for (const otherPlayer of this.lobby.players) {
             if (player !== otherPlayer) {
-                const pos = otherPlayer.position;
-                player.sendConnectedPlayerAddition(otherPlayer.id, otherPlayer.name, new Vector4(pos.x, pos.y, pos.z, otherPlayer.bodyRot), otherPlayer.headRot);
+                player.sendConnectedPlayerAddition(otherPlayer);
             }
         }
     }

@@ -63,10 +63,11 @@ export const sendAlert = (id: number, message: string) => {
 
 // PLAYER
 
-export const sendPlayerAddition = (id: number, pos: Vector4) => {
+export const sendPlayerAddition = (id: number, pos: Vector4, color: number) => {
     const dataObj = {
         id,
         pos: [pos.x, pos.y, pos.z, pos.w],
+        color,
     };
     const data = constructData(Packet.PLAYER_ADD, JSON.stringify(dataObj), DataType.STRING);
     send(id, data);

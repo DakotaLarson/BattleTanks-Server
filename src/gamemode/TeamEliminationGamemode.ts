@@ -94,12 +94,13 @@ export default class TeamEliminationGamemode extends Gamemode {
             player.isAlive = true;
             player.health = 1;
             this.lives.set(player.id, livesRemaining);
+
+            player.sendPlayerAddition(spawn);
+            player.sendPlayerHealth(player.health);
+
             for (const otherPlayer of this.match.lobby.players) {
-                if (otherPlayer === player) {
-                    player.sendPlayerAddition(spawn);
-                    player.sendPlayerHealth(player.health);
-                } else {
-                    otherPlayer.sendConnectedPlayerAddition(player.id, player.name, spawn, player.headRot);
+                if (otherPlayer !== player) {
+                    otherPlayer.sendConnectedPlayerAddition(player);
                     otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
                 }
             }
