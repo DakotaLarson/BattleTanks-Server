@@ -25,20 +25,29 @@ export default class TeamEliminationMatch extends Match {
     public run(): void {
         super.run();
 
-        let addToTeamA = true;
         for (const player of this.lobby.players) {
             player.sendCooldownTime(1);
 
             let spawn: Vector4;
 
-            if (addToTeamA) {
+            if (this.teamAPlayers.length < this.teamBPlayers.length) {
                 this.teamAPlayers.push(player.id);
                 player.color = TeamEliminationMatch.TEAM_A_COLOR;
                 spawn = this.arena.getNextTeamASpawn();
-            } else {
+            } else if (this.teamBPlayers.length < this.teamAPlayers.length) {
                 this.teamBPlayers.push(player.id);
                 player.color = TeamEliminationMatch.TEAM_B_COLOR;
                 spawn = this.arena.getNextTeamBSpawn();
+            } else {
+                if (Math.random() >= 0.5) {
+                    this.teamAPlayers.push(player.id);
+                    player.color = TeamEliminationMatch.TEAM_A_COLOR;
+                    spawn = this.arena.getNextTeamASpawn();
+                } else {
+                    this.teamBPlayers.push(player.id);
+                    player.color = TeamEliminationMatch.TEAM_B_COLOR;
+                    spawn = this.arena.getNextTeamBSpawn();
+                }
             }
             player.sendPlayerAddition(spawn);
 
@@ -47,7 +56,6 @@ export default class TeamEliminationMatch extends Match {
                     otherPlayer.sendConnectedPlayerAddition(player);
                 }
             }
-            addToTeamA = !addToTeamA;
         }
     }
     public addPlayer(player: Player): void { // adding spectator, not regular player
