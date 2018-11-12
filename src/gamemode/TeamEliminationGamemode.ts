@@ -10,12 +10,14 @@ export default class TeamEliminationGamemode extends Gamemode {
     private static readonly DAMAGE = 0.201;
     private static readonly LIFE_COUNT = 3;
 
-    public lives: Map<number, number>;
+    private lives: Map<number, number>;
+    private protected: number[];
 
     constructor(match: Match) {
         super(match);
 
         this.lives = new Map();
+        this.protected = [];
     }
 
     public enable(): void {
@@ -31,6 +33,7 @@ export default class TeamEliminationGamemode extends Gamemode {
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
         this.lives.clear();
+        this.protected = [];
     }
 
     protected onDeath(target: Player, player: Player): void {
@@ -67,17 +70,19 @@ export default class TeamEliminationGamemode extends Gamemode {
     private onHit(data: any) {
         if (data.match === this.match) {
             if (!(this.match as TeamEliminationMatch).onSameTeam(data.player, data.target)) {
+                const protectedIndex = this.protected.indexOf(data.target.id);
+                if (protectedIndex === -1) {
+                    const targetHealth = data.target.damage(TeamEliminationGamemode.DAMAGE);
 
-                const targetHealth = data.target.damage(TeamEliminationGamemode.DAMAGE);
-
-                for (const player of this.match.lobby.players) {
-                    if (player.id !== data.target.id) {
-                        player.sendConnectedPlayerHealth(data.target.id, data.target.health);
+                    for (const player of this.match.lobby.players) {
+                        if (player.id !== data.target.id) {
+                            player.sendConnectedPlayerHealth(data.target.id, data.target.health);
+                        }
                     }
-                }
 
-                if (targetHealth === 0) {
-                    this.onDeath(data.target, data.player);
+                    if (targetHealth === 0) {
+                        this.onDeath(data.target, data.player);
+                    }
                 }
             }
         }
@@ -85,15 +90,27 @@ export default class TeamEliminationGamemode extends Gamemode {
 
     private respawn(player: Player, livesRemaining: number) {
         setTimeout(() => {
-            this.lives.set(player.id, livesRemaining);
-            const spawn = this.match.getSpawn(player);
-            player.spawn(spawn);
+            if (this.match.hasPlayer(player)) {
+                this.lives.set(player.id, livesRemaining);
 
-            for (const otherPlayer of this.match.lobby.players) {
-                if (otherPlayer !== player) {
-                    otherPlayer.sendConnectedPlayerAddition(player);
-                    otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
+                const spawn = this.match.getSpawn(player);
+                player.spawn(spawn);
+
+                this.protected.push(player.id);
+
+                for (const otherPlayer of this.match.lobby.players) {
+                    if (otherPlayer !== player) {
+                        otherPlayer.sendConnectedPlayerAddition(player);
+                        otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
+                    }
                 }
+
+                setTimeout(() => {
+                    const index = this.protected.indexOf(player.id);
+                    if (index > -1) {
+                        this.protected.splice(index, 1);
+                    }
+                }, 5000);
             }
         }, 3000);
     }

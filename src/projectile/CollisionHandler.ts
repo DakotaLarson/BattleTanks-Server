@@ -89,13 +89,8 @@ export default class CollisionHandler {
                             target: collidedPlayer,
                         });
                     } else {
-                        const blockCollisionPosition = currentPosition.clone().sub(blockCorrection);
-                        const playerCollisionPosition = currentPosition.clone().sub(playerCorrection);
-                        console.log(blockCollisionPosition);
-                        console.log(playerCollisionPosition);
-                        console.log(currentPosition.distance(blockCollisionPosition));
-                        console.log(currentPosition.distance(playerCollisionPosition));
-                        console.log(previousPosition);
+                        // const blockCollisionPosition = currentPosition.clone().sub(blockCorrection);
+                        // const playerCollisionPosition = currentPosition.clone().sub(playerCorrection);
 
                         // if (playerDistance < blockDistance) {
                         //     EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, {
@@ -104,6 +99,7 @@ export default class CollisionHandler {
                         //         target: collidedPlayer,
                         //     });
                         // }
+                        console.log("Collision with block and player. Needs to be implemented.");
                     }
                 }
             }
