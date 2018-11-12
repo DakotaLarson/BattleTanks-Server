@@ -33,19 +33,10 @@ export default class Projectile {
     public move(delta: number) {
         const previousPosition = this.position.clone();
 
-        const corner1 = previousPosition.clone().add(this.perpendicularAxis.clone().multiplyScalar(Projectile.radius));
-        const corner2 = previousPosition.clone().sub(this.perpendicularAxis.clone().multiplyScalar(Projectile.radius));
-
         this.position.add(this.velocity.clone().multiplyScalar(delta * Projectile.projectileSpeed));
 
         const currentPosition = this.position.clone();
-
-        const corner3 = currentPosition.clone().add(this.perpendicularAxis.clone().multiplyScalar(Projectile.radius));
-        const corner4 = currentPosition.clone().sub(this.perpendicularAxis.clone().multiplyScalar(Projectile.radius));
-
-        const distanceCovered = previousPosition.distanceSquared(currentPosition);
-
-        this.collisionHandler.getProjectileCollision(this, [corner1, corner2, corner3, corner4], distanceCovered);
+        this.collisionHandler.getProjectileCollision(this, previousPosition, currentPosition, this.perpendicularAxis, Projectile.radius);
 
     }
     public destroy() {

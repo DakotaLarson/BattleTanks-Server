@@ -1,5 +1,6 @@
 import EventHandler from "../EventHandler";
 import Match from "../match/Match";
+import * as PacketSender from "../PacketSender";
 import Player from "../Player";
 import Vector3 from "../vector/Vector3";
 import CollisionHandler from "./CollisionHandler";
@@ -25,18 +26,16 @@ export default class ProjectileHandler {
 
     public enable() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_SHOOT, this.onShoot);
-        EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
         EventHandler.addListener(this, EventHandler.Event.PROJECTILE_COLLISION, this.onCollision);
     }
 
     public disable() {
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_SHOOT, this.onShoot);
-        EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
         EventHandler.removeListener(this, EventHandler.Event.PROJECTILE_COLLISION, this.onCollision);
 
         this.projectiles = [];
         for (const player of this.match.lobby.players) {
-            player.sendProjectileClear();
+            PacketSender.sendProjectileClear(player.id);
         }
     }
 
@@ -48,29 +47,16 @@ export default class ProjectileHandler {
             const id = ++ this.projectileId;
             const data = [position.x, position.y, position.z, rotation, id];
 
+            shooter.sendPlayerShoot();
             for (const player of this.match.lobby.players) {
-                if (player.id === shooter.id) {
-                    player.sendPlayerShoot();
-                } else {
+                if (player.id !== shooter.id) {
                     player.sendConnectedPlayerShoot(shooter.id);
                 }
-                player.sendProjectileLaunch(data);
+                PacketSender.sendProjectileLaunch(player.id, data);
             }
+
             this.projectiles.push(new Projectile(this.collisionHandler, position, rotation, id, shooter.id));
         }
-    }
-
-    private onTick(delta: number) {
-
-        // Removed as velocity is currently constant. There is no tangible benefit to sending updates which are ultimately also out of date.
-        // for (const projectile of this.projectiles) {
-        //     projectile.move(delta);
-        //     const projPos = projectile.position;
-        //     const data = [projPos.x, projPos.y, projPos.z, projectile.id];
-        //     for (const player of this.match.lobby.players) {
-        //         player.sendProjectileMove(data);
-        //     }
-        // }
     }
 
     private onCollision(proj: Projectile) {
@@ -79,7 +65,7 @@ export default class ProjectileHandler {
             this.projectiles.splice(index, 1);
             proj.destroy();
             for (const player of this.match.lobby.players) {
-                player.sendProjectileRemoval(proj.id);
+                PacketSender.sendProjectileRemoval(player.id, proj.id);
             }
         }
     }

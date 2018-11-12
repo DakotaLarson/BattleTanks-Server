@@ -26,9 +26,6 @@ export default abstract class Match {
         EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
         for (const player of this.lobby.players) {
             player.sendArena(this.arena.getRawData());
-
-            player.isAlive = true;
-            player.health = 1;
             player.sendAlert("Match started!");
         }
         this.projectileHandler.enable();
@@ -39,11 +36,9 @@ export default abstract class Match {
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
 
         for (const player of this.lobby.players) {
-            player.isAlive = false;
+            player.despawn();
             for (const otherPlayer of this.lobby.players) {
-                if (player === otherPlayer) {
-                    player.sendPlayerRemoval();
-                } else {
+                if (player !== otherPlayer) {
                     player.sendConnectedPlayerRemoval(otherPlayer.id);
                 }
             }

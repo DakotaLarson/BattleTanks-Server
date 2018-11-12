@@ -7,7 +7,7 @@ import Gamemode from "./Gamemode";
 
 export default class TeamEliminationGamemode extends Gamemode {
 
-    private static readonly DAMAGE = 0.35;
+    private static readonly DAMAGE = 0.201;
     private static readonly LIFE_COUNT = 3;
 
     public lives: Map<number, number>;
@@ -39,8 +39,7 @@ export default class TeamEliminationGamemode extends Gamemode {
 
         target.sendAudioRequest(Audio.LOSE);
 
-        target.isAlive = false;
-        target.sendPlayerRemoval();
+        target.despawn();
 
         for (const otherPlayer of this.match.lobby.players) {
             if (otherPlayer !== target) {
@@ -68,35 +67,27 @@ export default class TeamEliminationGamemode extends Gamemode {
     private onHit(data: any) {
         if (data.match === this.match) {
             if (!(this.match as TeamEliminationMatch).onSameTeam(data.player, data.target)) {
-                let targetHealth = data.target.health;
-                targetHealth = Math.max(targetHealth - TeamEliminationGamemode.DAMAGE, 0);
-                data.target.health = targetHealth;
+
+                const targetHealth = data.target.damage(TeamEliminationGamemode.DAMAGE);
 
                 for (const player of this.match.lobby.players) {
                     if (player.id !== data.target.id) {
                         player.sendConnectedPlayerHealth(data.target.id, data.target.health);
-                    } else {
-                        player.sendPlayerHealth(data.target.health);
                     }
                 }
 
                 if (targetHealth === 0) {
                     this.onDeath(data.target, data.player);
-                 }
+                }
             }
-
         }
     }
 
     private respawn(player: Player, livesRemaining: number) {
         setTimeout(() => {
-            const spawn = this.match.getSpawn(player);
-            player.isAlive = true;
-            player.health = 1;
             this.lives.set(player.id, livesRemaining);
-
-            player.sendPlayerAddition(spawn);
-            player.sendPlayerHealth(player.health);
+            const spawn = this.match.getSpawn(player);
+            player.spawn(spawn);
 
             for (const otherPlayer of this.match.lobby.players) {
                 if (otherPlayer !== player) {

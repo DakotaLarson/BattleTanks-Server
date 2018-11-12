@@ -26,4 +26,5 @@ setInterval(() => {
     const delta = (currentTime - time) / 1000;
     time = currentTime;
     EventHandler.callEvent(EventHandler.Event.GAME_TICK, delta);
+    // delta ~ 0.05
 }, 50);

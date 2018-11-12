@@ -12,7 +12,14 @@ export default class CollisionHandler {
         this.match = match;
     }
 
-    public getProjectileCollision(proj: Projectile, projectileCorners: Vector3[], distanceCovered: number) {
+    public getProjectileCollision(proj: Projectile, previousPosition: Vector3, currentPosition: Vector3, perpendicularAxis: Vector3, radius: number) {
+
+        const projectileCorners = [
+            previousPosition.clone().add(perpendicularAxis.clone().multiplyScalar(radius)),
+            previousPosition.clone().sub(perpendicularAxis.clone().multiplyScalar(radius)),
+            currentPosition.clone().add(perpendicularAxis.clone().multiplyScalar(radius)),
+            currentPosition.clone().sub(perpendicularAxis.clone().multiplyScalar(radius)),
+        ];
 
         const offsetX = 0.5;
         const offsetZ = 0.75;
@@ -20,7 +27,7 @@ export default class CollisionHandler {
         const blockRadius = 0.75;
         const playerRadius = 1.25;
 
-        distanceCovered = Math.ceil(distanceCovered);
+        const distanceCovered = Math.ceil(previousPosition.distanceSquared(currentPosition));
 
         const testBlockPositions: Vector3[] = [];
         const testPlayers: Player[] = [];
@@ -40,31 +47,64 @@ export default class CollisionHandler {
 
         if (testBlockPositions.length || testPlayers.length) {
 
+            let collidedPlayer;
+            let collidedBlock = false;
+
             const projectileParallelAxis = proj.velocity.clone();
             const projectilePerpendicularAxis = proj.perpendicularAxis.clone();
+            const playerCorrection = new Vector3();
 
             for (const target of testPlayers) {
                 const playerCorners = this.getPlayerCorners(target.position.clone().add(new Vector3(0.5, 0, 0.5)), target.bodyRot, offsetX, offsetZ);
                 const playerAxes = this.getAxes(target.bodyRot);
-                const collides = this.getOverlaps([projectileParallelAxis, projectilePerpendicularAxis, playerAxes[0], playerAxes[1]], projectileCorners, playerCorners);
-                if (collides) {
-                    EventHandler.callEvent(EventHandler.Event.PROJECTILE_COLLISION, proj);
-                    EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, {
-                        match: this.match,
-                        player: this.match.getPlayerById(proj.shooterId),
-                        target,
-                    });
-                    return;
+
+                const overlaps = this.getOverlaps([projectileParallelAxis, projectilePerpendicularAxis, playerAxes[0], playerAxes[1]], projectileCorners, playerCorners);
+
+                if (overlaps) {
+                    playerCorrection.add(this.getMTV(overlaps));
+                    collidedPlayer = target;
+                    break;
                 }
             }
 
             const blockAxes = this.getAxes(0);
-
+            const blockCorrection = new Vector3();
             for (const blockPos of this.match.arena.blockPositions) {
-                const collides = this.getOverlaps([projectileParallelAxis, projectilePerpendicularAxis, blockAxes[0], blockAxes[1]], projectileCorners, this.getBlockCorners(blockPos));
-                if (collides) {
-                    EventHandler.callEvent(EventHandler.Event.PROJECTILE_COLLISION, proj);
-                    return;
+                const overlaps = this.getOverlaps([projectileParallelAxis, projectilePerpendicularAxis, blockAxes[0], blockAxes[1]], projectileCorners, this.getBlockCorners(blockPos));
+
+                if (overlaps) {
+                    blockCorrection.add(this.getMTV(overlaps));
+                    collidedBlock = true;
+                }
+            }
+
+            if (collidedPlayer || collidedBlock) {
+
+                EventHandler.callEvent(EventHandler.Event.PROJECTILE_COLLISION, proj);
+                if (collidedPlayer) {
+                    if (!collidedBlock) {
+                        EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, {
+                            match: this.match,
+                            player: this.match.getPlayerById(proj.shooterId),
+                            target: collidedPlayer,
+                        });
+                    } else {
+                        const blockCollisionPosition = currentPosition.clone().sub(blockCorrection);
+                        const playerCollisionPosition = currentPosition.clone().sub(playerCorrection);
+                        console.log(blockCollisionPosition);
+                        console.log(playerCollisionPosition);
+                        console.log(currentPosition.distance(blockCollisionPosition));
+                        console.log(currentPosition.distance(playerCollisionPosition));
+                        console.log(previousPosition);
+
+                        // if (playerDistance < blockDistance) {
+                        //     EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, {
+                        //         match: this.match,
+                        //         player: this.match.getPlayerById(proj.shooterId),
+                        //         target: collidedPlayer,
+                        //     });
+                        // }
+                    }
                 }
             }
         }
@@ -81,6 +121,19 @@ export default class CollisionHandler {
             }
         }
         return overlaps;
+    }
+
+    private getMTV(overlaps: Vector3[]): Vector3 {
+        let distance = overlaps[0].lengthSq();
+        let shortestVec = overlaps[0];
+        for (let k = 1; k < overlaps.length; k++) {
+            const squareLength = overlaps[k].lengthSq();
+            if (squareLength < distance) {
+                distance = squareLength;
+                shortestVec = overlaps[k];
+            }
+        }
+        return shortestVec;
     }
 
     private getPlayerCorners(pos: Vector3, rot: number, offsetX: number, offsetZ: number) {

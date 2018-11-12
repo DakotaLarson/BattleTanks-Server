@@ -1,3 +1,4 @@
+import EventHandler from "./EventHandler";
 import Player from "./Player";
 
 const receivePlayerMove = (player: Player, data: number[]) => {
@@ -8,17 +9,32 @@ const receivePlayerShoot = (player: Player) => {
     player.shoot();
 };
 
-const handlers = new Map([
-    [0x01, receivePlayerMove],
-    [0X02, receivePlayerShoot],
-]);
+const receiveReloadMoveToggleRequest = (player: Player, data: number) => {
+    let moving = false;
+    if (data) {
+        moving = true;
+    }
+
+    player.onReloadMoveToggle(moving);
+};
+
+const receiveReloadRequest = (player: Player) => {
+    EventHandler.callEvent(EventHandler.Event.RELOAD_REQUEST, player);
+};
+
+const handlers: any = [
+    receivePlayerMove,
+    receivePlayerShoot,
+    receiveReloadRequest,
+    receiveReloadMoveToggleRequest,
+];
 
 enum DataType {
-    NUMBER = 0X00,
-    STRING = 0X01,
-    INT_ARRAY = 0x02,
-    FLOAT_ARRAY = 0X03,
-    HEADER_ONLY = 0X04,
+    NUMBER,
+    STRING,
+    INT_ARRAY,
+    FLOAT_ARRAY,
+    HEADER_ONLY,
 }
 
 export default class PacketReceiver {
@@ -50,7 +66,8 @@ export default class PacketReceiver {
                 body = new Array();
                 break;
         }
-        const handler = handlers.get(header);
+        // subtraction because of the connection header which has a value of 0
+        const handler = handlers[header - 1];
         if (handler) {
             handler(player, body);
         } else {

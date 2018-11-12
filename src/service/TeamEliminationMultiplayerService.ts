@@ -17,5 +17,6 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
 
     protected onPlayerLeave(player: Player): void {
         this.lobby.removePayer(player);
+        player.destroy();
     }
 }

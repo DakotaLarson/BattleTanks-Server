@@ -26,8 +26,6 @@ export default class TeamEliminationMatch extends Match {
         super.run();
 
         for (const player of this.lobby.players) {
-            player.sendCooldownTime(1);
-
             let spawn: Vector4;
 
             if (this.teamAPlayers.length < this.teamBPlayers.length) {
@@ -49,7 +47,7 @@ export default class TeamEliminationMatch extends Match {
                     spawn = this.arena.getNextTeamBSpawn();
                 }
             }
-            player.sendPlayerAddition(spawn);
+            player.spawn(spawn);
 
             for (const otherPlayer of this.lobby.players) {
                 if (otherPlayer !== player) {

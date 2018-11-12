@@ -18,6 +18,7 @@ enum Packet {
     PLAYER_SHOOT,
     PLAYER_HEALTH,
     PLAYER_SPECTATING,
+    PLAYER_AMMO_STATUS,
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
@@ -109,6 +110,11 @@ export const sendPlayerHealth = (id: number, health: number) => {
 
 export const sendPlayerSpectating = (id: number) => {
     const data = constructData(Packet.PLAYER_SPECTATING, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
+export const sendPlayerAmmoStatus = (id: number, ammoCount: number, reloadPercentage: number) => {
+    const data = constructData(Packet.PLAYER_AMMO_STATUS, [ammoCount, reloadPercentage], DataType.FLOAT_ARRAY);
     send(id, data);
 };
 

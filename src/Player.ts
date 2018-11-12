@@ -17,12 +17,17 @@ export default class Player {
     public movementVelocity: number;
     public rotationVelocity: number;
 
-    public lastShotTime: number;
-
     public isAlive: boolean;
     public health: number;
 
     public color: number;
+
+    public ammoCount: number;
+    public reloadPercentage: number;
+    public reloading: boolean;
+    public lastReloadingPosition: Vector3;
+
+    public moving: boolean;
 
     constructor(name: string, id: number) {
         this.name = name;
@@ -36,43 +41,21 @@ export default class Player {
         this.movementVelocity = 0;
         this.rotationVelocity = 0;
 
-        this.lastShotTime = 0;
-
         this.isAlive = false;
         this.health = 1;
+
+        this.ammoCount = 10;
+        this.reloadPercentage = 1;
+        this.reloading = false;
+        this.lastReloadingPosition = new Vector3();
+
+        this.moving = false;
 
         this.color = 0x000000;
     }
 
-    public sendPlayerAddition(pos: Vector4) {
-        this.position.x = pos.x;
-        this.position.y = pos.y;
-        this.position.z = pos.z;
-        this.bodyRot = pos.w;
-        this.headRot = 0;
-
-        PacketSender.sendPlayerAddition(this.id, pos, this.color);
-    }
-
-    public sendPlayerRemoval() {
-        PacketSender.sendPlayerRemoval(this.id);
-    }
-
-    public sendPlayerMove(pos: Vector4) {
-        this.position.x = pos.x;
-        this.position.y = pos.y;
-        this.position.z = pos.z;
-        this.bodyRot = pos.w;
-
-        PacketSender.sendPlayerMove(this.id, this.position, this.headRot, this.bodyRot);
-    }
-
     public sendPlayerShoot() {
         PacketSender.sendPlayerShoot(this.id);
-    }
-
-    public sendPlayerHealth(health: number) {
-        PacketSender.sendPlayerHealth(this.id, health);
     }
 
     public sendPlayerSpectating() {
@@ -105,10 +88,6 @@ export default class Player {
         PacketSender.sendConnectedPlayerHealth(this.id, playerId, health);
     }
 
-    public sendMatchStatistics(stats: any) {
-        PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
-    }
-
     public sendArena(arena: any) {
         PacketSender.sendArena(this.id, arena);
     }
@@ -121,32 +100,8 @@ export default class Player {
         PacketSender.sendAlert(this.id, message);
     }
 
-    public sendInvalidShot() {
-        PacketSender.sendPlayerShootInvalid(this.id);
-    }
-
     public sendAudioRequest(audio: Audio) {
         PacketSender.sendAudioRequest(this.id, audio);
-    }
-
-    public sendCooldownTime(time: number) {
-        PacketSender.sendCooldownTime(this.id, time);
-    }
-
-    public sendProjectileLaunch(data: number[]) {
-        PacketSender.sendProjectileLaunch(this.id, data);
-    }
-
-    public sendProjectileMove(data: number[]) {
-        PacketSender.sendProjectileMove(this.id, data);
-    }
-
-    public sendProjectileRemoval(projId: number) {
-        PacketSender.sendProjectileRemoval(this.id, projId);
-    }
-
-    public sendProjectileClear() {
-        PacketSender.sendProjectileClear(this.id);
     }
 
     public onMove(data: number[]) {
@@ -160,15 +115,114 @@ export default class Player {
     }
 
     public shoot() {
-        if (this.isAlive) {
+        if (this.isAlive && this.ammoCount > 0) {
             EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
-            // const currentTime = Date.now();
-            // if (currentTime - this.lastShotTime > COOLDOWN_ITERVAL) {
-            //     EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
-            //     this.lastShotTime = currentTime;
-            // } else {
-            //     this.sendInvalidShot();
-            // }
+            this.ammoCount --;
+            if (this.ammoCount === 0) {
+                this.reload();
+            }
+            PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
         }
     }
+
+    public resetAmmo() {
+        this.reloadPercentage = 1;
+        this.ammoCount = 10;
+        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+    }
+
+    public reload() {
+        this.ammoCount = 0;
+        this.reloadPercentage = 0;
+        this.lastReloadingPosition = this.position.clone();
+        EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        this.reloading = true;
+    }
+
+    public spawn(pos: Vector4) {
+        this.isAlive = true;
+        this.health = 1;
+        this.ammoCount = 10;
+
+        this.position.x = pos.x;
+        this.position.y = pos.y;
+        this.position.z = pos.z;
+        this.bodyRot = pos.w;
+        this.headRot = 0;
+
+        PacketSender.sendPlayerAddition(this.id, pos, this.color);
+
+        PacketSender.sendPlayerHealth(this.id, this.health);
+        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+    }
+
+    public despawn() {
+        this.isAlive = false;
+        this.health = 0;
+        this.ammoCount = 0;
+
+        PacketSender.sendPlayerRemoval(this.id);
+        PacketSender.sendPlayerHealth(this.id, this.health);
+    }
+
+    public damage(amount: number) {
+        this.health = Math.max(this.health - amount, 0);
+        PacketSender.sendPlayerHealth(this.id, this.health);
+
+        return this.health;
+    }
+
+    public destroy() {
+        if (this.reloading) {
+            this.finishReload();
+        }
+    }
+
+    public onReloadMoveToggle(moving: boolean) {
+        this.moving = moving;
+    }
+
+    private onTick(delta: number) {
+        if (this.reloading) {
+            this.updateReload(delta);
+        }
+    }
+
+    private updateReload(delta: number) {
+        let reloadIncrease = delta;
+        if (this.moving) {
+            reloadIncrease = delta / 3;
+        } else {
+            this.lastReloadingPosition = this.position.clone();
+        }
+
+        this.reloadPercentage = Math.min(this.reloadPercentage + reloadIncrease, 1);
+        if (this.reloadPercentage === 1) {
+            this.finishReload();
+        }
+        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+    }
+
+    private finishReload() {
+        this.ammoCount = 10;
+        EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        this.reloading = false;
+    }
+
+    // public sendMatchStatistics(stats: any) {
+    //     PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
+    // }
+// public sendPlayerMove(pos: Vector4) {
+    //     this.position.x = pos.x;
+    //     this.position.y = pos.y;
+    //     this.position.z = pos.z;
+    //     this.bodyRot = pos.w;
+    //     PacketSender.sendPlayerMove(this.id, this.position, this.headRot, this.bodyRot);
+    // }
+    // public sendInvalidShot() {
+    //     PacketSender.sendPlayerShootInvalid(this.id);
+    // }
+    // public sendCooldownTime(time: number) {
+    //     PacketSender.sendCooldownTime(this.id, time);
+    // }
 }
