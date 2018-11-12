@@ -132,11 +132,14 @@ export default class Player {
     }
 
     public reload() {
-        this.ammoCount = 0;
-        this.reloadPercentage = 0;
-        this.lastReloadingPosition = this.position.clone();
-        EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
-        this.reloading = true;
+        if (!this.reloading && this.ammoCount < 10) {
+            this.ammoCount = 0;
+            this.reloadPercentage = 0;
+            this.lastReloadingPosition = this.position.clone();
+            EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+            this.reloading = true;
+        }
+
     }
 
     public spawn(pos: Vector4) {

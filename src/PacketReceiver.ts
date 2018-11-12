@@ -1,4 +1,3 @@
-import EventHandler from "./EventHandler";
 import Player from "./Player";
 
 const receivePlayerMove = (player: Player, data: number[]) => {
@@ -19,7 +18,7 @@ const receiveReloadMoveToggleRequest = (player: Player, data: number) => {
 };
 
 const receiveReloadRequest = (player: Player) => {
-    EventHandler.callEvent(EventHandler.Event.RELOAD_REQUEST, player);
+    player.reload();
 };
 
 const handlers: any = [
