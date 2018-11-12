@@ -73,6 +73,8 @@ export default abstract class Match {
 
     public abstract getActivePlayerCount(): number;
 
+    public abstract hasEnoughPlayers(): boolean;
+
     private onTick() {
         for (const player of this.lobby.players) {
             for (const otherPlayer of this.lobby.players) {

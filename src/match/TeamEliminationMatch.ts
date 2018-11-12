@@ -105,4 +105,8 @@ export default class TeamEliminationMatch extends Match {
     public onSameTeam(player: Player, otherPlayer: Player) {
         return this.teamAPlayers.indexOf(player.id) > -1 && this.teamAPlayers.indexOf(otherPlayer.id) > -1 || this.teamBPlayers.indexOf(player.id) > -1 && this.teamBPlayers.indexOf(otherPlayer.id) > -1;
     }
+
+    public hasEnoughPlayers() {
+        return this.teamAPlayers.length > 0 && this.teamBPlayers.length > 0;
+    }
 }

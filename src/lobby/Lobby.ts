@@ -47,7 +47,7 @@ export default abstract class Lobby {
         if (this.status === GameStatus.RUNNING) {
             (this.match as Match).removePlayer(player);
 
-            if ((this.match as Match).getActivePlayerCount() < this.minimumPlayerCount) {
+            if (!(this.match as Match).hasEnoughPlayers()) {
                 this.finishMatch();
             }
         }
