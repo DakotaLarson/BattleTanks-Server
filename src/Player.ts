@@ -14,20 +14,19 @@ export default class Player {
     public bodyRot: number;
     public headRot: number;
 
-    public movementVelocity: number;
-    public rotationVelocity: number;
-
     public isAlive: boolean;
     public health: number;
 
     public color: number;
 
-    public ammoCount: number;
-    public reloadPercentage: number;
-    public reloading: boolean;
-    public lastReloadingPosition: Vector3;
+    private movementVelocity: number;
+    private rotationVelocity: number;
 
-    public moving: boolean;
+    private ammoCount: number;
+    private reloadPercentage: number;
+    private reloading: boolean;
+
+    private moving: boolean;
 
     constructor(name: string, id: number) {
         this.name = name;
@@ -47,7 +46,6 @@ export default class Player {
         this.ammoCount = 10;
         this.reloadPercentage = 1;
         this.reloading = false;
-        this.lastReloadingPosition = new Vector3();
 
         this.moving = false;
 
@@ -135,7 +133,6 @@ export default class Player {
         if (!this.reloading && this.ammoCount < 10) {
             this.ammoCount = 0;
             this.reloadPercentage = 0;
-            this.lastReloadingPosition = this.position.clone();
             EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
             this.reloading = true;
         }
@@ -195,8 +192,6 @@ export default class Player {
         let reloadIncrease = delta;
         if (this.moving) {
             reloadIncrease = delta / 3;
-        } else {
-            this.lastReloadingPosition = this.position.clone();
         }
 
         this.reloadPercentage = Math.min(this.reloadPercentage + reloadIncrease, 1);

@@ -22,8 +22,6 @@ enum Event {
 
     PLAYER_DAMAGE_HITSCAN,
     PLAYER_DAMAGE_PROJECTILE,
-
-    RELOAD_REQUEST,
 }
 
 enum Level {

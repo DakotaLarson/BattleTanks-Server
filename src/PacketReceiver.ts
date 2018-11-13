@@ -31,7 +31,6 @@ const handlers: any = [
 enum DataType {
     NUMBER,
     STRING,
-    INT_ARRAY,
     FLOAT_ARRAY,
     HEADER_ONLY,
 }
@@ -48,12 +47,6 @@ export default class PacketReceiver {
                 break;
             case DataType.STRING:
                 body = message.toString("utf8", 2);
-                break;
-            case DataType.INT_ARRAY:
-                body = new Array();
-                for (let i = 1; i < message.length; i += 1) {
-                    body.push(message.readUInt8(i));
-                }
                 break;
             case DataType.FLOAT_ARRAY:
                 body = new Array();

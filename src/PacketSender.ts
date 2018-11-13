@@ -41,7 +41,6 @@ enum Packet {
 enum DataType {
     NUMBER,
     STRING,
-    INT_ARRAY,
     FLOAT_ARRAY,
     FLOAT_ARRAY_INT_HEADER,
     HEADER_ONLY,
@@ -227,15 +226,6 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
             break;
         case DataType.STRING:
             buffer = Buffer.from(body, "utf8");
-
-            break;
-        case DataType.INT_ARRAY:
-
-            buffer = Buffer.alloc(body.length);
-
-            for (let i = 0; i < body.length; i += 1) {
-                buffer.writeUInt8(body[i], i);
-            }
 
             break;
         case DataType.FLOAT_ARRAY:
