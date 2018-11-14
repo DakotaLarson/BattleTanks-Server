@@ -5,7 +5,7 @@ import CollisionHandler from "./CollisionHandler";
 export default class Projectile {
 
     private static radius = 0.1;
-    private static projectileSpeed = 10;
+    private static projectileSpeed = 20;
 
     public shooterId: number;
     public velocity: Vector3;
