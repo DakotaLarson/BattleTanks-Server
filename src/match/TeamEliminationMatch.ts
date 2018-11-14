@@ -81,7 +81,7 @@ export default class TeamEliminationMatch extends Match {
         }
 
         for (const otherPlayer of this.lobby.players) {
-            otherPlayer.sendConnectedPlayerRemoval(player.id);
+            otherPlayer.sendConnectedPlayerRemoval(player.id, -1);
         }
     }
     public getSpawn(player: Player): Vector4 {

@@ -73,11 +73,10 @@ export const sendPlayerAddition = (id: number, pos: Vector4, color: number) => {
     send(id, data);
 };
 
-export const sendPlayerRemoval = (id: number) => {
-    const dataObj = {
-        id,
-    };
-    const data = constructData(Packet.PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
+export const sendPlayerRemoval = (id: number, involvedId?: number) => {
+    involvedId = involvedId || 0;
+    const rawData = [id, involvedId];
+    const data = constructData(Packet.PLAYER_REMOVE, rawData, DataType.FLOAT_ARRAY);
     send(id, data);
 };
 
@@ -125,11 +124,10 @@ export const sendConnectedPlayerAddition = (id: number, playerData: any) => {
     send(id, data);
 };
 
-export const sendConnectedPlayerRemoval = (id: number, playerId: number) => {
-    const dataObj = {
-        id: playerId,
-    };
-    const data = constructData(Packet.CONNECTED_PLAYER_REMOVE, JSON.stringify(dataObj), DataType.STRING);
+export const sendConnectedPlayerRemoval = (id: number, playerId: number, involvedId?: number) => {
+    involvedId = involvedId || 0;
+    const rawData = [playerId, involvedId];
+    const data = constructData(Packet.CONNECTED_PLAYER_REMOVE, rawData, DataType.FLOAT_ARRAY);
     send(id, data);
 };
 

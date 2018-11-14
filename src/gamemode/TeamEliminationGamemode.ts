@@ -42,11 +42,11 @@ export default class TeamEliminationGamemode extends Gamemode {
 
         target.sendAudioRequest(Audio.LOSE);
 
-        target.despawn();
+        target.despawn(player.id);
 
         for (const otherPlayer of this.match.lobby.players) {
             if (otherPlayer !== target) {
-                otherPlayer.sendConnectedPlayerRemoval(target.id);
+                otherPlayer.sendConnectedPlayerRemoval(target.id, player.id);
             }
         }
 
