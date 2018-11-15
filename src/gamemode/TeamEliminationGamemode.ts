@@ -37,23 +37,24 @@ export default class TeamEliminationGamemode extends Gamemode {
     }
 
     protected onDeath(target: Player, player: Player): void {
-        target.sendAlert("You were killed by: " + player.name);
-        player.sendAlert("You killed: " + target.name);
-
-        target.sendAudioRequest(Audio.LOSE);
-
-        target.despawn(player.id);
-
-        for (const otherPlayer of this.match.lobby.players) {
-            if (otherPlayer !== target) {
-                otherPlayer.sendConnectedPlayerRemoval(target.id, player.id);
-            }
-        }
-
         let livesRemaining = this.lives.get(target.id) as number;
 
         if (!isNaN(livesRemaining)) {
             livesRemaining --;
+
+            target.sendAlert("You were killed by: " + player.name);
+            player.sendAlert("You killed: " + target.name);
+
+            target.sendAudioRequest(Audio.LOSE);
+
+            target.despawn(player.id, livesRemaining);
+
+            for (const otherPlayer of this.match.lobby.players) {
+                if (otherPlayer !== target) {
+                    otherPlayer.sendConnectedPlayerRemoval(target.id, player.id, livesRemaining);
+                }
+            }
+
             if (livesRemaining !== 0) {
                 this.respawn(target, livesRemaining);
                 target.sendAlert("Lives remaining: " + livesRemaining);
@@ -110,7 +111,7 @@ export default class TeamEliminationGamemode extends Gamemode {
                     if (index > -1) {
                         this.protected.splice(index, 1);
                     }
-                }, 5000);
+                }, 3000);
             }
         }, 3000);
     }

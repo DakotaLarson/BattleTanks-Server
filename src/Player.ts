@@ -78,8 +78,8 @@ export default class Player {
         PacketSender.sendConnectedPlayerMove(this.id, player.position, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
     }
 
-    public sendConnectedPlayerRemoval(playerId: number, involvedId?: number) {
-        PacketSender.sendConnectedPlayerRemoval(this.id, playerId, involvedId);
+    public sendConnectedPlayerRemoval(playerId: number, involvedId?: number, livesRemaining?: number) {
+        PacketSender.sendConnectedPlayerRemoval(this.id, playerId, involvedId, livesRemaining);
     }
 
     public sendConnectedPlayerHealth(playerId: number, health: number) {
@@ -156,12 +156,12 @@ export default class Player {
         PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
     }
 
-    public despawn(involvedId?: number) {
+    public despawn(involvedId?: number, livesRemaining?: number) {
         this.isAlive = false;
         this.health = 0;
         this.ammoCount = 0;
 
-        PacketSender.sendPlayerRemoval(this.id, involvedId);
+        PacketSender.sendPlayerRemoval(this.id, involvedId, livesRemaining);
         PacketSender.sendPlayerHealth(this.id, this.health);
     }
 

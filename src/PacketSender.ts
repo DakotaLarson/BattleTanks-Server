@@ -73,9 +73,10 @@ export const sendPlayerAddition = (id: number, pos: Vector4, color: number) => {
     send(id, data);
 };
 
-export const sendPlayerRemoval = (id: number, involvedId?: number) => {
+export const sendPlayerRemoval = (id: number, involvedId?: number, livesRemaining?: number) => {
     involvedId = involvedId || 0;
-    const rawData = [id, involvedId];
+    livesRemaining = livesRemaining || 0;
+    const rawData = [id, involvedId, livesRemaining];
     const data = constructData(Packet.PLAYER_REMOVE, rawData, DataType.FLOAT_ARRAY);
     send(id, data);
 };
@@ -124,9 +125,10 @@ export const sendConnectedPlayerAddition = (id: number, playerData: any) => {
     send(id, data);
 };
 
-export const sendConnectedPlayerRemoval = (id: number, playerId: number, involvedId?: number) => {
+export const sendConnectedPlayerRemoval = (id: number, playerId: number, involvedId?: number, livesRemaining?: number) => {
     involvedId = involvedId || 0;
-    const rawData = [playerId, involvedId];
+    livesRemaining = livesRemaining || 0;
+    const rawData = [playerId, involvedId, livesRemaining];
     const data = constructData(Packet.CONNECTED_PLAYER_REMOVE, rawData, DataType.FLOAT_ARRAY);
     send(id, data);
 };
