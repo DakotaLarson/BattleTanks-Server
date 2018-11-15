@@ -56,8 +56,13 @@ export default class WebSocketServer {
                 this.deadSockets.splice(socketIndex, 1);
                 console.log("WS Terminated...");
             } else {
-                ws.ping();
-                this.deadSockets.push(ws);
+                if (ws.readyState !== ws.OPEN) {
+                    console.warn("socket is closed, but not removed.");
+                    ws.terminate();
+                } else {
+                    ws.ping();
+                    this.deadSockets.push(ws);
+                }
             }
         }
     }

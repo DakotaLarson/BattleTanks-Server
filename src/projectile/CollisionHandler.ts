@@ -12,11 +12,26 @@ export default class CollisionHandler {
         this.match = match;
     }
 
-    public getProjectileCollision(proj: Projectile, previousPosition: Vector3, currentPosition: Vector3, perpendicularAxis: Vector3, radius: number) {
+    public getProjectileCollision(proj: Projectile, initialPosition: Vector3, travelScalar: number, perpendicularAxis: Vector3, radius: number, internal: number) {
+
+        const search = (originalScalar: number, increaseDistance: boolean, newInternal: number) => {
+            if (newInternal > 50) {
+                console.log("Collision was calculated 50x.");
+                return;
+            }
+            const difference = originalScalar / 2;
+            let scalar = originalScalar - difference;
+            if (increaseDistance) {
+                scalar = originalScalar + difference;
+            }
+            this.getProjectileCollision(proj, initialPosition, scalar, perpendicularAxis, radius, newInternal);
+        };
+
+        const currentPosition = initialPosition.clone().add(proj.velocity.clone().multiplyScalar(travelScalar));
 
         const projectileCorners = [
-            previousPosition.clone().add(perpendicularAxis.clone().multiplyScalar(radius)),
-            previousPosition.clone().sub(perpendicularAxis.clone().multiplyScalar(radius)),
+            initialPosition.clone().add(perpendicularAxis.clone().multiplyScalar(radius)),
+            initialPosition.clone().sub(perpendicularAxis.clone().multiplyScalar(radius)),
             currentPosition.clone().add(perpendicularAxis.clone().multiplyScalar(radius)),
             currentPosition.clone().sub(perpendicularAxis.clone().multiplyScalar(radius)),
         ];
@@ -27,7 +42,7 @@ export default class CollisionHandler {
         const blockRadius = 0.75;
         const playerRadius = 1.25;
 
-        const distanceCovered = Math.ceil(previousPosition.distanceSquared(currentPosition));
+        const distanceCovered = Math.ceil(initialPosition.distanceSquared(currentPosition));
 
         const testBlockPositions: Vector3[] = [];
         const testPlayers: Player[] = [];
@@ -89,20 +104,14 @@ export default class CollisionHandler {
                             target: collidedPlayer,
                         });
                     } else {
-                        // const blockCollisionPosition = currentPosition.clone().sub(blockCorrection);
-                        // const playerCollisionPosition = currentPosition.clone().sub(playerCorrection);
-
-                        // if (playerDistance < blockDistance) {
-                        //     EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, {
-                        //         match: this.match,
-                        //         player: this.match.getPlayerById(proj.shooterId),
-                        //         target: collidedPlayer,
-                        //     });
-                        // }
-                        console.log("Collision with block and player. Needs to be implemented.");
+                        search(travelScalar, false, ++ internal);
                     }
                 }
+            } else if (internal) {
+                search(travelScalar, true, ++ internal);
             }
+        } else if (internal) {
+            search(travelScalar, true, ++ internal);
         }
     }
 

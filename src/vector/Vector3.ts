@@ -4,6 +4,10 @@ export default class Vector3 {
         return new Vector3(Math.sin(angle), 0, Math.cos(angle));
     }
 
+    public static multiplyVectors(a: Vector3, b: Vector3) {
+        return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
+    }
+
     public x: number;
     public y: number;
     public z: number;

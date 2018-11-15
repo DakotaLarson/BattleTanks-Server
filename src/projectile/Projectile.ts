@@ -33,10 +33,11 @@ export default class Projectile {
     public move(delta: number) {
         const previousPosition = this.position.clone();
 
-        this.position.add(this.velocity.clone().multiplyScalar(delta * Projectile.projectileSpeed));
+        const travelScalar = delta * Projectile.projectileSpeed;
 
-        const currentPosition = this.position.clone();
-        this.collisionHandler.getProjectileCollision(this, previousPosition, currentPosition, this.perpendicularAxis, Projectile.radius);
+        this.position.add(this.velocity.clone().multiplyScalar(travelScalar));
+
+        this.collisionHandler.getProjectileCollision(this, previousPosition, travelScalar, this.perpendicularAxis, Projectile.radius, 0);
 
     }
     public destroy() {
