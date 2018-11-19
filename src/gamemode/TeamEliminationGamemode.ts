@@ -121,10 +121,10 @@ export default class TeamEliminationGamemode extends Gamemode {
 
     private onFinalDeath(target: Player) {
         target.sendAlert("KO!");
-        target.sendAudioRequest(Audio.DEATH_NORESPAWN);
         for (const player of this.match.lobby.players) {
             if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
                 if (player.isAlive || this.lives.get(player.id) !== 0) {
+                    target.sendAudioRequest(Audio.DEATH_NORESPAWN);
                     return;
                 }
             }

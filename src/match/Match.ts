@@ -23,7 +23,7 @@ export default abstract class Match {
     }
 
     public run() {
-        EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
         for (const player of this.lobby.players) {
             player.sendArena(this.arena.getRawData());
             player.sendAlert("Match started!");
@@ -33,7 +33,7 @@ export default abstract class Match {
     }
 
     public finish() {
-        EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
 
         for (const player of this.lobby.players) {
             player.despawn();
@@ -75,10 +75,10 @@ export default abstract class Match {
 
     public abstract hasEnoughPlayers(): boolean;
 
-    private onTick() {
-        for (const player of this.lobby.players) {
+    private onPlayerMove(player: Player) {
+        if (this.hasPlayer(player)) {
             for (const otherPlayer of this.lobby.players) {
-                if (player.id !== otherPlayer.id) {
+                if (player !== otherPlayer) {
                     otherPlayer.sendConnectedPlayerMove(player);
                 }
             }

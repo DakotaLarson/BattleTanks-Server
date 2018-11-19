@@ -1,7 +1,9 @@
+import EventHandler from "./EventHandler";
 import Player from "./Player";
 
 const receivePlayerMove = (player: Player, data: number[]) => {
     player.onMove(data);
+    EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, player);
 };
 
 const receivePlayerShoot = (player: Player) => {

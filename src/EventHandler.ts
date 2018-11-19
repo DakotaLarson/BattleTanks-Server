@@ -7,6 +7,7 @@ enum Event {
     PLAYER_JOIN,
     PLAYER_LEAVE,
     PLAYER_SHOOT,
+    PLAYER_MOVE,
 
     // WS
     WS_CONNECTION_CHECK,
