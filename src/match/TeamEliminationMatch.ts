@@ -1,6 +1,6 @@
 import Arena from "../Arena";
 import TeamEliminationGamemode from "../gamemode/TeamEliminationGamemode";
-import Lobby from "../lobby/Lobby";
+import TeamEliminationLobby from "../lobby/TeamEliminationLobby";
 import Player from "../Player";
 import Vector4 from "../vector/Vector4";
 import Match from "./Match";
@@ -15,7 +15,7 @@ export default class TeamEliminationMatch extends Match {
     private teamAPlayers: number[];
     private teamBPlayers: number[];
 
-    constructor(arena: Arena, lobby: Lobby) {
+    constructor(arena: Arena, lobby: TeamEliminationLobby) {
         super(arena, lobby);
         this.gamemode = new TeamEliminationGamemode(this);
 

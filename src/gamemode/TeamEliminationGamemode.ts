@@ -1,6 +1,5 @@
 import Audio from "../Audio";
 import EventHandler from "../EventHandler";
-import Match from "../match/Match";
 import TeamEliminationMatch from "../match/TeamEliminationMatch";
 import Player from "../Player";
 import Gamemode from "./Gamemode";
@@ -13,7 +12,7 @@ export default class TeamEliminationGamemode extends Gamemode {
     private lives: Map<number, number>;
     private protected: number[];
 
-    constructor(match: Match) {
+    constructor(match: TeamEliminationMatch) {
         super(match);
 
         this.lives = new Map();
@@ -127,6 +126,15 @@ export default class TeamEliminationGamemode extends Gamemode {
                     target.sendAudioRequest(Audio.DEATH_NORESPAWN);
                     return;
                 }
+            }
+        }
+        for (const player of this.match.lobby.players) {
+            if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
+                player.sendAlert("Your team lost...");
+                player.sendAudioRequest(Audio.LOSE);
+            } else {
+                player.sendAlert("Your team won!");
+                player.sendAudioRequest(Audio.WIN);
             }
         }
         this.match.lobby.finishMatch();

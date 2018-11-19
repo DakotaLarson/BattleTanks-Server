@@ -66,7 +66,7 @@ export default abstract class Lobby {
         }
     }
 
-    protected abstract createMatch(arena: Arena, lobby: Lobby): Match;
+    protected abstract createMatch(arena: Arena): Match;
 
     private startMatch() {
         this.updateStatus(GameStatus.STARTING);
@@ -75,16 +75,12 @@ export default abstract class Lobby {
 
             if (this.players.length >= this.minimumPlayerCount) {
                 const arena = ArenaLoader.getRandomArena();
-                this.match = this.createMatch(arena, this);
+                this.match = this.createMatch(arena);
                 this.updateStatus(GameStatus.RUNNING);
             } else {
                 this.wait("Not enough players to start a match");
             }
         }, 3000);
-
-        for (const player of this.players) {
-            player.sendAlert("Match starting in 3 seconds");
-        }
     }
 
     private wait(message?: string) {
