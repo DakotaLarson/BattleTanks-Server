@@ -1,3 +1,4 @@
+import {performance} from "perf_hooks";
 import Audio from "./Audio";
 import EventHandler from "./EventHandler";
 import * as PacketSender from "./PacketSender";
@@ -5,6 +6,8 @@ import Vector3 from "./vector/Vector3";
 import Vector4 from "./vector/Vector4";
 
 export default class Player {
+
+    private static shotCooldown = 75;
 
     public name: string;
     public id: number;
@@ -28,6 +31,9 @@ export default class Player {
 
     private moving: boolean;
 
+    private lastShotTime: number;
+    private nextShotScheduled: boolean;
+
     constructor(name: string, id: number) {
         this.name = name;
         this.id = id;
@@ -50,6 +56,9 @@ export default class Player {
         this.moving = false;
 
         this.color = 0x000000;
+
+        this.lastShotTime = performance.now();
+        this.nextShotScheduled = false;
     }
 
     public sendPlayerShoot() {
@@ -113,14 +122,16 @@ export default class Player {
     }
 
     public shoot() {
-        if (this.isAlive && this.ammoCount > 0) {
-            EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
-            this.ammoCount --;
-            if (this.ammoCount === 0) {
-                this.reload();
+        this.validateShot(() => {
+            if (this.isAlive && this.ammoCount > 0) {
+                EventHandler.callEvent(EventHandler.Event.PLAYER_SHOOT, this);
+                this.ammoCount --;
+                if (this.ammoCount === 0) {
+                    this.reload();
+                }
+                PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
             }
-            PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
-        }
+        });
     }
 
     public resetAmmo() {
@@ -133,6 +144,7 @@ export default class Player {
         if (!this.reloading && this.ammoCount < 10) {
             this.ammoCount = 0;
             this.reloadPercentage = 0;
+
             EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
             this.reloading = true;
         }
@@ -205,6 +217,25 @@ export default class Player {
         this.ammoCount = 10;
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
         this.reloading = false;
+    }
+
+    private validateShot(callback: () => void) {
+        const currentTime = performance.now();
+        const timeDiff = currentTime - this.lastShotTime;
+        if (timeDiff >= Player.shotCooldown) {
+            callback();
+            this.lastShotTime = currentTime;
+        } else {
+            if (!this.nextShotScheduled) {
+                const timeRemaining = Player.shotCooldown - timeDiff;
+                this.nextShotScheduled = true;
+                setTimeout(() => {
+                    callback();
+                    this.nextShotScheduled = false;
+                    this.lastShotTime = performance.now();
+                }, timeRemaining);
+            }
+        }
     }
 
     // public sendMatchStatistics(stats: any) {

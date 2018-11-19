@@ -155,7 +155,7 @@ export const sendMatchStatistics = (id: number, statistics: string) => {
 };
 
 export const sendAudioRequest = (id: number, audio: Audio) => {
-    const data = constructData(Packet.AUDIO_REQUEST, audio,  DataType.NUMBER);
+    const data = constructData(Packet.AUDIO_REQUEST, audio,  DataType.STRING);
     send(id, data);
 };
 

@@ -1,6 +1,12 @@
 enum Audio {
-    WIN,
-    LOSE,
+    WIN = "GAME_WIN",
+    LOSE = "GAME_LOSE",
+    SHOOT = "GAME_SHOOT",
+    HIT = "GAME_HIT",
+    HIT_HIGH = "GAME_HIT_HIGH",
+    DAMAGE = "GAME_DAMAGE",
+    DEATH_RESPAWN = "GAME_DEATH_RESPAWN",
+    DEATH_NORESPAWN = "GAME_DEATH_NORESPAWN",
 }
 
 export default Audio;
