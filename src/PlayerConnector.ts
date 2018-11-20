@@ -57,5 +57,6 @@ export default class PlayerConnector {
         PacketSender.addSocket(id, (ws as any));
 
         EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
+        console.log("Player connected");
     }
 }
