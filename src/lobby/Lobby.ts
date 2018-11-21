@@ -1,5 +1,6 @@
 import Arena from "../Arena";
 import ArenaLoader from "../ArenaLoader";
+import EventHandler from "../EventHandler";
 import GameStatus from "../GameStatus";
 import Match from "../match/Match";
 import Player from "../Player";
@@ -18,6 +19,9 @@ export default abstract class Lobby {
         this.players = [];
 
         this.status = GameStatus.WAITING;
+
+        // TODO: Refactor this to allow cleanup when multiple lobbies can be created & destroyed.
+        EventHandler.addListener(this, EventHandler.Event.CHAT_MESSAGE_SEND, this.onChatMessage);
     }
 
     public addPlayer(player: Player) {
@@ -96,6 +100,15 @@ export default abstract class Lobby {
         this.status = status;
         for (const player of this.players) {
             player.sendGameStatus(status);
+        }
+    }
+
+    private onChatMessage(data: any) {
+        const player: Player = data.player;
+        const message: string = data.message;
+
+        if (this.players.indexOf(player) > -1) {
+            // todo send message
         }
     }
 }

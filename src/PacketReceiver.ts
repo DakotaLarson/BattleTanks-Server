@@ -23,11 +23,19 @@ const receiveReloadRequest = (player: Player) => {
     player.reload();
 };
 
+const receiveChatMessageSend = (player: Player, message: string) => {
+    EventHandler.callEvent(EventHandler.Event.CHAT_MESSAGE_SEND, {
+        player,
+        message,
+    });
+};
+
 const handlers: any = [
     receivePlayerMove,
     receivePlayerShoot,
     receiveReloadRequest,
     receiveReloadMoveToggleRequest,
+    receiveChatMessageSend,
 ];
 
 enum DataType {
