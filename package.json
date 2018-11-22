@@ -12,9 +12,9 @@
   "devDependencies": {
     "@types/express": "latest",
     "@types/express-session": "latest",
-    "@types/node": "latest",
+    "@types/node": "^10.12.10",
     "@types/uuid": "latest",
-    "@types/ws": "latest",
+    "@types/ws": "^6.0.1",
     "eslint": "latest",
     "supervisor": "latest"
   },

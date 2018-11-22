@@ -36,6 +36,8 @@ enum Packet {
     PROJECTILE_MOVE,
     PROJECTILE_REMOVAL,
     PROJECTILE_CLEAR,
+
+    CHAT_MESSAGE,
 }
 
 enum DataType {
@@ -181,6 +183,11 @@ export const sendProjectileRemoval = (id: number, projId: number) => {
 
 export const sendProjectileClear = (id: number) => {
     const data = constructData(Packet.PROJECTILE_CLEAR, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
+export const sendChatMessage = (id: number, constructedMessage: string) => {
+    const data = constructData(Packet.CHAT_MESSAGE, constructedMessage, DataType.STRING);
     send(id, data);
 };
 

@@ -24,7 +24,7 @@ enum Event {
     PLAYER_DAMAGE_HITSCAN,
     PLAYER_DAMAGE_PROJECTILE,
 
-    CHAT_MESSAGE_SEND,
+    CHAT_MESSAGE,
 }
 
 enum Level {
