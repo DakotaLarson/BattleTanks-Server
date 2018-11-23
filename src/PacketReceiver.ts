@@ -24,10 +24,12 @@ const receiveReloadRequest = (player: Player) => {
 };
 
 const receiveChatMessage = (player: Player, message: string) => {
-    EventHandler.callEvent(EventHandler.Event.CHAT_MESSAGE, {
-        player,
-        message,
-    });
+    if (message.length <= 255) {
+        EventHandler.callEvent(EventHandler.Event.CHAT_MESSAGE, {
+            player,
+            message,
+        });
+    }
 };
 
 const handlers: any = [

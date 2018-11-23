@@ -7,7 +7,8 @@ import Player from "./Player";
 
 export default class PlayerConnector {
 
-    private static CONNECTION_HEADER_CODE: number = 0x00;
+    private static readonly CONNECTION_HEADER_CODE = 0x00;
+    private static readonly MAX_NAME_LENGTH = 16;
 
     private playerId: number;
 
@@ -32,7 +33,9 @@ export default class PlayerConnector {
         const header = buffer.readUInt8(0);
         if (header === PlayerConnector.CONNECTION_HEADER_CODE) {
             const name = buffer.toString("utf8", 2);
-            this.createPlayer(event.target, name);
+            if (name.length <= PlayerConnector.MAX_NAME_LENGTH) {
+                this.createPlayer(event.target, name);
+            }
         }
     }
 
