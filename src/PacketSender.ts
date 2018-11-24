@@ -43,8 +43,8 @@ enum Packet {
 enum DataType {
     NUMBER,
     STRING,
-    FLOAT_ARRAY,
-    FLOAT_ARRAY_INT_HEADER,
+    NUMBER_ARRAY,
+    NUMBER_ARRAY_HEADER,
     HEADER_ONLY,
 }
 
@@ -79,7 +79,7 @@ export const sendPlayerRemoval = (id: number, involvedId?: number, livesRemainin
     involvedId = involvedId || 0;
     livesRemaining = livesRemaining || 0;
     const rawData = [id, involvedId, livesRemaining];
-    const data = constructData(Packet.PLAYER_REMOVE, rawData, DataType.FLOAT_ARRAY);
+    const data = constructData(Packet.PLAYER_REMOVE, rawData, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 
@@ -115,7 +115,7 @@ export const sendPlayerSpectating = (id: number) => {
 };
 
 export const sendPlayerAmmoStatus = (id: number, ammoCount: number, reloadPercentage: number) => {
-    const data = constructData(Packet.PLAYER_AMMO_STATUS, [ammoCount, reloadPercentage], DataType.FLOAT_ARRAY);
+    const data = constructData(Packet.PLAYER_AMMO_STATUS, [ammoCount, reloadPercentage], DataType.NUMBER_ARRAY);
     send(id, data);
 };
 
@@ -131,12 +131,12 @@ export const sendConnectedPlayerRemoval = (id: number, playerId: number, involve
     involvedId = involvedId || 0;
     livesRemaining = livesRemaining || 0;
     const rawData = [playerId, involvedId, livesRemaining];
-    const data = constructData(Packet.CONNECTED_PLAYER_REMOVE, rawData, DataType.FLOAT_ARRAY);
+    const data = constructData(Packet.CONNECTED_PLAYER_REMOVE, rawData, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 
 export const sendConnectedPlayerMove = (id: number, pos: Vector3, movementVelocity: number, rotationVelocity: number, bodyRot: number, headRot: number, playerId: number) => {
-    const data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, movementVelocity, rotationVelocity, bodyRot, headRot], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+    const data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, movementVelocity, rotationVelocity, bodyRot, headRot], DataType.NUMBER_ARRAY_HEADER, playerId);
     send(id, data);
 };
 
@@ -146,7 +146,7 @@ export const sendConnectedPlayerShoot = (id: number, playerId: number) => {
 };
 
 export const sendConnectedPlayerHealth = (id: number, playerId: number, health: number) => {
-    const data = constructData(Packet.CONNECTED_PLAYER_HEALTH, [health], DataType.FLOAT_ARRAY_INT_HEADER, playerId);
+    const data = constructData(Packet.CONNECTED_PLAYER_HEALTH, [health], DataType.NUMBER_ARRAY_HEADER, playerId);
 
     send(id, data);
 };
@@ -167,12 +167,12 @@ export const sendCooldownTime = (id: number, time: number) => {
 };
 
 export const sendProjectileLaunch = (id: number, packetData: number[]) => {
-    const data = constructData(Packet.PROJECTILE_LAUNCH, packetData, DataType.FLOAT_ARRAY);
+    const data = constructData(Packet.PROJECTILE_LAUNCH, packetData, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 
 export const sendProjectileMove = (id: number, packetData: number[]) => {
-    const data = constructData(Packet.PROJECTILE_MOVE, packetData, DataType.FLOAT_ARRAY);
+    const data = constructData(Packet.PROJECTILE_MOVE, packetData, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 
@@ -215,7 +215,7 @@ const send = (id: number, data: any) => {
 const constructData = (header: Packet, body: any, dataType: DataType, additionalHeader?: number) => {
 
     let headerBuffer: Buffer;
-    if (dataType === DataType.FLOAT_ARRAY || dataType === DataType.FLOAT_ARRAY_INT_HEADER || dataType === DataType.NUMBER) {
+    if (dataType === DataType.NUMBER_ARRAY || dataType === DataType.NUMBER_ARRAY_HEADER || dataType === DataType.NUMBER) {
         headerBuffer = Buffer.alloc(4);
     } else {
         headerBuffer = Buffer.alloc(2);
@@ -235,7 +235,7 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
             buffer = Buffer.from(body, "utf8");
 
             break;
-        case DataType.FLOAT_ARRAY:
+        case DataType.NUMBER_ARRAY:
 
             buffer = Buffer.alloc(body.length * 4);
 
@@ -244,9 +244,9 @@ const constructData = (header: Packet, body: any, dataType: DataType, additional
             }
 
             break;
-        case DataType.FLOAT_ARRAY_INT_HEADER:
+        case DataType.NUMBER_ARRAY_HEADER:
 
-            headerBuffer.writeUInt8((additionalHeader as number), 2);
+            headerBuffer.writeUInt16LE((additionalHeader as number), 2);
 
             buffer = Buffer.alloc(body.length * 4);
 

@@ -43,7 +43,7 @@ const handlers: any = [
 enum DataType {
     NUMBER,
     STRING,
-    FLOAT_ARRAY,
+    NUMBER_ARRAY,
     HEADER_ONLY,
 }
 
@@ -60,7 +60,7 @@ export default class PacketReceiver {
             case DataType.STRING:
                 body = message.toString("utf8", 2);
                 break;
-            case DataType.FLOAT_ARRAY:
+            case DataType.NUMBER_ARRAY:
                 body = new Array();
                 for (let i = 4; i < message.length; i += 4) {
                     body.push(message.readFloatLE(i));
