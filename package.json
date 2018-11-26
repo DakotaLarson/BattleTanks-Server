@@ -6,6 +6,7 @@
   "dependencies": {
     "express": "latest",
     "express-session": "latest",
+    "google-auth-library": "^2.0.1",
     "uuid": "latest",
     "ws": "latest"
   },

@@ -1,6 +1,7 @@
 import express = require("express");
 import session = require("express-session");
 import * as fs from "fs";
+import {OAuth2Client} from "google-auth-library";
 import http = require("http");
 import path = require("path");
 import uuid = require("uuid/v4");
@@ -9,13 +10,17 @@ const port = process.env.PORT || 8000;
 
 export default class WebServer {
 
+    private static readonly CLIENT_ID = "42166570332-0egs4928q7kfsnhh4nib3o8hjn62f9u5.apps.googleusercontent.com";
+
     public server: http.Server;
 
     private sessionIds: string[] = [];
+    private oauthClient: OAuth2Client;
 
     constructor() {
         const app = express();
         this.server = http.createServer(app);
+        this.oauthClient = new OAuth2Client(WebServer.CLIENT_ID);
 
         // Middleware
         app.use(session({
@@ -30,7 +35,6 @@ export default class WebServer {
 
         const cssPath = path.join(process.cwd(), "admin/css");
         app.use(express.static(cssPath));
-
         app.use(this.authenticate.bind(this));
 
         // Handlers
@@ -38,6 +42,7 @@ export default class WebServer {
 
         app.post("/login", this.onPostLogin.bind(this));
         app.post("/logout", this.onPostLogout.bind(this));
+        app.post("/token", this.onPostToken.bind(this));
     }
 
     public start() {
@@ -45,7 +50,7 @@ export default class WebServer {
     }
 
     private authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
-        if (req.session && req.session.user && this.isIdValid(req.session.user) || this.isAuthRequest(req)) {
+        if (req.session && req.session.user && this.isIdValid(req.session.user) || this.isPostRequest(req)) {
             // check data
             next();
         } else {
@@ -56,6 +61,21 @@ export default class WebServer {
     private onDashboardRequest(req: express.Request, res: express.Response) {
         res.sendFile(path.join(process.cwd(), "/admin/markup/dashboard.html"));
 
+    }
+
+    private onPostToken(req: express.Request, res: express.Response) {
+        this.oauthClient.verifyIdToken({
+            idToken: req.body.token,
+            audience: WebServer.CLIENT_ID,
+        }).then((ticket) => {
+            const payload =  ticket.getPayload();
+            if (payload) {
+                if (payload.aud === WebServer.CLIENT_ID && (payload.iss === "accounts.google.com" || payload.iss === "https://accounts.google.com")) {
+                    console.log(payload.sub);
+                }
+            }
+        });
+        res.sendStatus(200);
     }
 
     private onPostLogin(req: express.Request, res: express.Response) {
@@ -95,8 +115,8 @@ export default class WebServer {
         }
     }
 
-    private isAuthRequest(req: express.Request) {
-        return req.method === "POST" && (req.url === "/login" || req.url === "/logout");
+    private isPostRequest(req: express.Request) {
+        return req.method === "POST";
     }
 
     private isIdValid(id: string) {
