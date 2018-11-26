@@ -40,10 +40,6 @@ export default class TeamEliminationGamemode extends Gamemode {
 
         if (!isNaN(livesRemaining)) {
             livesRemaining --;
-
-            target.sendAlert("You were killed by: " + player.name);
-            player.sendAlert("You killed: " + target.name);
-
             target.despawn(player.id, livesRemaining);
 
             for (const otherPlayer of this.match.lobby.players) {
@@ -54,7 +50,6 @@ export default class TeamEliminationGamemode extends Gamemode {
 
             if (livesRemaining !== 0) {
                 this.respawn(target, livesRemaining);
-                target.sendAlert("Lives remaining: " + livesRemaining);
             } else {
                 this.lives.set(target.id, livesRemaining);
                 this.onFinalDeath(target);
@@ -119,7 +114,6 @@ export default class TeamEliminationGamemode extends Gamemode {
     }
 
     private onFinalDeath(target: Player) {
-        target.sendAlert("KO!");
         for (const player of this.match.lobby.players) {
             if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
                 if (player.isAlive || this.lives.get(player.id) !== 0) {

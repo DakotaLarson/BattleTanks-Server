@@ -34,7 +34,7 @@ export default abstract class Lobby {
             if (this.players.length >= this.minimumPlayerCount) {
                 this.startMatch();
             } else {
-                this.wait("Waiting for another player to start a new match");
+                this.wait();
             }
         } else if (this.status === GameStatus.RUNNING) {
             (this.match as Match).addPlayer(player);

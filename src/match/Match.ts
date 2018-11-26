@@ -26,7 +26,6 @@ export default abstract class Match {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
         for (const player of this.lobby.players) {
             player.sendArena(this.arena.getRawData());
-            player.sendAlert("Match started!");
         }
         this.projectileHandler.enable();
         this.gamemode.enable();
