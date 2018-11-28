@@ -15,10 +15,13 @@ export default class PlayerConnector {
 
     private playerId: number;
 
+    private subs: string[];
+
     private oauthClient: OAuth2Client;
 
     constructor() {
         this.playerId = 1;
+        this.subs = [];
         this.oauthClient = new OAuth2Client(PlayerConnector.CLIENT_ID);
     }
 
@@ -59,7 +62,14 @@ export default class PlayerConnector {
 
     private createPlayer(ws: WebSocket, name: string, sub?: string) {
         const id = this.playerId ++;
-        const player = new Player(name, id, sub);
+
+        let player: Player;
+        if (this.containsPlayerSub(sub)) {
+            player = new Player(name, id);
+        } else {
+            player = new Player(name, id, sub);
+            this.subs.push(sub as string);
+        }
 
         DomEventHandler.removeListener(this, ws, "message", this.checkMessage);
 
@@ -69,6 +79,7 @@ export default class PlayerConnector {
         ws.addEventListener("close", (event) => {
             console.log("Player disconnected " + event.code);
             PacketSender.removeSocket(id);
+            this.removePlayerSub(player.sub);
             EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, player);
         });
         ws.addEventListener("error", (error) => {
@@ -78,7 +89,7 @@ export default class PlayerConnector {
         PacketSender.addSocket(id, (ws as any));
 
         EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
-        if (sub) {
+        if (player.sub) {
             console.log("Player connected (Auth)");
         } else {
             console.log("Player connected (No Auth)");
@@ -100,4 +111,21 @@ export default class PlayerConnector {
             }).catch(reject);
         });
     }
+
+    private removePlayerSub(sub: string | undefined) {
+        if (sub) {
+            const index = this.subs.indexOf(sub);
+            if (index > -1) {
+                this.subs.splice(index, 1);
+            }
+        }
+    }
+
+    private containsPlayerSub(sub: string | undefined) {
+        if (sub) {
+            return this.subs.indexOf(sub) > -1;
+        }
+        return false;
+    }
+
 }
