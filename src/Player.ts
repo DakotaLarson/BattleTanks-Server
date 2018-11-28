@@ -11,6 +11,7 @@ export default class Player {
 
     public name: string;
     public id: number;
+    public sub: string | undefined;
 
     public position: Vector3;
 
@@ -34,9 +35,10 @@ export default class Player {
     private lastShotTime: number;
     private nextShotScheduled: boolean;
 
-    constructor(name: string, id: number) {
+    constructor(name: string, id: number, sub?: string) {
         this.name = name;
         this.id = id;
+        this.sub = sub;
 
         this.position = new Vector3();
 

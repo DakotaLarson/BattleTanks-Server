@@ -1,3 +1,4 @@
+import { OAuth2Client } from "google-auth-library";
 import WebSocket = require("ws");
 import DomEventHandler from "./DomEventHandler";
 import EventHandler from "./EventHandler";
@@ -9,11 +10,16 @@ export default class PlayerConnector {
 
     private static readonly CONNECTION_HEADER_CODE = 0x00;
     private static readonly MAX_NAME_LENGTH = 16;
+    private static readonly MAX_PACKET_LENGTH = 2048;
+    private static readonly CLIENT_ID = "42166570332-0egs4928q7kfsnhh4nib3o8hjn62f9u5.apps.googleusercontent.com";
 
     private playerId: number;
 
+    private oauthClient: OAuth2Client;
+
     constructor() {
         this.playerId = 1;
+        this.oauthClient = new OAuth2Client(PlayerConnector.CLIENT_ID);
     }
 
     public start() {
@@ -30,18 +36,30 @@ export default class PlayerConnector {
 
     private checkMessage(event: any) {
         const buffer: Buffer = event.data;
-        const header = buffer.readUInt8(0);
-        if (header === PlayerConnector.CONNECTION_HEADER_CODE) {
-            const name = buffer.toString("utf8", 2);
-            if (name.length <= PlayerConnector.MAX_NAME_LENGTH) {
-                this.createPlayer(event.target, name);
+        if (buffer.length < PlayerConnector.MAX_PACKET_LENGTH) {
+            const header = buffer.readUInt8(0);
+            if (header === PlayerConnector.CONNECTION_HEADER_CODE) {
+                try {
+                    const data = JSON.parse(buffer.toString("utf8", 2));
+                    if (data.name.length <= PlayerConnector.MAX_NAME_LENGTH) {
+                        if (data.tokenId) {
+                            this.verifyId(data.tokenId).then((sub) => {
+                                this.createPlayer(event.target, data.name, sub);
+                            }).catch(console.log);
+                        } else {
+                            this.createPlayer(event.target, data.name);
+                        }
+                    }
+                } catch (ex) {
+                    return;
+                }
             }
         }
     }
 
-    private createPlayer = (ws: WebSocket, name: string) => {
+    private createPlayer(ws: WebSocket, name: string, sub?: string) {
         const id = this.playerId ++;
-        const player = new Player(name, id);
+        const player = new Player(name, id, sub);
 
         DomEventHandler.removeListener(this, ws, "message", this.checkMessage);
 
@@ -60,6 +78,26 @@ export default class PlayerConnector {
         PacketSender.addSocket(id, (ws as any));
 
         EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
-        console.log("Player connected");
+        if (sub) {
+            console.log("Player connected (Auth)");
+        } else {
+            console.log("Player connected (No Auth)");
+        }
+    }
+
+    private verifyId(idToken: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.oauthClient.verifyIdToken({
+                idToken,
+                audience: PlayerConnector.CLIENT_ID,
+            }).then((ticket) => {
+                const payload =  ticket.getPayload();
+                if (payload) {
+                    if (payload.aud === PlayerConnector.CLIENT_ID && (payload.iss === "accounts.google.com" || payload.iss === "https://accounts.google.com")) {
+                        resolve(payload.sub);
+                    }
+                }
+            }).catch(reject);
+        });
     }
 }

@@ -18,7 +18,7 @@ export default class WebSocketServer {
         this.webServer = new WebServer();
         this.wss = new WebSocket.Server({
             server: this.webServer.server,
-            verifyClient: this.verifyClient,
+            verifyClient: this.verifyClient.bind(this),
         } as WebSocket.ServerOptions);
         this.wss.on("listening", () => {
             console.log("WSS Listening...");
