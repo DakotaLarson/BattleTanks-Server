@@ -12,50 +12,26 @@ export default class Arena {
 
     private rawData: any;
 
-    private initialSpawns: Vector4[];
-    private gameSpawns: Vector4[];
     private teamASpawns: Vector4[];
     private teamBSpawns: Vector4[];
 
-    private nextGameSpawnIndex: number;
-    private nextInitialSpawnIndex: number;
     private nextTeamASpawnIndex: number;
     private nextTeamBSpawnIndex: number;
 
     constructor(data: any) {
         this.rawData = data;
 
-        this.initialSpawns = [];
-        this.gameSpawns = [];
         this.teamASpawns = [];
         this.teamBSpawns = [];
         this.blockPositions = [];
 
         this.title = data.title;
 
-        this.nextGameSpawnIndex = 0;
-        this.nextInitialSpawnIndex = 0;
         this.nextTeamASpawnIndex = 0;
         this.nextTeamBSpawnIndex = 0;
 
         this.minimumPlayerCount = 2;
         this.maximumPlayerCount = 16;
-
-        for (let i = 0; i < data.initialSpawnPositions.length; i += 4) {
-            const x = data.initialSpawnPositions[i];
-            const y = data.initialSpawnPositions[i + 1];
-            const z = data.initialSpawnPositions[i + 2];
-            const w = data.initialSpawnPositions[i + 3] + Math.PI / 2;
-            this.initialSpawns.push(new Vector4(x, y, z, w));
-        }
-
-        for (let i = 0; i < data.gameSpawnPositions.length; i += 4) {
-            const x = data.gameSpawnPositions[i];
-            const y = data.gameSpawnPositions[i + 1];
-            const z = data.gameSpawnPositions[i + 2];
-            const w = data.gameSpawnPositions[i + 3] + Math.PI / 2;
-            this.gameSpawns.push(new Vector4(x, y, z, w));
-        }
 
         for (let i = 0; i < data.teamASpawnPositions.length; i += 4) {
             const x = data.teamASpawnPositions[i];
@@ -78,30 +54,6 @@ export default class Arena {
             const y = data.blockPositions[i + 1];
             const z = data.blockPositions[i + 2];
             this.blockPositions.push(new Vector3(x, y, z));
-        }
-    }
-
-    public getNextInitialSpawn(): Vector4 {
-        const length = this.initialSpawns.length;
-        if (length) {
-            if (this.nextInitialSpawnIndex >= length) {
-                this.nextInitialSpawnIndex = 0;
-            }
-            return this.initialSpawns[this.nextInitialSpawnIndex ++];
-        } else {
-            return new Vector4();
-        }
-    }
-
-    public getNextGameSpawn(): Vector4 {
-        const length = this.gameSpawns.length;
-        if (length) {
-            if (this.nextGameSpawnIndex >= length) {
-                this.nextGameSpawnIndex = 0;
-            }
-            return this.gameSpawns[this.nextGameSpawnIndex ++];
-        } else {
-            return new Vector4();
         }
     }
 
