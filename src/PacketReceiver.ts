@@ -1,5 +1,6 @@
 import EventHandler from "./EventHandler";
 import Player from "./Player";
+import Vector3 from "./vector/Vector3";
 
 const receivePlayerMove = (player: Player, data: number[]) => {
     player.onMove(data);
@@ -32,12 +33,22 @@ const receiveChatMessage = (player: Player, message: string) => {
     }
 };
 
+const receivePowerupPickup = (player: Player, rawData: number[]) => {
+    const data = {
+        player,
+        type: rawData[0],
+        position: new Vector3(rawData[1], rawData[2], rawData[3]),
+    };
+    EventHandler.callEvent(EventHandler.Event.POWERUP_PICKUP, data);
+};
+
 const handlers: any = [
     receivePlayerMove,
     receivePlayerShoot,
     receiveReloadRequest,
     receiveReloadMoveToggleRequest,
     receiveChatMessage,
+    receivePowerupPickup,
 ];
 
 enum DataType {

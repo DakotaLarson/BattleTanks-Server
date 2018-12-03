@@ -3,12 +3,17 @@ import Vector4 from "./vector/Vector4";
 
 export default class Arena {
 
-    public blockPositions: Vector3[];
-
     public title: string;
 
+    public blockPositions: Vector3[];
+
+    public shieldPowerupPositions: Vector3[];
+    public healthPowerupPositions: Vector3[];
+    public speedPowerupPositions: Vector3[];
+    public ammoPowerupPositions: Vector3[];
+
     public minimumPlayerCount: number;
-    public maximumPlayerCount: number;
+    public idealPlayerCount: number;
 
     private rawData: any;
 
@@ -21,40 +26,32 @@ export default class Arena {
     constructor(data: any) {
         this.rawData = data;
 
-        this.teamASpawns = [];
-        this.teamBSpawns = [];
+        this.title = data.title;
         this.blockPositions = [];
 
-        this.title = data.title;
+        this.teamASpawns = [];
+        this.teamBSpawns = [];
+
+        this.shieldPowerupPositions = [];
+        this.healthPowerupPositions = [];
+        this.speedPowerupPositions = [];
+        this.ammoPowerupPositions = [];
 
         this.nextTeamASpawnIndex = 0;
         this.nextTeamBSpawnIndex = 0;
 
         this.minimumPlayerCount = 2;
-        this.maximumPlayerCount = 16;
+        this.idealPlayerCount = 16;
 
-        for (let i = 0; i < data.teamASpawnPositions.length; i += 4) {
-            const x = data.teamASpawnPositions[i];
-            const y = data.teamASpawnPositions[i + 1];
-            const z = data.teamASpawnPositions[i + 2];
-            const w = -data.teamASpawnPositions[i + 3] + Math.PI / 2;
-            this.teamASpawns.push(new Vector4(x, y, z, w));
-        }
+        this.parseLocationData(data, "blockPositions", this.blockPositions, false);
 
-        for (let i = 0; i < data.teamBSpawnPositions.length; i += 4) {
-            const x = data.teamBSpawnPositions[i];
-            const y = data.teamBSpawnPositions[i + 1];
-            const z = data.teamBSpawnPositions[i + 2];
-            const w = -data.teamBSpawnPositions[i + 3] + Math.PI / 2;
-            this.teamBSpawns.push(new Vector4(x, y, z, w));
-        }
+        this.parseLocationData(data, "teamASpawnPositions", this.teamASpawns, true);
+        this.parseLocationData(data, "teamBSpawnPositions", this.teamBSpawns, true);
 
-        for (let i = 0; i < data.blockPositions.length; i += 3) {
-            const x = data.blockPositions[i];
-            const y = data.blockPositions[i + 1];
-            const z = data.blockPositions[i + 2];
-            this.blockPositions.push(new Vector3(x, y, z));
-        }
+        this.parseLocationData(data, "shieldPowerupPositions", this.shieldPowerupPositions, false);
+        this.parseLocationData(data, "healthPowerupPositions", this.healthPowerupPositions, false);
+        this.parseLocationData(data, "speedPowerupPositions", this.speedPowerupPositions, false);
+        this.parseLocationData(data, "ammoPowerupPositions", this.ammoPowerupPositions, false);
     }
 
     public getNextTeamASpawn(): Vector4 {
@@ -83,5 +80,29 @@ export default class Arena {
 
     public getRawData(): string {
         return this.rawData;
+    }
+
+    private parseLocationData(data: any, title: string, storage: Vector3[] | Vector4[], isVec4: boolean) {
+        if (data[title]) {
+            const length = data[title].length;
+            if (length) {
+                let increment = 3;
+                if (isVec4) {
+                    increment = 4;
+                }
+                for (let i = 0; i < length; i += increment) {
+                    const x = data[title][i];
+                    const y = data[title][i + 1];
+                    const z = data[title][i + 2];
+                    if (isVec4) {
+                        const w = -data[title][i + 3] + Math.PI / 2;
+                        (storage as Vector4[]).push(new Vector4(x, y, z, w));
+                    } else {
+                        (storage as Vector3[]).push(new Vector3(x, y, z));
+
+                    }
+                }
+            }
+        }
     }
 }

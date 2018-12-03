@@ -25,6 +25,8 @@ enum Event {
     PLAYER_DAMAGE_PROJECTILE,
 
     CHAT_MESSAGE,
+
+    POWERUP_PICKUP,
 }
 
 enum Level {

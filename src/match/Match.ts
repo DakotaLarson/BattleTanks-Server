@@ -3,6 +3,7 @@ import EventHandler from "../EventHandler";
 import Gamemode from "../gamemode/Gamemode";
 import Lobby from "../lobby/Lobby";
 import Player from "../Player";
+import PowerupHandler from "../powerup/PowerupHandler";
 import ProjectileHandler from "../projectile/ProjectileHandler";
 import Vector4 from "../vector/Vector4";
 
@@ -13,21 +14,25 @@ export default abstract class Match {
 
     protected abstract gamemode: Gamemode;
 
-    protected projectileHandler: ProjectileHandler;
+    private projectileHandler: ProjectileHandler;
+    private powerupHandler: PowerupHandler;
 
     constructor(arena: Arena, lobby: Lobby) {
         this.arena = arena;
         this.lobby = lobby;
 
         this.projectileHandler = new ProjectileHandler(this);
+        this.powerupHandler = new PowerupHandler(this);
     }
 
     public run() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
+
         for (const player of this.lobby.players) {
             player.sendArena(this.arena.getRawData());
         }
         this.projectileHandler.enable();
+        this.powerupHandler.enable();
         this.gamemode.enable();
     }
 
@@ -43,6 +48,7 @@ export default abstract class Match {
             }
         }
         this.projectileHandler.disable();
+        this.powerupHandler.enable();
         this.gamemode.disable();
     }
 

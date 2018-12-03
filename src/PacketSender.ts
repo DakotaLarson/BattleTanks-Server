@@ -38,6 +38,10 @@ enum Packet {
     PROJECTILE_CLEAR,
 
     CHAT_MESSAGE,
+
+    POWERUP_ADDITION,
+    POWERUP_REMOVAL,
+    POWERUP_APPLICATION,
 }
 
 enum DataType {
@@ -188,6 +192,21 @@ export const sendProjectileClear = (id: number) => {
 
 export const sendChatMessage = (id: number, constructedMessage: string) => {
     const data = constructData(Packet.CHAT_MESSAGE, constructedMessage, DataType.STRING);
+    send(id, data);
+};
+
+export const sendPowerupAddition = (id: number, packetData: number[]) => {
+    const data = constructData(Packet.POWERUP_ADDITION, packetData, DataType.NUMBER_ARRAY);
+    send(id, data);
+};
+
+export const sendPowerupRemoval = (id: number, packetData: number[]) => {
+    const data = constructData(Packet.POWERUP_REMOVAL, packetData, DataType.NUMBER_ARRAY);
+    send(id, data);
+};
+
+export const sendPowerupApplication = (id: number, powerupId: number) => {
+    const data = constructData(Packet.POWERUP_APPLICATION, powerupId, DataType.NUMBER);
     send(id, data);
 };
 
