@@ -10,6 +10,6 @@ export default class SpeedPowerup extends Powerup {
     constructor(position: Vector3, handler: PowerupHandler) {
         super(position, handler);
         this.typeId = 2;
-        this.regenTime = 3;
+        this.regenTime = 12;
     }
 }

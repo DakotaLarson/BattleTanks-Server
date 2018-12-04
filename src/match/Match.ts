@@ -48,7 +48,7 @@ export default abstract class Match {
             }
         }
         this.projectileHandler.disable();
-        this.powerupHandler.enable();
+        this.powerupHandler.disable();
         this.gamemode.disable();
     }
 

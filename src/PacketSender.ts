@@ -17,14 +17,18 @@ enum Packet {
     PLAYER_SHOOT_INVALID,
     PLAYER_SHOOT,
     PLAYER_HEALTH,
+    PLAYER_SHIELD,
     PLAYER_SPECTATING,
     PLAYER_AMMO_STATUS,
+    PLAYER_SPEED_MULTIPLIER,
+    PLAYER_POWERUP_PICKUP,
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
     CONNECTED_PLAYER_REMOVE,
     CONNECTED_PLAYER_SHOOT,
     CONNECTED_PLAYER_HEALTH,
+    CONNECTED_PLAYER_SHIELD,
 
     MATCH_STATISTICS,
 
@@ -113,6 +117,11 @@ export const sendPlayerHealth = (id: number, health: number) => {
     send(id, data);
 };
 
+export const sendPlayerShield = (id: number, shield: number) => {
+    const data = constructData(Packet.PLAYER_SHIELD, shield, DataType.NUMBER);
+    send(id, data);
+};
+
 export const sendPlayerSpectating = (id: number) => {
     const data = constructData(Packet.PLAYER_SPECTATING, undefined, DataType.HEADER_ONLY);
     send(id, data);
@@ -120,6 +129,16 @@ export const sendPlayerSpectating = (id: number) => {
 
 export const sendPlayerAmmoStatus = (id: number, ammoCount: number, reloadPercentage: number) => {
     const data = constructData(Packet.PLAYER_AMMO_STATUS, [ammoCount, reloadPercentage], DataType.NUMBER_ARRAY);
+    send(id, data);
+};
+
+export const sendPlayerSpeedMultiplier = (id: number, multiplier: number) => {
+    const data = constructData(Packet.PLAYER_SPEED_MULTIPLIER, multiplier, DataType.NUMBER);
+    send(id, data);
+};
+
+export const sendPlayerPowerupPickup = (id: number) => {
+    const data = constructData(Packet.PLAYER_POWERUP_PICKUP, undefined, DataType.HEADER_ONLY);
     send(id, data);
 };
 
@@ -151,7 +170,11 @@ export const sendConnectedPlayerShoot = (id: number, playerId: number) => {
 
 export const sendConnectedPlayerHealth = (id: number, playerId: number, health: number) => {
     const data = constructData(Packet.CONNECTED_PLAYER_HEALTH, [health], DataType.NUMBER_ARRAY_HEADER, playerId);
+    send(id, data);
+};
 
+export const sendConnectedPlayerShield = (id: number, playerId: number, shield: number) => {
+    const data = constructData(Packet.CONNECTED_PLAYER_SHIELD, [shield], DataType.NUMBER_ARRAY_HEADER, playerId);
     send(id, data);
 };
 

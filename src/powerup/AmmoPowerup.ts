@@ -10,6 +10,6 @@ export default class AmmoPowerup extends Powerup {
     constructor(position: Vector3, handler: PowerupHandler) {
         super(position, handler);
         this.typeId = 3;
-        this.regenTime = 2;
+        this.regenTime = 7.5;
     }
 }

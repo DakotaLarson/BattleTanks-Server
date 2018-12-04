@@ -6,7 +6,7 @@ import Gamemode from "./Gamemode";
 
 export default class TeamEliminationGamemode extends Gamemode {
 
-    private static readonly DAMAGE = 0.201;
+    private static readonly DAMAGE = 0.20;
     private static readonly LIFE_COUNT = 3;
 
     private lives: Map<number, number>;
@@ -65,11 +65,23 @@ export default class TeamEliminationGamemode extends Gamemode {
             if (!(this.match as TeamEliminationMatch).onSameTeam(data.player, data.target)) {
                 const protectedIndex = this.protected.indexOf(data.target.id);
                 if (protectedIndex === -1) {
-                    const targetHealth = data.target.damage(TeamEliminationGamemode.DAMAGE);
+                    const previousShield = data.target.shield;
+                    const targetData = data.target.damage(TeamEliminationGamemode.DAMAGE);
+
+                    const targetHealth = targetData[0];
+                    const targetShield = targetData[1];
+
+                    if (previousShield !== targetShield) {
+                        for (const player of this.match.lobby.players) {
+                            if (player !== data.target) {
+                                player.sendConnectedPlayerShield(data.target.id, targetShield);
+                            }
+                        }
+                    }
 
                     for (const player of this.match.lobby.players) {
-                        if (player.id !== data.target.id) {
-                            player.sendConnectedPlayerHealth(data.target.id, data.target.health);
+                        if (player !== data.target) {
+                            player.sendConnectedPlayerHealth(data.target.id, targetHealth);
                         }
                     }
 

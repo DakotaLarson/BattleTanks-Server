@@ -10,6 +10,6 @@ export default class ShieldPowerup extends Powerup {
     constructor(position: Vector3, handler: PowerupHandler) {
         super(position, handler);
         this.typeId = 0;
-        this.regenTime = 5;
+        this.regenTime = 25;
     }
 }

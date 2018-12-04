@@ -7,6 +7,14 @@ import Vector4 from "./vector/Vector4";
 
 export default class Player {
 
+    public static fullAmmoCount = 10;
+
+    public static ammoBoost = 5;
+    public static healthBoost = 0.4;
+    public static speedBoost = 1.5;
+    public static speedBoostTime = 5;
+    public static shieldBoost = 0.4;
+
     private static shotCooldown = 75;
 
     public name: string;
@@ -20,13 +28,17 @@ export default class Player {
 
     public isAlive: boolean;
     public health: number;
+    public shield: number;
+
+    public hasSpeedBoost: boolean;
 
     public color: number;
+
+    public ammoCount: number;
 
     private movementVelocity: number;
     private rotationVelocity: number;
 
-    private ammoCount: number;
     private reloadPercentage: number;
     private reloading: boolean;
 
@@ -50,8 +62,11 @@ export default class Player {
 
         this.isAlive = false;
         this.health = 1;
+        this.shield = 0;
 
-        this.ammoCount = 10;
+        this.hasSpeedBoost = false;
+
+        this.ammoCount = Player.fullAmmoCount;
         this.reloadPercentage = 1;
         this.reloading = false;
 
@@ -95,6 +110,10 @@ export default class Player {
 
     public sendConnectedPlayerHealth(playerId: number, health: number) {
         PacketSender.sendConnectedPlayerHealth(this.id, playerId, health);
+    }
+
+    public sendConnectedPlayerShield(playerId: number, shield: number) {
+        PacketSender.sendConnectedPlayerShield(this.id, playerId, shield);
     }
 
     public sendArena(arena: any) {
@@ -150,7 +169,6 @@ export default class Player {
             EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
             this.reloading = true;
         }
-
     }
 
     public spawn(pos: Vector4) {
@@ -180,10 +198,14 @@ export default class Player {
     }
 
     public damage(amount: number) {
-        this.health = Math.max(this.health - amount, 0);
-        PacketSender.sendPlayerHealth(this.id, this.health);
-
-        return this.health;
+        if (amount > this.shield) {
+            const diff = amount - this.shield;
+            this.alterShield(-amount);
+            this.alterHealth(-diff);
+        } else {
+            this.alterShield(-amount);
+        }
+        return [this.health, this.shield];
     }
 
     public destroy() {
@@ -194,6 +216,46 @@ export default class Player {
 
     public onReloadMoveToggle(moving: boolean) {
         this.moving = moving;
+    }
+
+    public boostAmmo() {
+        if (this.reloading) {
+            this.finishReload();
+            this.reloadPercentage = 1;
+        }
+        this.ammoCount = Player.fullAmmoCount + Player.ammoBoost;
+        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+    }
+
+    public boostHealth() {
+        this.alterHealth(Player.healthBoost);
+    }
+
+    public boostSpeed() {
+        this.hasSpeedBoost = true;
+        PacketSender.sendPlayerSpeedMultiplier(this.id, Player.speedBoost);
+        setTimeout(() => {
+            PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
+            this.hasSpeedBoost = false;
+        }, Player.speedBoostTime * 1000);
+    }
+
+    public boostShield() {
+        this.alterShield(Player.shieldBoost);
+    }
+
+    private alterHealth(amount: number) {
+        this.health = Math.round(Math.max(Math.min(this.health + amount, 1), 0) * 100) / 100;
+        PacketSender.sendPlayerHealth(this.id, this.health);
+
+        return this.health;
+    }
+
+    private alterShield(amount: number) {
+        this.shield = Math.round(Math.max(Math.min(this.shield + amount, 1), 0) * 100) / 100;
+        PacketSender.sendPlayerShield(this.id, this.shield);
+
+        return this.shield;
     }
 
     private onTick(delta: number) {
@@ -216,7 +278,7 @@ export default class Player {
     }
 
     private finishReload() {
-        this.ammoCount = 10;
+        this.ammoCount = Player.fullAmmoCount;
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
         this.reloading = false;
     }
