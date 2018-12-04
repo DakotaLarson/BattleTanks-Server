@@ -174,6 +174,7 @@ export default class Player {
     public spawn(pos: Vector4) {
         this.isAlive = true;
         this.health = 1;
+        this.shield = 0;
         this.ammoCount = 10;
 
         this.position.x = pos.x;
@@ -191,6 +192,7 @@ export default class Player {
     public despawn(involvedId?: number, livesRemaining?: number) {
         this.isAlive = false;
         this.health = 0;
+        this.shield = 0;
         this.ammoCount = 0;
 
         PacketSender.sendPlayerRemoval(this.id, involvedId, livesRemaining);

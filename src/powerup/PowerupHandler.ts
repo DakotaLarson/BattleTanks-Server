@@ -39,7 +39,7 @@ export default class PowerupHandler {
             powerup.enable();
         }
 
-        EventHandler.addListener(this, EventHandler.Event.POWERUP_PICKUP, this.onPickup);
+        EventHandler.addListener(this, EventHandler.Event.POWERUP_PICKUP, this.onPickupRequest);
     }
 
     public disable() {
@@ -47,7 +47,7 @@ export default class PowerupHandler {
             powerup.disable();
         }
 
-        EventHandler.removeListener(this, EventHandler.Event.POWERUP_PICKUP, this.onPickup);
+        EventHandler.removeListener(this, EventHandler.Event.POWERUP_PICKUP, this.onPickupRequest);
     }
 
     public addPowerup(powerup: Powerup) {
@@ -62,9 +62,9 @@ export default class PowerupHandler {
         }
     }
 
-    private onPickup(data: any) {
+    private onPickupRequest(data: any) {
         for (const powerup of this.powerups) {
-            if (powerup.position.equals(data.position) && powerup.typeId === data.type) {
+            if (powerup.position.equals(data.position) && powerup.typeId === data.type && powerup.enabled) {
                 const maxDistance = Math.pow(PowerupHandler.powerupRadius, 2) + Math.pow(PowerupHandler.playerRadius, 2);
                 const distance = data.player.position.distanceSquared(powerup.position);
                 if (distance < maxDistance) {
@@ -92,7 +92,7 @@ export default class PowerupHandler {
     }
 
     private pickup(player: Player, type: number) {
-        PacketSender.sendPlayerPowerupPickup(player.id);
+        PacketSender.sendPlayerPowerupPickup(player.id);  // Sound.
         if (type === 0) {
             player.boostShield();
 
