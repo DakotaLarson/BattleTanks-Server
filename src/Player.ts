@@ -11,8 +11,8 @@ export default class Player {
 
     public static ammoBoost = 5;
     public static healthBoost = 0.4;
-    public static speedBoost = 1.5;
-    public static speedBoostTime = 5;
+    public static speedBoost = 1.25;
+    public static speedBoostTime = 7.5;
     public static shieldBoost = 0.4;
 
     private static shotCooldown = 75;
