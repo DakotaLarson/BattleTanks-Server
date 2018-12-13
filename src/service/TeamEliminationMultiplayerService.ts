@@ -9,6 +9,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
     constructor() {
         super();
         this.lobby = new TeamEliminationLobby();
+        this.lobby.enable();
     }
 
     protected onPlayerJoin(player: Player): void {

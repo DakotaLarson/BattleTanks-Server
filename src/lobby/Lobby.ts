@@ -18,11 +18,20 @@ export default abstract class Lobby {
 
     constructor() {
         this.players = [];
-
         this.status = GameStatus.WAITING;
+    }
 
-        // TODO: Refactor this to allow cleanup when multiple lobbies can be created & destroyed.
+    public enable() {
         EventHandler.addListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
+    }
+
+    public disable() {
+        if (this.match) {
+            throw new Error("Cannot disable lobby when match exists");
+        }
+        this.players = [];
+        this.status = GameStatus.WAITING;
+        EventHandler.removeListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
     }
 
     public addPlayer(player: Player) {
