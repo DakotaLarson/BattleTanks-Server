@@ -144,7 +144,7 @@ export default abstract class Lobby {
         setTimeout(() => {
 
             if (this.players.length >= this.minimumPlayerCount) {
-                const arena = ArenaLoader.getRandomArena();
+                const arena = ArenaLoader.getArena(this.players.length);
                 this.match = this.createMatch(arena);
                 this.updateStatus(GameStatus.RUNNING);
             } else {

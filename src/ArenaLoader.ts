@@ -1,7 +1,6 @@
-import Arena from "./Arena";
-
 import * as fs from "fs";
 import * as path from "path";
+import Arena from "./Arena";
 
 export default class ArenaLoader {
 
@@ -68,10 +67,6 @@ export default class ArenaLoader {
         });
     }
 
-    public static getLoadedArena() {
-        return ArenaLoader.loadedArena;
-    }
-
     public static getRandomArena(): Arena {
         const arenaCount = ArenaLoader.arenas.length;
         if (arenaCount) {
@@ -82,16 +77,55 @@ export default class ArenaLoader {
         }
     }
 
-    public static loadRandomArena(): boolean {
-        const arenaCount = ArenaLoader.arenas.length;
-        if (arenaCount) {
-            const index = Math.floor(Math.random() * arenaCount);
-            ArenaLoader.loadedArena = ArenaLoader.arenas[index];
-            return true;
+    public static getArena(playerCount: number): Arena {
+        if (ArenaLoader.arenas.length) {
+            const validArenas = [];
+
+            // Get all arenas that can fit players
+            let useRecommendedLimit = false;
+            for (const arena of ArenaLoader.arenas) {
+                if (arena.maximumPlayerCount >= playerCount && arena.minimumPlayerCount <= playerCount) {
+                    if (arena.recommendedPlayerCount >= playerCount) {
+                        // At least one arena can hold players using the recommended limit.
+                        useRecommendedLimit = true;
+                    }
+                    validArenas.push(arena);
+                }
+            }
+
+            if (useRecommendedLimit) {
+                for (const arena of validArenas) {
+                    if (arena.recommendedPlayerCount < playerCount) {
+                        // The arena would be over recommended capacity.
+                        validArenas.splice(validArenas.indexOf(arena), 1);
+                    }
+                }
+            }
+
+            if (!validArenas.length) {
+                throw new Error("No arenas can hold player count: " + playerCount);
+            }
+
+            let selectedArena = validArenas[0];
+            let selectedArenaDiff = (useRecommendedLimit ? selectedArena.recommendedPlayerCount : selectedArena.maximumPlayerCount) - playerCount;
+
+            for (let i = 1; i < validArenas.length; i ++) {
+                const arena = validArenas[i];
+                const arenaDiff = (useRecommendedLimit ? arena.recommendedPlayerCount : arena.maximumPlayerCount) - playerCount;
+                if (arenaDiff < selectedArenaDiff) {
+                    selectedArena = arena;
+                    selectedArenaDiff = arenaDiff;
+                } else if (arenaDiff === selectedArenaDiff && Math.random() >= 0.5) {
+                    selectedArena = arena;
+                }
+            }
+
+            return selectedArena;
+        } else {
+            throw new Error("No arenas loaded on server");
         }
-        return false;
     }
-    private static loadedArena: Arena;
+
     private static arenas: Arena[] = [];
 
     private static getArenaData(dirPath: string, fileName: string): Promise<string> {
