@@ -12,10 +12,11 @@ export default abstract class Match {
     public arena: Arena;
     public lobby: Lobby;
 
+    protected powerupHandler: PowerupHandler;
+
     protected abstract gamemode: Gamemode;
 
     private projectileHandler: ProjectileHandler;
-    private powerupHandler: PowerupHandler;
 
     constructor(arena: Arena, lobby: Lobby) {
         this.arena = arena;

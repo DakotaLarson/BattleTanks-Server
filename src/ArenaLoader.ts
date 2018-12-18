@@ -10,6 +10,10 @@ export default class ArenaLoader {
 
             ArenaLoader.arenas = [];
 
+            Arena.maximumPlayerCount = 0;
+            Arena.recommendedPlayerCount = 0;
+            Arena.minimumPlayerCount = Number.MAX_SAFE_INTEGER;
+
             const dirPath = path.join(process.cwd(), "arenas");
 
             fs.exists(dirPath, (exists) => {
@@ -22,6 +26,7 @@ export default class ArenaLoader {
                             reject("Error reading from 'arenas' directory");
 
                         } else {
+
                             let expectedArenaCount = arenaFiles.length;
                             if (expectedArenaCount) {
                                 let loadedArenaCount = 0;
@@ -31,6 +36,10 @@ export default class ArenaLoader {
                                     ArenaLoader.getArenaData(dirPath, arena).then((arenaData: string) => {
                                         this.arenas.push(new Arena(arenaData));
                                         if (++ loadedArenaCount === expectedArenaCount) {
+                                            console.log("Recommended Limit: " + Arena.recommendedPlayerCount);
+                                            console.log("Maximum Limit: " + Arena.maximumPlayerCount);
+                                            console.log("Minimum Limit: " + Arena.minimumPlayerCount);
+
                                             resolve(loadedArenaCount + " arena(s) loaded");
                                         }
                                     }).catch((message: string) => {
@@ -102,8 +111,10 @@ export default class ArenaLoader {
                         console.error(ex);
                         reject("Error parsing content in " + fileName);
                     }
-                    if (ArenaLoader.hasTitle(data) && ArenaLoader.hasDimensions(data) && ArenaLoader.hasBlockPositions(data) && ArenaLoader.hasPlayerSpawns(data)) {
+                    if (ArenaLoader.hasTitle(data) && ArenaLoader.hasDimensions(data) && ArenaLoader.hasBlockPositions(data) && ArenaLoader.hasPlayerSpawns(data) && ArenaLoader.hasPlayerCounts(data)) {
                         resolve(data);
+                    } else {
+                        reject("Missing required fields in " + fileName);
                     }
                 });
             } else {
@@ -132,5 +143,11 @@ export default class ArenaLoader {
         const hasTeamBSpawns = data.teamBSpawnPositions && data.teamBSpawnPositions.length;
 
         return hasTeamASpawns && hasTeamBSpawns;
+    }
+
+    private static hasPlayerCounts(data: any) {
+        return data.minimumPlayerCount && data.minimumPlayerCount >= 2 &&
+            data.recommendedPlayerCount && data.recommendedPlayerCount >= data.minimumPlayerCount &&
+            data.maximumPlayerCount && data.maximumPlayerCount >= data.recommendedPlayerCount + 2;
     }
 }

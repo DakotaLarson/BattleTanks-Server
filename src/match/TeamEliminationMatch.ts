@@ -59,9 +59,10 @@ export default class TeamEliminationMatch extends Match {
     public addPlayer(player: Player): void { // adding spectator, not regular player
         player.sendPlayerSpectating();
         player.sendArena(this.arena.getRawData());
+        this.powerupHandler.onPlayerAddition(player);
 
         for (const otherPlayer of this.lobby.players) {
-            if (player !== otherPlayer) {
+            if (player !== otherPlayer && otherPlayer.isAlive) {
                 player.sendConnectedPlayerAddition(otherPlayer);
             }
         }

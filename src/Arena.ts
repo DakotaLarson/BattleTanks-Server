@@ -3,6 +3,10 @@ import Vector4 from "./vector/Vector4";
 
 export default class Arena {
 
+    public static recommendedPlayerCount: number;
+    public static maximumPlayerCount: number;
+    public static minimumPlayerCount: number;
+
     public title: string;
 
     public blockPositions: Vector3[];
@@ -13,7 +17,8 @@ export default class Arena {
     public ammoPowerupPositions: Vector3[];
 
     public minimumPlayerCount: number;
-    public idealPlayerCount: number;
+    public recommendedPlayerCount: number;
+    public maximumPlayerCount: number;
 
     private rawData: any;
 
@@ -40,8 +45,14 @@ export default class Arena {
         this.nextTeamASpawnIndex = 0;
         this.nextTeamBSpawnIndex = 0;
 
-        this.minimumPlayerCount = 2;
-        this.idealPlayerCount = 16;
+        this.minimumPlayerCount = data.minimumPlayerCount;
+        Arena.minimumPlayerCount = Math.min(this.minimumPlayerCount, Arena.minimumPlayerCount);
+
+        this.recommendedPlayerCount = data.recommendedPlayerCount;
+        Arena.recommendedPlayerCount = Math.max(this.recommendedPlayerCount, Arena.recommendedPlayerCount);
+
+        this.maximumPlayerCount = data.maximumPlayerCount;
+        Arena.maximumPlayerCount = Math.max(this.maximumPlayerCount, Arena.maximumPlayerCount);
 
         this.parseLocationData(data, "blockPositions", this.blockPositions, false);
 

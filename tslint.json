@@ -8,7 +8,13 @@
         "max-line-length": false,
         "no-console": false,
         "object-literal-sort-keys": false,
-        "no-null-keyword": true
+        "no-null-keyword": true,
+        "no-shadowed-variable": [
+            true,
+            {
+              "temporalDeadZone": false
+            }
+          ]
     },
     "rulesDirectory": []
 }

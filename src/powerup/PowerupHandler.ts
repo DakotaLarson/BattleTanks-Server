@@ -62,15 +62,25 @@ export default class PowerupHandler {
         }
     }
 
-    private onPickupRequest(data: any) {
+    public onPlayerAddition(player: Player) {
         for (const powerup of this.powerups) {
-            if (powerup.position.equals(data.position) && powerup.typeId === data.type && powerup.enabled) {
-                const maxDistance = Math.pow(PowerupHandler.powerupRadius, 2) + Math.pow(PowerupHandler.playerRadius, 2);
-                const distance = data.player.position.distanceSquared(powerup.position);
-                if (distance < maxDistance) {
-                    if (this.canPickup(data.player, data.type)) {
-                        powerup.regen();
-                        this.pickup(data.player, data.type);
+            if (powerup.enabled) {
+                PacketSender.sendPowerupAddition(player.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
+            }
+        }
+    }
+
+    private onPickupRequest(data: any) {
+        if (this.match.hasPlayer(data.player)) {
+            for (const powerup of this.powerups) {
+                if (powerup.position.equals(data.position) && powerup.typeId === data.type && powerup.enabled) {
+                    const maxDistance = Math.pow(PowerupHandler.powerupRadius, 2) + Math.pow(PowerupHandler.playerRadius, 2);
+                    const distance = data.player.position.distanceSquared(powerup.position);
+                    if (distance < maxDistance) {
+                        if (this.canPickup(data.player, data.type)) {
+                            powerup.regen();
+                            this.pickup(data.player, data.type);
+                        }
                     }
                 }
             }
