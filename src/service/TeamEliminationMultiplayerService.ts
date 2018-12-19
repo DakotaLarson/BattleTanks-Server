@@ -1,4 +1,3 @@
-import Arena from "../Arena";
 import Lobby from "../lobby/Lobby";
 import TeamEliminationLobby from "../lobby/TeamEliminationLobby";
 import Player from "../Player";
@@ -14,21 +13,26 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
     }
 
     public onMatchEnd(lobby: TeamEliminationLobby): boolean {
-        let amountToMove = lobby.players.length;
-        if (!lobby.isBelowRecommendedPlayerCount()) {
-            amountToMove -= Arena.recommendedPlayerCount;
-        }
-        const availableSpace = this.getAvailableLobbySpace(this.lobbies, lobby);
+        // console.log("match end");
+        // let amountToMove = lobby.players.length;
+        // if (!lobby.isBelowRecommendedPlayerCount()) {
+        //     amountToMove -= Arena.recommendedPlayerCount;
+        // }
+        // const availableSpace = this.getAvailableLobbySpace(this.lobbies, lobby);
 
-        if (availableSpace >= amountToMove && amountToMove) {
-            this.sortLobbies(this.lobbies);
-            this.migratePlayers(this.lobbies, lobby, amountToMove);
-            return true;
-        }
+        // console.log(availableSpace);
+        // console.log(amountToMove);
+        // if (availableSpace >= amountToMove && amountToMove) {
+        //     this.sortLobbies(this.lobbies);
+        //     this.migratePlayers(this.lobbies, lobby, amountToMove);
+        //     return true;
+        // }
         return false;
     }
 
     protected onPlayerJoin(player: Player): void {
+
+        console.log("player join");
 
         /*
         Find a lobby below absolute recommended limit.
@@ -46,7 +50,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
 
         const belowMinLobbies = [];
 
-        let spectatorCount = 0;
+        // let spectatorCount = 0;
 
         for (const lobby of this.lobbies) {
             if (lobby.isBelowMinimumPlayerCount()) {
@@ -64,7 +68,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
                     runningBelowMaxLobbies.push(lobby);
                 }
             }
-            spectatorCount += lobby.getSpectatorCount();
+           // spectatorCount += lobby.getSpectatorCount();
         }
         let lobby;
         if (startingBelowRecLobbies.length) {
@@ -74,23 +78,26 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         } else if (belowMinLobbies.length) {
             lobby = this.getMostFullLobby(belowMinLobbies);
         } else {
-            if (spectatorCount + 1 >= Arena.minimumPlayerCount) {
-                lobby = this.createLobby();
-                this.migrateSpectators(this.lobbies, lobby, Math.min(spectatorCount, Arena.recommendedPlayerCount));
-            } else {
-                if (runningBelowMaxLobbies.length) {
-                    lobby = this.getMostFullLobby(runningBelowMaxLobbies);
-                } else if (startingBelowMaxLobbies.length) {
-                    lobby = this.getMostFullLobby(startingBelowMaxLobbies);
-                } else {
-                    lobby = this.createLobby();
-                }
-            }
+            // if (spectatorCount + 1 >= Arena.minimumPlayerCount) {
+            //     lobby = this.createLobby();
+            //     this.migrateSpectators(this.lobbies, lobby, Math.min(spectatorCount, Arena.recommendedPlayerCount));
+            // } else {
+            //     if (runningBelowMaxLobbies.length) {
+            //         lobby = this.getMostFullLobby(runningBelowMaxLobbies);
+            //     } else if (startingBelowMaxLobbies.length) {
+            //         lobby = this.getMostFullLobby(startingBelowMaxLobbies);
+            //     } else {
+            //         lobby = this.createLobby();
+            //     }
+            // }
+
+            lobby = this.createLobby();
         }
         lobby.addPlayer(player);
     }
 
     protected onPlayerLeave(player: Player): void {
+        console.log("player leave");
         for (const lobby of this.lobbies) {
             if (lobby.hasPlayer(player)) {
                 lobby.removePayer(player);
@@ -120,53 +127,56 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         return mostFullLobby;
     }
 
-    private getAvailableLobbySpace(lobbies: Lobby[], exemptLobby: Lobby) {
-        let playerCount = 0;
-        for (const lobby of lobbies) {
-            if (lobby !== exemptLobby) {
-                playerCount +=  Math.max(Arena.recommendedPlayerCount - lobby.players.length, 0);
-            }
-        }
-        return playerCount;
-    }
+    // private getAvailableLobbySpace(lobbies: Lobby[], exemptLobby: Lobby) {
+    //     let playerCount = 0;
+    //     for (const lobby of lobbies) {
+    //         if (lobby !== exemptLobby) {
+    //             playerCount +=  Math.max(Arena.recommendedPlayerCount - lobby.players.length, 0);
+    //         }
+    //     }
+    //     return playerCount;
+    // }
 
-    private sortLobbies(lobbies: Lobby[]) {
-        lobbies.sort((a: Lobby, b: Lobby) => {
-            return b.players.length - a.players.length;
-        });
-    }
+    // private sortLobbies(lobbies: Lobby[]) {
+    //     lobbies.sort((a: Lobby, b: Lobby) => {
+    //         return b.players.length - a.players.length;
+    //     });
+    // }
 
-    private migratePlayers(lobbies: Lobby[], currentLobby: TeamEliminationLobby, amountToMove: number) {
-        for (let i = 0; i < amountToMove; i ++) {
-            const player = currentLobby.players[i];
-            currentLobby.removePayer(player);
-            for (const lobby of lobbies) {
-                if (lobby.isBelowRecommendedPlayerCount() && lobby !== currentLobby) {
-                    lobby.addPlayer(player);
-                    break;
-                }
-            }
-        }
-        if (currentLobby.isEmpty()) {
-            currentLobby.disable();
-            this.lobbies.splice(this.lobbies.indexOf(currentLobby), 1);
-        }
-    }
+    // private migratePlayers(lobbies: Lobby[], currentLobby: TeamEliminationLobby, amountToMove: number) {
+    //     console.log("migrating players");
+    //     for (let i = 0; i < amountToMove; i ++) {
+    //         const player = currentLobby.players[i];
+    //         currentLobby.removePayer(player);
+    //         for (const lobby of lobbies) {
+    //             if (lobby.isBelowRecommendedPlayerCount() && lobby !== currentLobby) {
+    //                 lobby.addPlayer(player);
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     if (currentLobby.isEmpty()) {
+    //         currentLobby.disable();
+    //         this.lobbies.splice(this.lobbies.indexOf(currentLobby), 1);
+    //     }
+    // }
 
-    private migrateSpectators(lobbies: Lobby[], destinationLobby: Lobby, spectatorCount: number) {
-        let playersAdded = 0;
-        for (const lobby of lobbies) {
-            for (const player of lobby.spectators) {
-                lobby.removePayer(player);
-                destinationLobby.addPlayer(player);
-                if (++ playersAdded === spectatorCount) {
-                    return;
-                }
-            }
-        }
-    }
+    // private migrateSpectators(lobbies: Lobby[], destinationLobby: Lobby, spectatorCount: number) {
+    //     console.log("migrating spectators");
+    //     let playersAdded = 0;
+    //     for (const lobby of lobbies) {
+    //         for (const player of lobby.spectators) {
+    //             lobby.removePayer(player);
+    //             destinationLobby.addPlayer(player);
+    //             if (++ playersAdded === spectatorCount) {
+    //                 return;
+    //             }
+    //         }
+    //     }
+    // }
 
     private createLobby() {
+        console.log("lobby created");
         const lobby = new TeamEliminationLobby(this);
         lobby.enable();
         this.lobbies.push(lobby);

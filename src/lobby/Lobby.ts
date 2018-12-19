@@ -17,8 +17,6 @@ export default abstract class Lobby {
     private status: GameStatus;
     private service: MultiplayerService;
 
-    private readonly minimumPlayerCount = 2;
-
     constructor(service: MultiplayerService) {
         this.players = [];
         this.spectators = [];
@@ -50,7 +48,7 @@ export default abstract class Lobby {
         player.sendGameStatus(this.status);
 
         if (this.status === GameStatus.WAITING) {
-            if (this.players.length >= this.minimumPlayerCount) {
+            if (this.players.length >= Arena.minimumPlayerCount) {
                 this.startMatch();
             } else {
                 this.wait();
@@ -76,7 +74,7 @@ export default abstract class Lobby {
 
         if (this.status === GameStatus.RUNNING) {
             if (this.match === undefined) {
-                console.warn("match is null");
+                console.warn("match is undefined");
                 return;
             }
             (this.match as Match).removePlayer(player);
@@ -128,7 +126,7 @@ export default abstract class Lobby {
         this.spectators = [];
         this.updateStatus(GameStatus.WAITING);
         if (!this.service.onMatchEnd(this)) {
-            if (this.players.length >= this.minimumPlayerCount) {
+            if (this.players.length >= Arena.minimumPlayerCount) {
                 this.startMatch();
             } else {
                 this.wait("Not enough players to start a new match");
@@ -143,7 +141,7 @@ export default abstract class Lobby {
 
         setTimeout(() => {
 
-            if (this.players.length >= this.minimumPlayerCount) {
+            if (this.players.length >= Arena.minimumPlayerCount) {
                 const arena = ArenaLoader.getArena(this.players.length);
                 this.match = this.createMatch(arena);
                 this.updateStatus(GameStatus.RUNNING);
