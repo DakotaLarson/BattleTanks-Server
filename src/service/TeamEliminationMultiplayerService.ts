@@ -68,9 +68,13 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         for (const lobby of this.lobbies) {
             if (lobby.hasPlayer(player)) {
                 lobby.removePayer(player);
-                if (lobby.isEnabled() && lobby.isEmpty()) {
-                    lobby.disable();
-                    this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
+                if (lobby.isEnabled()) {
+                    if (lobby.isEmpty()) {
+                        lobby.disable();
+                        this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
+                    } else {
+                        this.migrateWaitingPlayers(this.lobbies, lobby);
+                    }
                 }
             }
         }
@@ -123,6 +127,35 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         if (currentLobby.isEmpty()) {
             currentLobby.disable();
             this.lobbies.splice(this.lobbies.indexOf(currentLobby), 1);
+        }
+    }
+
+    private migrateWaitingPlayers(lobbies: TeamEliminationLobby[], destinationLobby: Lobby) {
+        const playersToMove = Arena.maximumPlayerCount - destinationLobby.players.length;
+        let movedPlayers = 0;
+        for (const lobby of lobbies) {
+            if (lobby !== destinationLobby && lobby.isBelowMinimumPlayerCount()) {
+                if (lobby.players.length <= playersToMove) {
+                    const players = lobby.removePlayers(lobby.players);
+
+                    for (const player of players) {
+                        destinationLobby.addPlayer(player);
+                    }
+
+                    if (lobby.isEmpty()) {
+                        lobby.disable();
+                        this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
+                    }
+
+                    movedPlayers += players.length;
+                    if (movedPlayers === playersToMove) {
+                        break;
+                    }
+
+                } else {
+                    console.log("Found waiting arena with more players to move than available.");
+                }
+            }
         }
     }
 
