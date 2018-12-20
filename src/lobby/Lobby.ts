@@ -17,16 +17,21 @@ export default abstract class Lobby {
     private status: GameStatus;
     private service: MultiplayerService;
 
+    private enabled: boolean;
+
     constructor(service: MultiplayerService) {
         this.players = [];
         this.spectators = [];
 
         this.status = GameStatus.WAITING;
         this.service = service;
+
+        this.enabled = false;
     }
 
     public enable() {
         EventHandler.addListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
+        this.enabled = true;
     }
 
     public disable() {
@@ -37,6 +42,7 @@ export default abstract class Lobby {
         this.spectators = [];
         this.status = GameStatus.WAITING;
         EventHandler.removeListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
+        this.enabled = false;
     }
 
     public hasPlayer(player: Player) {
@@ -60,30 +66,39 @@ export default abstract class Lobby {
     }
 
     public removePayer(player: Player) {
-        let index = this.players.indexOf(player);
-        if (index > -1) {
-            this.players.splice(index, 1);
-        } else {
-            console.warn("Unable to remove player");
-        }
-
-        index = this.spectators.indexOf(player);
-        if (index > -1) {
-            this.spectators.splice(index, 1);
-        }
+        this.removePlayerFromLobby(player);
 
         if (this.status === GameStatus.RUNNING) {
-            if (this.match === undefined) {
-                console.warn("match is undefined");
-                return;
-            }
             (this.match as Match).removePlayer(player);
 
             if (!(this.match as Match).hasEnoughPlayers()) {
                 this.finishMatch();
             }
         }
+    }
 
+    public removePlayers(players: Player[]) {
+        const removedPlayers: Player[] = [];
+
+        // apply function didn't work in this context.
+        for (const player of players) {
+            removedPlayers.push(player);
+        }
+
+        for (const player of removedPlayers) {
+            this.removePlayerFromLobby(player);
+        }
+
+        if (this.status === GameStatus.RUNNING) {
+            for (const player of removedPlayers) {
+                (this.match as Match).removePlayer(player);
+            }
+
+            if (!(this.match as Match).hasEnoughPlayers()) {
+                this.finishMatch();
+            }
+        }
+        return removedPlayers;
     }
 
     public isRunning() {
@@ -98,12 +113,12 @@ export default abstract class Lobby {
         return this.players.length === 0;
     }
 
-    public isBelowMinimumPlayerCount() {
-        return this.players.length < Arena.minimumPlayerCount;
+    public isEnabled() {
+        return this.enabled;
     }
 
-    public isBelowRecommendedPlayerCount() {
-        return this.players.length < Arena.recommendedPlayerCount;
+    public isBelowMinimumPlayerCount() {
+        return this.players.length < Arena.minimumPlayerCount;
     }
 
     public isBelowMaximumPlayerCount() {
@@ -111,10 +126,10 @@ export default abstract class Lobby {
     }
 
     public getSpectatorCount() {
-        if (this.players.length <= Arena.recommendedPlayerCount) {
+        if (this.players.length <= Arena.maximumPlayerCount) {
             return 0;
         } else {
-            return Math.min(this.spectators.length, this.players.length - Arena.recommendedPlayerCount);
+            return Math.min(this.spectators.length, this.players.length - Arena.maximumPlayerCount);
         }
     }
 
@@ -193,5 +208,19 @@ export default abstract class Lobby {
             text: ": " + message,
         });
         return segments;
+    }
+
+    private removePlayerFromLobby(player: Player) {
+        let index = this.players.indexOf(player);
+        if (index > -1) {
+            this.players.splice(index, 1);
+        } else {
+            console.warn("Unable to remove player");
+        }
+
+        index = this.spectators.indexOf(player);
+        if (index > -1) {
+            this.spectators.splice(index, 1);
+        }
     }
 }

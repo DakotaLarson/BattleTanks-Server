@@ -10,7 +10,6 @@ export default class ArenaLoader {
             ArenaLoader.arenas = [];
 
             Arena.maximumPlayerCount = 0;
-            Arena.recommendedPlayerCount = 0;
             Arena.minimumPlayerCount = Number.MAX_SAFE_INTEGER;
 
             const dirPath = path.join(process.cwd(), "arenas");
@@ -35,7 +34,6 @@ export default class ArenaLoader {
                                     ArenaLoader.getArenaData(dirPath, arena).then((arenaData: string) => {
                                         this.arenas.push(new Arena(arenaData));
                                         if (++ loadedArenaCount === expectedArenaCount) {
-                                            console.log("Recommended Limit: " + Arena.recommendedPlayerCount);
                                             console.log("Maximum Limit: " + Arena.maximumPlayerCount);
                                             console.log("Minimum Limit: " + Arena.minimumPlayerCount);
 
@@ -82,23 +80,9 @@ export default class ArenaLoader {
             const validArenas = [];
 
             // Get all arenas that can fit players
-            let useRecommendedLimit = false;
             for (const arena of ArenaLoader.arenas) {
                 if (arena.maximumPlayerCount >= playerCount && arena.minimumPlayerCount <= playerCount) {
-                    if (arena.recommendedPlayerCount >= playerCount) {
-                        // At least one arena can hold players using the recommended limit.
-                        useRecommendedLimit = true;
-                    }
                     validArenas.push(arena);
-                }
-            }
-
-            if (useRecommendedLimit) {
-                for (const arena of validArenas) {
-                    if (arena.recommendedPlayerCount < playerCount) {
-                        // The arena would be over recommended capacity.
-                        validArenas.splice(validArenas.indexOf(arena), 1);
-                    }
                 }
             }
 
@@ -107,11 +91,11 @@ export default class ArenaLoader {
             }
 
             let selectedArena = validArenas[0];
-            let selectedArenaDiff = (useRecommendedLimit ? selectedArena.recommendedPlayerCount : selectedArena.maximumPlayerCount) - playerCount;
+            let selectedArenaDiff = selectedArena.maximumPlayerCount - playerCount;
 
             for (let i = 1; i < validArenas.length; i ++) {
                 const arena = validArenas[i];
-                const arenaDiff = (useRecommendedLimit ? arena.recommendedPlayerCount : arena.maximumPlayerCount) - playerCount;
+                const arenaDiff = arena.maximumPlayerCount - playerCount;
                 if (arenaDiff < selectedArenaDiff) {
                     selectedArena = arena;
                     selectedArenaDiff = arenaDiff;
