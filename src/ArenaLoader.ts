@@ -164,8 +164,9 @@ export default class ArenaLoader {
     }
 
     private static hasPlayerCounts(data: any) {
-        return data.minimumPlayerCount && data.minimumPlayerCount >= 2 &&
-            data.recommendedPlayerCount && data.recommendedPlayerCount >= data.minimumPlayerCount &&
-            data.maximumPlayerCount && data.maximumPlayerCount >= data.recommendedPlayerCount + 2;
+        return data.minimumPlayerCount &&
+        data.minimumPlayerCount >= 2 &&
+        data.maximumPlayerCount &&
+        data.maximumPlayerCount >= data.minimumPlayerCount + 2;
     }
 }
