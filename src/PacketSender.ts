@@ -22,6 +22,7 @@ enum Packet {
     PLAYER_AMMO_STATUS,
     PLAYER_SPEED_MULTIPLIER,
     PLAYER_POWERUP_PICKUP,
+    PLAYER_RAM,
 
     CONNECTED_PLAYER_ADD,
     CONNECTED_PLAYER_MOVE,
@@ -139,6 +140,12 @@ export const sendPlayerSpeedMultiplier = (id: number, multiplier: number) => {
 
 export const sendPlayerPowerupPickup = (id: number) => {
     const data = constructData(Packet.PLAYER_POWERUP_PICKUP, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
+export const sendPlayerRam = (id: number, startTime: number, endTime: number) => {
+    const rawData = startTime + " " + endTime;
+    const data = constructData(Packet.PLAYER_RAM, rawData, DataType.STRING);
     send(id, data);
 };
 

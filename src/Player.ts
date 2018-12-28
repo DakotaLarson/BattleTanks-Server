@@ -17,6 +17,10 @@ export default class Player {
 
     private static shotCooldown = 75;
 
+    private static ramCooldown = 7500;
+    private static ramUsageTime = 350;
+    private static ramUsageDelay = 250;
+
     public name: string;
     public id: number;
     public sub: string | undefined;
@@ -47,6 +51,8 @@ export default class Player {
     private lastShotTime: number;
     private nextShotScheduled: boolean;
 
+    private ramTime: number;
+
     constructor(name: string, id: number, sub?: string) {
         this.name = name;
         this.id = id;
@@ -76,6 +82,8 @@ export default class Player {
 
         this.lastShotTime = performance.now();
         this.nextShotScheduled = false;
+
+        this.ramTime = 0;
     }
 
     public sendPlayerShoot() {
@@ -155,6 +163,15 @@ export default class Player {
         });
     }
 
+    public ram() {
+        const currentTime = Date.now();
+        if (currentTime - this.ramTime > Player.ramCooldown) {
+            this.ramTime = currentTime + Player.ramUsageDelay;
+            const endTime = this.ramTime + Player.ramUsageTime;
+            PacketSender.sendPlayerRam(this.id, this.ramTime, endTime);
+        }
+    }
+
     public resetAmmo() {
         this.reloadPercentage = 1;
         this.ammoCount = 10;
@@ -175,6 +192,7 @@ export default class Player {
         this.isAlive = true;
         this.health = 1;
         this.shield = 0;
+        this.ramTime = 0;
         this.ammoCount = 10;
 
         this.position.x = pos.x;

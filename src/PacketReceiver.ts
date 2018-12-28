@@ -11,6 +11,10 @@ const receivePlayerShoot = (player: Player) => {
     player.shoot();
 };
 
+const receivePlayerRam = (player: Player) => {
+    player.ram();
+};
+
 const receiveReloadMoveToggleRequest = (player: Player, data: number) => {
     let moving = false;
     if (data) {
@@ -45,6 +49,7 @@ const receivePowerupPickup = (player: Player, rawData: number[]) => {
 const handlers: any = [
     receivePlayerMove,
     receivePlayerShoot,
+    receivePlayerRam,
     receiveReloadRequest,
     receiveReloadMoveToggleRequest,
     receiveChatMessage,
