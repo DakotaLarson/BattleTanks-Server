@@ -1,7 +1,6 @@
 import express = require("express");
-import session = require("express-session");
 import http = require("http");
-import path = require("path");
+import EventHandler from "./EventHandler";
 // import uuid = require("uuid/v4");
 
 const port = process.env.PORT || 8000;
@@ -9,29 +8,33 @@ const port = process.env.PORT || 8000;
 export default class WebServer {
 
     public server: http.Server;
-    public sessionHandler: express.RequestHandler;
+
+    private playerCount: number;
 
     // private sessionIds: string[] = [];
 
     constructor() {
         const app = express();
         this.server = http.createServer(app);
-        this.sessionHandler = session({
-            secret: "$eCuRiTy",
-            resave: false,
-            saveUninitialized: false,
-            cookie: {
-                httpOnly: true,
-                secure: false,
-            },
-        });
+        this.playerCount = 0;
+
+        app.get("/playercount", this.onGetPlayerCount.bind(this));
+        // this.sessionHandler = session({
+        //     secret: "$eCuRiTy",
+        //     resave: false,
+        //     saveUninitialized: false,
+        //     cookie: {
+        //         httpOnly: true,
+        //         secure: false,
+        //     },
+        // });
 
         // Middleware
-        app.use(this.sessionHandler);
-        app.use(express.urlencoded({extended: true}));
+        // app.use(this.sessionHandler);
+        // app.use(express.urlencoded({extended: true}));
 
-        const cssPath = path.join(process.cwd(), "admin/css");
-        app.use(express.static(cssPath));
+        // const cssPath = path.join(process.cwd(), "admin/css");
+        // app.use(express.static(cssPath));
         // app.use(this.authenticate.bind(this));
 
         // // Handlers
@@ -44,6 +47,21 @@ export default class WebServer {
 
     public start() {
         this.server.listen(port);
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
+    }
+
+    private onGetPlayerCount(req: express.Request, res: express.Response) {
+        res.set("Content-Type", "text/plain");
+        res.send("" + this.playerCount);
+    }
+
+    private onPlayerJoin() {
+        this.playerCount ++;
+    }
+
+    private onPlayerLeave() {
+        this.playerCount --;
     }
 
     // private onPostToken(req: express.Request, res: express.Response) {
