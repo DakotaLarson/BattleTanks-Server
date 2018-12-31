@@ -143,9 +143,8 @@ export const sendPlayerPowerupPickup = (id: number) => {
     send(id, data);
 };
 
-export const sendPlayerRam = (id: number, startTime: number, endTime: number) => {
-    const rawData = startTime + " " + endTime;
-    const data = constructData(Packet.PLAYER_RAM, rawData, DataType.STRING);
+export const sendPlayerRam = (id: number, time: number) => {
+    const data = constructData(Packet.PLAYER_RAM, time, DataType.NUMBER);
     send(id, data);
 };
 

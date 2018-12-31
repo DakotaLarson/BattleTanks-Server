@@ -45,7 +45,10 @@ export default class PlayerConnector {
                         if (data.tokenId) {
                             this.verifyId(data.tokenId).then((sub) => {
                                 this.createPlayer(event.target, data.name, sub);
-                            }).catch(console.log);
+                            }).catch(() => {
+                                const player = this.createPlayer(event.target, data.name);
+                                player.sendAlert("Your account couldn't be verified. Try refreshing the page if you want to save stats.");
+                            });
                         } else {
                             this.createPlayer(event.target, data.name);
                         }
@@ -83,6 +86,7 @@ export default class PlayerConnector {
         } else {
             console.log("Player connected (No Auth)");
         }
+        return player;
     }
 
     private verifyId(idToken: string): Promise<string> {

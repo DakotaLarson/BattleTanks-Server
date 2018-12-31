@@ -11,15 +11,14 @@ export default class Player {
 
     public static ammoBoost = 5;
     public static healthBoost = 0.4;
-    public static speedBoost = 1.25;
+    public static speedBoost = 1.4;
     public static speedBoostTime = 7.5;
     public static shieldBoost = 0.4;
 
     private static shotCooldown = 75;
 
     private static ramCooldown = 7500;
-    private static ramUsageTime = 350;
-    private static ramUsageDelay = 250;
+    private static ramUsageTime = 500;
 
     public name: string;
     public id: number;
@@ -166,9 +165,8 @@ export default class Player {
     public ram() {
         const currentTime = Date.now();
         if (currentTime - this.ramTime > Player.ramCooldown) {
-            this.ramTime = currentTime + Player.ramUsageDelay;
-            const endTime = this.ramTime + Player.ramUsageTime;
-            PacketSender.sendPlayerRam(this.id, this.ramTime, endTime);
+            this.ramTime = currentTime;
+            PacketSender.sendPlayerRam(this.id, Player.ramUsageTime);
         }
     }
 
