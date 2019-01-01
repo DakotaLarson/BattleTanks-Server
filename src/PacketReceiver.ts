@@ -46,6 +46,13 @@ const receivePowerupPickup = (player: Player, rawData: number[]) => {
     EventHandler.callEvent(EventHandler.Event.POWERUP_PICKUP, data);
 };
 
+const receiveRamCollision = (player: Player, targetId: number) => {
+    EventHandler.callEvent(EventHandler.Event.RAM_COLLISION, {
+        player,
+        targetId,
+    });
+};
+
 const handlers: any = [
     receivePlayerMove,
     receivePlayerShoot,
@@ -54,6 +61,7 @@ const handlers: any = [
     receiveReloadMoveToggleRequest,
     receiveChatMessage,
     receivePowerupPickup,
+    receiveRamCollision,
 ];
 
 enum DataType {

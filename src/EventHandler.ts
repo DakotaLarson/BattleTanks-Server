@@ -27,6 +27,8 @@ enum Event {
     CHAT_MESSAGE,
 
     POWERUP_PICKUP,
+
+    RAM_COLLISION,
 }
 
 enum Level {

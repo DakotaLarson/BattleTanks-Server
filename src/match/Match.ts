@@ -28,6 +28,7 @@ export default abstract class Match {
 
     public run() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
+        EventHandler.addListener(this, EventHandler.Event.RAM_COLLISION, this.onRamCollision);
 
         for (const player of this.lobby.players) {
             player.sendArena(this.arena.getRawData());
@@ -39,6 +40,7 @@ export default abstract class Match {
 
     public finish() {
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
+        EventHandler.removeListener(this, EventHandler.Event.RAM_COLLISION, this.onRamCollision);
 
         for (const player of this.lobby.players) {
             player.despawn();
@@ -96,6 +98,14 @@ export default abstract class Match {
                 this.handlePlayerOutOfBounds(player);
             }
         }
+    }
+
+    private onRamCollision(data: any) {
+        if (this.hasPlayer(data.player)) {
+            // collision between players
+            console.log("collision");
+        }
+
     }
 
     private isPlayerInBounds(player: Player, arena: Arena) {
