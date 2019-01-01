@@ -26,12 +26,12 @@ export default class ProjectileHandler {
 
     public enable() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_SHOOT, this.onShoot);
-        EventHandler.addListener(this, EventHandler.Event.PROJECTILE_COLLISION, this.onCollision);
+        EventHandler.addListener(this, EventHandler.Event.PROJECTILE_REMOVAL, this.onRemoval);
     }
 
     public disable() {
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_SHOOT, this.onShoot);
-        EventHandler.removeListener(this, EventHandler.Event.PROJECTILE_COLLISION, this.onCollision);
+        EventHandler.removeListener(this, EventHandler.Event.PROJECTILE_REMOVAL, this.onRemoval);
 
         this.projectiles = [];
         for (const player of this.match.lobby.players) {
@@ -59,7 +59,7 @@ export default class ProjectileHandler {
         }
     }
 
-    private onCollision(proj: Projectile) {
+    private onRemoval(proj: Projectile) {
         const index = this.projectiles.indexOf(proj);
         if (index > -1) {
             this.projectiles.splice(index, 1);

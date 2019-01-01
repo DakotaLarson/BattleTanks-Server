@@ -6,6 +6,7 @@ export default class Projectile {
 
     private static radius = 0.1;
     private static projectileSpeed = 20;
+    private static lifespan = 3000;
 
     public shooterId: number;
     public velocity: Vector3;
@@ -15,6 +16,7 @@ export default class Projectile {
     public id: number;
 
     private collisionHandler: CollisionHandler;
+    private taskId: NodeJS.Timer;
 
     constructor(collisionHandler: CollisionHandler, position: Vector3, rotation: number, id: number, shooterId: number) {
         this.collisionHandler = collisionHandler;
@@ -28,6 +30,9 @@ export default class Projectile {
         this.shooterId = shooterId;
 
         EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.move);
+        this.taskId = setTimeout(() => {
+            EventHandler.callEvent(EventHandler.Event.PROJECTILE_REMOVAL, this);
+        }, Projectile.lifespan);
     }
 
     public move(delta: number) {
@@ -42,5 +47,6 @@ export default class Projectile {
     }
     public destroy() {
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.move);
+        clearTimeout(this.taskId);
     }
 }

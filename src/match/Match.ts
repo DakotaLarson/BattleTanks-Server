@@ -82,12 +82,27 @@ export default abstract class Match {
     public abstract hasEnoughPlayers(): boolean;
 
     private onPlayerMove(player: Player) {
+
         if (this.hasPlayer(player)) {
-            for (const otherPlayer of this.lobby.players) {
-                if (player !== otherPlayer) {
-                    otherPlayer.sendConnectedPlayerMove(player);
+            if (this.playerHasValidPosition(player, this.arena)) {
+                for (const otherPlayer of this.lobby.players) {
+                    if (player !== otherPlayer) {
+                        otherPlayer.sendConnectedPlayerMove(player);
+                    }
                 }
+            } else {
+                // player is out of bounds.
             }
         }
+    }
+
+    private playerHasValidPosition(player: Player, arena: Arena) {
+        const xPos = player.position.x + 0.5;
+        const zPos = player.position.z + 0.5;
+
+        const width = arena.width + 2;
+        const height = arena.height + 2;
+
+        return xPos >= 0 && xPos <= width && zPos >= 0 && zPos <= height;
     }
 }

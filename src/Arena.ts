@@ -8,6 +8,9 @@ export default class Arena {
 
     public title: string;
 
+    public width: number;
+    public height: number;
+
     public blockPositions: Vector3[];
 
     public shieldPowerupPositions: Vector3[];
@@ -30,6 +33,9 @@ export default class Arena {
         this.rawData = data;
 
         this.title = data.title;
+        this.width = data.width;
+        this.height = data.height;
+
         this.blockPositions = [];
 
         this.teamASpawns = [];

@@ -95,7 +95,7 @@ export default class CollisionHandler {
 
             if (collidedPlayer || collidedBlock) {
 
-                EventHandler.callEvent(EventHandler.Event.PROJECTILE_COLLISION, proj);
+                EventHandler.callEvent(EventHandler.Event.PROJECTILE_REMOVAL, proj);
                 if (collidedPlayer) {
                     if (!collidedBlock) {
                         EventHandler.callEvent(EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, {
