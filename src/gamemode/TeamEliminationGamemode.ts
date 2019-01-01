@@ -8,6 +8,7 @@ export default class TeamEliminationGamemode extends Gamemode {
 
     private static readonly DAMAGE = 0.20;
     private static readonly LIFE_COUNT = 3;
+    private static readonly OOB_ID = -2; // Out of Bounds Id
 
     private lives: Map<number, number>;
     private protected: number[];
@@ -35,29 +36,12 @@ export default class TeamEliminationGamemode extends Gamemode {
         this.protected = [];
     }
 
+    public handleOutOfBounds(player: Player) {
+        this.killPlayer(player, TeamEliminationGamemode.OOB_ID);
+    }
+
     protected onDeath(target: Player, player: Player): void {
-        let livesRemaining = this.lives.get(target.id) as number;
-
-        if (!isNaN(livesRemaining)) {
-            livesRemaining --;
-            target.despawn(player.id, livesRemaining);
-
-            for (const otherPlayer of this.match.lobby.players) {
-                if (otherPlayer !== target) {
-                    otherPlayer.sendConnectedPlayerRemoval(target.id, player.id, livesRemaining);
-                }
-            }
-
-            if (livesRemaining !== 0) {
-                this.respawn(target, livesRemaining);
-            } else {
-                this.lives.set(target.id, livesRemaining);
-                this.onFinalDeath(target);
-            }
-        } else {
-            throw new Error("Unexpected value in lives map: " + livesRemaining);
-        }
-
+        this.killPlayer(target, player.id);
     }
 
     private onHit(data: any) {
@@ -94,6 +78,30 @@ export default class TeamEliminationGamemode extends Gamemode {
                     }
                 }
             }
+        }
+    }
+
+    private killPlayer(target: Player, playerId: number) {
+        let livesRemaining = this.lives.get(target.id) as number;
+
+        if (!isNaN(livesRemaining)) {
+            livesRemaining --;
+            target.despawn(playerId, livesRemaining);
+
+            for (const otherPlayer of this.match.lobby.players) {
+                if (otherPlayer !== target) {
+                    otherPlayer.sendConnectedPlayerRemoval(target.id, playerId, livesRemaining);
+                }
+            }
+
+            if (livesRemaining !== 0) {
+                this.respawn(target, livesRemaining);
+            } else {
+                this.lives.set(target.id, livesRemaining);
+                this.onFinalDeath(target);
+            }
+        } else {
+            throw new Error("Unexpected value in lives map: " + livesRemaining);
         }
     }
 

@@ -110,4 +110,8 @@ export default class TeamEliminationMatch extends Match {
     public hasEnoughPlayers() {
         return this.teamAPlayers.length > 0 && this.teamBPlayers.length > 0;
     }
+
+    protected handlePlayerOutOfBounds(player: Player) {
+        this.gamemode.handleOutOfBounds(player);
+    }
 }
