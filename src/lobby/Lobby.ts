@@ -9,7 +9,7 @@ import MultiplayerService from "../service/MultiplayerService";
 
 export default abstract class Lobby {
 
-    private static WAIT_BETWEEN_MATCHES = 5000;
+    private static WAIT_BETWEEN_MATCHES = 10000;
 
     public players: Player[];
     public spectators: Player[];
