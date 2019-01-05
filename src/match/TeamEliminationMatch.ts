@@ -117,12 +117,23 @@ export default class TeamEliminationMatch extends Match {
         return this.teamAPlayers.indexOf(player.id) > -1 && this.teamAPlayers.indexOf(otherPlayer.id) > -1 || this.teamBPlayers.indexOf(player.id) > -1 && this.teamBPlayers.indexOf(otherPlayer.id) > -1;
     }
 
-    public onTeamA(player: Player) {
-        return this.teamAPlayers.indexOf(player.id) > -1;
-    }
-
     public hasEnoughPlayers() {
-        return this.teamAPlayers.length > 0 && this.teamBPlayers.length > 0;
+        let teamAValid = false;
+        let teamBValid = false;
+        for (const player of this.lobby.players) {
+            if (!teamAValid && this.teamAPlayers.indexOf(player.id) > -1) {
+                if (this.gamemode.isPlayerValid(player)) {
+                    teamAValid = true;
+                    continue;
+                }
+            } else if (!teamBValid && this.teamBPlayers.indexOf(player.id) > -1) {
+                if (this.gamemode.isPlayerValid(player)) {
+                    teamBValid = true;
+                    continue;
+                }
+            }
+        }
+        return teamAValid && teamBValid;
     }
 
     protected handlePlayerOutOfBounds(player: Player) {

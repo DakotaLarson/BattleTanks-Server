@@ -40,6 +40,10 @@ export default class TeamEliminationGamemode extends Gamemode {
         this.killPlayer(player, TeamEliminationGamemode.OOB_ID);
     }
 
+    public isPlayerValid(player: Player) {
+        return player.isAlive || this.lives.get(player.id) !== 0;
+    }
+
     protected onDeath(target: Player, player: Player): void {
         this.killPlayer(target, player.id);
     }
@@ -147,7 +151,7 @@ export default class TeamEliminationGamemode extends Gamemode {
     private onFinalDeath(target: Player) {
         for (const player of this.match.lobby.players) {
             if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
-                if (player.isAlive || this.lives.get(player.id) !== 0) {
+                if (this.isPlayerValid(player)) {
                     target.sendAudioRequest(Audio.DEATH_NORESPAWN);
                     return;
                 }
