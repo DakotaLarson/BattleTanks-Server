@@ -52,6 +52,8 @@ export default class Player {
 
     private ramTime: number;
 
+    private speedBoostTimer: NodeJS.Timer | undefined;
+
     constructor(name: string, id: number, sub?: string) {
         this.name = name;
         this.id = id;
@@ -211,6 +213,8 @@ export default class Player {
         this.shield = 0;
         this.ammoCount = 0;
 
+        this.resetSpeed();
+
         PacketSender.sendPlayerRemoval(this.id, involvedId, livesRemaining);
         PacketSender.sendPlayerHealth(this.id, this.health);
     }
@@ -252,14 +256,20 @@ export default class Player {
     public boostSpeed() {
         this.hasSpeedBoost = true;
         PacketSender.sendPlayerSpeedMultiplier(this.id, Player.speedBoost);
-        setTimeout(() => {
-            PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
-            this.hasSpeedBoost = false;
-        }, Player.speedBoostTime * 1000);
+        this.speedBoostTimer = setTimeout(this.resetSpeed, Player.speedBoostTime * 1000);
     }
 
     public boostShield() {
         this.alterShield(Player.shieldBoost);
+    }
+
+    private resetSpeed() {
+        if (this.speedBoostTimer) {
+            clearTimeout(this.speedBoostTimer);
+            PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
+            this.hasSpeedBoost = false;
+            this.speedBoostTimer = undefined;
+        }
     }
 
     private alterHealth(amount: number) {
