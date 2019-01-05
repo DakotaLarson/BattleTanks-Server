@@ -2,6 +2,7 @@ import Arena from "../Arena";
 import TeamEliminationGamemode from "../gamemode/TeamEliminationGamemode";
 import TeamEliminationLobby from "../lobby/TeamEliminationLobby";
 import Player from "../Player";
+import TeamEliminationMatchStats from "../statistics/TeamEliminationMatchStatistics";
 import Vector4 from "../vector/Vector4";
 import Match from "./Match";
 
@@ -14,6 +15,8 @@ export default class TeamEliminationMatch extends Match {
 
     private teamAPlayers: number[];
     private teamBPlayers: number[];
+
+    private matchStats: TeamEliminationMatchStats | undefined;
 
     constructor(arena: Arena, lobby: TeamEliminationLobby) {
         super(arena, lobby);
@@ -55,7 +58,16 @@ export default class TeamEliminationMatch extends Match {
                 }
             }
         }
+
+        this.matchStats = new TeamEliminationMatchStats(this, this.teamAPlayers, this.teamBPlayers);
+        this.matchStats.enable();
     }
+
+    public finish() {
+        super.finish();
+        (this.matchStats as TeamEliminationMatchStats).disable();
+    }
+
     public addPlayer(player: Player): void { // adding spectator, not regular player
         player.sendPlayerSpectating();
         player.sendArena(this.arena.getRawData());
@@ -67,6 +79,7 @@ export default class TeamEliminationMatch extends Match {
             }
         }
     }
+
     public removePlayer(player: Player): void {
         let index = this.teamAPlayers.indexOf(player.id);
         if (index > -1) {
@@ -85,6 +98,7 @@ export default class TeamEliminationMatch extends Match {
             otherPlayer.sendConnectedPlayerRemoval(player.id, -1);
         }
     }
+
     public getSpawn(player: Player): Vector4 {
         let index = this.teamAPlayers.indexOf(player.id);
         if (index > -1) {
@@ -99,12 +113,12 @@ export default class TeamEliminationMatch extends Match {
         }
     }
 
-    public getActivePlayerCount() {
-        return this.teamAPlayers.length + this.teamBPlayers.length;
-    }
-
     public onSameTeam(player: Player, otherPlayer: Player) {
         return this.teamAPlayers.indexOf(player.id) > -1 && this.teamAPlayers.indexOf(otherPlayer.id) > -1 || this.teamBPlayers.indexOf(player.id) > -1 && this.teamBPlayers.indexOf(otherPlayer.id) > -1;
+    }
+
+    public onTeamA(player: Player) {
+        return this.teamAPlayers.indexOf(player.id) > -1;
     }
 
     public hasEnoughPlayers() {

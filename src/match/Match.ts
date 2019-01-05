@@ -79,8 +79,6 @@ export default abstract class Match {
 
     public abstract getSpawn(player: Player): Vector4;
 
-    public abstract getActivePlayerCount(): number;
-
     public abstract hasEnoughPlayers(): boolean;
 
     protected abstract handlePlayerOutOfBounds(player: Player): void;

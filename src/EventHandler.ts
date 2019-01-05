@@ -29,6 +29,12 @@ enum Event {
     POWERUP_PICKUP,
 
     RAM_COLLISION,
+
+    // MATCH STATS
+    STATS_SHOT,
+    STATS_HIT,
+    STATS_KILL,
+    STATS_SEND,
 }
 
 enum Level {

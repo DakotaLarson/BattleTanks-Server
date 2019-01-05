@@ -56,6 +56,11 @@ export default class ProjectileHandler {
             }
 
             this.projectiles.push(new Projectile(this.collisionHandler, position, rotation, id, shooter.id));
+
+            EventHandler.callEvent(EventHandler.Event.STATS_SHOT, {
+                match: this.match,
+                player: shooter.id,
+            });
         }
     }
 

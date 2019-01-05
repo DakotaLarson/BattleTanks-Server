@@ -9,6 +9,8 @@ import MultiplayerService from "../service/MultiplayerService";
 
 export default abstract class Lobby {
 
+    private static WAIT_BETWEEN_MATCHES = 5000;
+
     public players: Player[];
     public spectators: Player[];
 
@@ -166,7 +168,7 @@ export default abstract class Lobby {
                     this.wait("Not enough players to start a match");
                 }
             }
-        }, 3000);
+        }, Lobby.WAIT_BETWEEN_MATCHES);
     }
 
     private wait(message?: string) {

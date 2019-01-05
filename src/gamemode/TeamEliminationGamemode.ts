@@ -69,6 +69,11 @@ export default class TeamEliminationGamemode extends Gamemode {
                         }
                     }
 
+                    EventHandler.callEvent(EventHandler.Event.STATS_HIT, {
+                        match: this.match,
+                        player: data.player.id,
+                    });
+
                     if (targetHealth === 0) {
                         this.onDeath(data.target, data.player);
                         data.player.sendAudioRequest(Audio.HIT);
@@ -93,6 +98,12 @@ export default class TeamEliminationGamemode extends Gamemode {
                     otherPlayer.sendConnectedPlayerRemoval(target.id, playerId, livesRemaining);
                 }
             }
+
+            EventHandler.callEvent(EventHandler.Event.STATS_KILL, {
+                match: this.match,
+                player: target.id,
+                shooter: playerId,
+            });
 
             if (livesRemaining !== 0) {
                 this.respawn(target, livesRemaining);
@@ -144,13 +155,15 @@ export default class TeamEliminationGamemode extends Gamemode {
         }
         for (const player of this.match.lobby.players) {
             if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
-                player.sendAlert("Your team lost...");
                 player.sendAudioRequest(Audio.LOSE);
             } else {
-                player.sendAlert("Your team won!");
                 player.sendAudioRequest(Audio.WIN);
             }
         }
+        EventHandler.callEvent(EventHandler.Event.STATS_SEND, {
+            match: this.match,
+            playerId: target.id,
+        });
         this.match.lobby.finishMatch();
     }
 }

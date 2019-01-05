@@ -184,8 +184,8 @@ export const sendConnectedPlayerShield = (id: number, playerId: number, shield: 
     send(id, data);
 };
 
-export const sendMatchStatistics = (id: number, statistics: string) => {
-    const data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.STRING);
+export const sendMatchStatistics = (id: number, statistics: number[]) => {
+    const data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 
