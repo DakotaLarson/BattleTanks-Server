@@ -8,8 +8,8 @@ import Match from "./Match";
 
 export default class TeamEliminationMatch extends Match {
 
-    private static readonly TEAM_A_COLOR = 0x009247;
-    private static readonly TEAM_B_COLOR = 0xcf2b36;
+    private static readonly TEAM_A_COLOR = 0xf00e30;
+    private static readonly TEAM_B_COLOR = 0x0e52f0;
 
     protected gamemode: TeamEliminationGamemode;
 

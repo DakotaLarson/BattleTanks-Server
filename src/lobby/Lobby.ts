@@ -10,6 +10,7 @@ import MultiplayerService from "../service/MultiplayerService";
 export default abstract class Lobby {
 
     private static WAIT_BETWEEN_MATCHES = 10000;
+    private static DEV_WAIT_BETWEEN_MATCHES = 2500;
 
     public players: Player[];
     public spectators: Player[];
@@ -156,6 +157,10 @@ export default abstract class Lobby {
     private startMatch() {
         this.updateStatus(GameStatus.STARTING);
 
+        let waitTime = Lobby.WAIT_BETWEEN_MATCHES;
+        if (process.argv.includes("dev")) {
+            waitTime = Lobby.DEV_WAIT_BETWEEN_MATCHES;
+        }
         setTimeout(() => {
 
             if (this.players.length >= Arena.minimumPlayerCount) {
@@ -168,7 +173,7 @@ export default abstract class Lobby {
                     this.wait("Not enough players to start a match");
                 }
             }
-        }, Lobby.WAIT_BETWEEN_MATCHES);
+        }, waitTime);
     }
 
     private wait(message?: string) {
