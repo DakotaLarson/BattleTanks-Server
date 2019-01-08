@@ -267,9 +267,9 @@ export default class Player {
         if (this.speedBoostTimer) {
             clearTimeout(this.speedBoostTimer);
             PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
-            this.hasSpeedBoost = false;
             this.speedBoostTimer = undefined;
         }
+        this.hasSpeedBoost = false;
     }
 
     private alterHealth(amount: number) {
