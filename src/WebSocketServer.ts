@@ -5,6 +5,13 @@ import EventHandler from "./EventHandler";
 import WebServer from "./WebServer";
 
 export default class WebSocketServer {
+
+    private static readonly PROTOCOL_PREFIX = "battletanks-";
+    private static readonly SERVER_VERSION = 1;
+
+    private static readonly CLIENT_OUTDATED_CODE = 4001;
+    private static readonly SERVER_OUTDATED_CODE = 4002;
+
     private connectionCheckerId: NodeJS.Timer;
 
     private webServer: WebServer;
@@ -38,14 +45,18 @@ export default class WebSocketServer {
     }
 
     private handleConnection(ws: WebSocket) {
-        DomEventHandler.addListener(this, ws, "pong", () => {
-            const socketIndex = this.deadSockets.indexOf(ws);
-            if (socketIndex > -1) {
-                this.deadSockets.splice(socketIndex, 1);
-            }
-        });
-
-        EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
+        const statusCode = this.verifyVersion(ws.protocol);
+        if (statusCode) {
+            ws.close(statusCode);
+        } else {
+            DomEventHandler.addListener(this, ws, "pong", () => {
+                const socketIndex = this.deadSockets.indexOf(ws);
+                if (socketIndex > -1) {
+                    this.deadSockets.splice(socketIndex, 1);
+                }
+            });
+            EventHandler.callEvent(EventHandler.Event.WS_CONNECTION_OPENED, ws);
+        }
     }
 
     private checkConnections() {
@@ -68,6 +79,27 @@ export default class WebSocketServer {
     }
 
     private verifyClient(info: any) {
-        return info.req.headers["sec-websocket-protocol"] === "tanks-MP";
+        try {
+            return info.req.headers["sec-websocket-protocol"].startsWith(WebSocketServer.PROTOCOL_PREFIX);
+        } catch (ex) {
+            return false;
+        }
+    }
+
+    private verifyVersion(protocol: string) {
+        try {
+            const clientVersion = parseInt(protocol.split("-")[1], 10);
+            if (isNaN(clientVersion)) {
+                return 4000;
+            } else if (clientVersion > WebSocketServer.SERVER_VERSION) {
+                return WebSocketServer.SERVER_OUTDATED_CODE;
+            } else if (clientVersion < WebSocketServer.SERVER_VERSION) {
+                return WebSocketServer.CLIENT_OUTDATED_CODE;
+            } else {
+                return 0;
+            }
+        } catch (ex) {
+            return 4000;
+        }
     }
 }
