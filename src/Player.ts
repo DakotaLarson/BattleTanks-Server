@@ -52,8 +52,6 @@ export default class Player {
 
     private ramTime: number;
 
-    private speedBoostTimer: NodeJS.Timer | undefined;
-
     constructor(name: string, id: number, sub?: string) {
         this.name = name;
         this.id = id;
@@ -256,7 +254,7 @@ export default class Player {
     public boostSpeed() {
         this.hasSpeedBoost = true;
         PacketSender.sendPlayerSpeedMultiplier(this.id, Player.speedBoost);
-        this.speedBoostTimer = setTimeout(this.resetSpeed, Player.speedBoostTime * 1000);
+        setTimeout(this.resetSpeed.bind(this), Player.speedBoostTime * 1000);
     }
 
     public boostShield() {
@@ -264,11 +262,7 @@ export default class Player {
     }
 
     private resetSpeed() {
-        if (this.speedBoostTimer) {
-            clearTimeout(this.speedBoostTimer);
-            PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
-            this.speedBoostTimer = undefined;
-        }
+        PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
         this.hasSpeedBoost = false;
     }
 
