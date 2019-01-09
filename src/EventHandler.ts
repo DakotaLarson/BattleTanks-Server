@@ -35,6 +35,9 @@ enum Event {
     STATS_HIT,
     STATS_KILL,
     STATS_SEND,
+
+    DATA_INBOUND,
+    DATA_OUTBOUND,
 }
 
 enum Level {

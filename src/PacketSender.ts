@@ -1,4 +1,5 @@
 import Audio from "./Audio";
+import EventHandler from "./EventHandler";
 import Vector3 from "./vector/Vector3";
 import Vector4 from "./vector/Vector4";
 
@@ -247,13 +248,14 @@ export const removeSocket = (id: number) => {
     sockets.delete(id);
 };
 
-const send = (id: number, data: any) => {
+const send = (id: number, data: Buffer) => {
     const socket: WebSocket | undefined = sockets.get(id);
     if (socket) {
         if (socket.readyState !== socket.OPEN) {
             console.warn("socket is closed, but not removed.");
         } else {
             socket.send(data);
+            EventHandler.callEvent(EventHandler.Event.DATA_OUTBOUND, Buffer.byteLength(data));
         }
     } else {
         console.warn("Attempting to send data without socket: " + id);

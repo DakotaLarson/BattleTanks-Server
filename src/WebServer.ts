@@ -11,6 +11,12 @@ export default class WebServer {
 
     private playerCount: number;
 
+    private inboundCount: number;
+    private outboundCount: number;
+
+    private lastSecondInbound: number;
+    private lastSecondOutbound: number;
+
     // private sessionIds: string[] = [];
 
     constructor() {
@@ -18,7 +24,13 @@ export default class WebServer {
         this.server = http.createServer(app);
         this.playerCount = 0;
 
-        app.get("/playercount", this.onGetPlayerCount.bind(this));
+        this.inboundCount = 0;
+        this.outboundCount = 0;
+
+        this.lastSecondInbound = 0;
+        this.lastSecondOutbound = 0;
+
+        app.get("/stats", this.onGetStats.bind(this));
         // this.sessionHandler = session({
         //     secret: "$eCuRiTy",
         //     resave: false,
@@ -47,13 +59,29 @@ export default class WebServer {
 
     public start() {
         this.server.listen(port);
+
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
+        EventHandler.addListener(this, EventHandler.Event.DATA_INBOUND, this.onDataInbound);
+        EventHandler.addListener(this, EventHandler.Event.DATA_OUTBOUND, this.onDataOutbound);
+
+        setInterval(() => {
+            this.lastSecondInbound = this.inboundCount;
+            this.lastSecondOutbound = this.outboundCount;
+
+            this.inboundCount = 0;
+            this.outboundCount = 0;
+        }, 1000);
     }
 
-    private onGetPlayerCount(req: express.Request, res: express.Response) {
-        res.set("Content-Type", "text/plain");
-        res.send("" + this.playerCount);
+    private onGetStats(req: express.Request, res: express.Response) {
+        res.set("Content-Type", "application/json");
+        const data = {
+            players: this.playerCount,
+            outbound: this.lastSecondOutbound,
+            inbound: this.lastSecondInbound,
+        };
+        res.send(JSON.stringify(data));
     }
 
     private onPlayerJoin() {
@@ -62,6 +90,14 @@ export default class WebServer {
 
     private onPlayerLeave() {
         this.playerCount --;
+    }
+
+    private onDataInbound(length: number) {
+        this.inboundCount += length;
+    }
+
+    private onDataOutbound(length: number) {
+        this.outboundCount += length;
     }
 
     // private onPostToken(req: express.Request, res: express.Response) {

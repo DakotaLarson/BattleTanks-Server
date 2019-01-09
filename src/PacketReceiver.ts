@@ -101,5 +101,6 @@ export default class PacketReceiver {
         } else {
             console.warn("Received unknown header: " + header);
         }
+        EventHandler.callEvent(EventHandler.Event.DATA_INBOUND, Buffer.byteLength(message));
     }
 }
