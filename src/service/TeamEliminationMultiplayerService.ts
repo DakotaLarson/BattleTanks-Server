@@ -135,7 +135,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         let movedPlayers = 0;
         for (const lobby of lobbies) {
             if (lobby !== destinationLobby && lobby.isBelowMinimumPlayerCount()) {
-                if (lobby.players.length <= playersToMove) {
+                if (lobby.players.length <= playersToMove - movedPlayers) {
                     const players = lobby.removePlayers(lobby.players);
 
                     for (const player of players) {

@@ -210,6 +210,7 @@ export default class Player {
         this.health = 0;
         this.shield = 0;
         this.ammoCount = 0;
+        this.position = new Vector3();
 
         this.resetSpeed();
 
