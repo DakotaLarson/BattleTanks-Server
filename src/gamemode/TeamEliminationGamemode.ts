@@ -9,6 +9,8 @@ export default class TeamEliminationGamemode extends Gamemode {
     private static readonly DAMAGE = 0.20;
     private static readonly LIFE_COUNT = 3;
     private static readonly OOB_ID = -2; // Out of Bounds Id
+    private static readonly RESPAWN_TIME = 5000;
+    private static readonly PROTECTED_TIME = 3000;
 
     private lives: Map<number, number>;
     private protected: number[];
@@ -143,9 +145,9 @@ export default class TeamEliminationGamemode extends Gamemode {
                     if (index > -1) {
                         this.protected.splice(index, 1);
                     }
-                }, 3000);
+                }, TeamEliminationGamemode.PROTECTED_TIME);
             }
-        }, 3000);
+        }, TeamEliminationGamemode.RESPAWN_TIME);
     }
 
     private onFinalDeath(target: Player) {

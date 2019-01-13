@@ -88,6 +88,7 @@ export default class WebServer {
             players: this.playerCount,
             outbound: this.lastSecondOutbound,
             inbound: this.lastSecondInbound,
+            subscribers: this.subscribers.length,
         };
         res.send(JSON.stringify(data));
     }
