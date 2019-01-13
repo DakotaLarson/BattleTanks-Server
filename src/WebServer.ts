@@ -1,6 +1,5 @@
 import express = require("express");
 import http = require("http");
-import {performance} from "perf_hooks";
 import EventHandler from "./EventHandler";
 // import uuid = require("uuid/v4");
 
@@ -8,7 +7,7 @@ const port = process.env.PORT || 8000;
 
 export default class WebServer {
 
-    private static PLAYER_COUNT_COOLDOWN = 1000;
+    private static SSE_INTERVAL = 1000;
 
     public server: http.Server;
 
@@ -21,8 +20,6 @@ export default class WebServer {
     private lastSecondOutbound: number;
 
     private subscribers: express.Response[];
-    private lastSendTime: number;
-    private nextSendScheduled: boolean;
 
     // private sessionIds: string[] = [];
 
@@ -38,8 +35,6 @@ export default class WebServer {
         this.lastSecondOutbound = 0;
 
         this.subscribers = [];
-        this.lastSendTime = performance.now();
-        this.nextSendScheduled = false;
 
         app.get("/stats", this.onGetStats.bind(this));
         app.get("/playercount", this.onGetPlayercount.bind(this));
@@ -84,6 +79,7 @@ export default class WebServer {
             this.inboundCount = 0;
             this.outboundCount = 0;
         }, 1000);
+        this.sendPlayerCount();
     }
 
     private onGetStats(req: express.Request, res: express.Response) {
@@ -103,10 +99,10 @@ export default class WebServer {
             }
         });
         res.status(200).set({
-            "connection": "keep-alive",
+            // "connection": "keep-alive",
             "cache-control": "no-cache",
             "content-type": "text/event-stream",
-            "Access-Control-Allow-Origin": "*",
+            "access-control-allow-origin": "*",
         });
         this.subscribers.push(res);
         this.sendPlayerCountData(res);
@@ -114,12 +110,10 @@ export default class WebServer {
 
     private onPlayerJoin() {
         this.playerCount ++;
-        this.sendPlayerCount();
     }
 
     private onPlayerLeave() {
         this.playerCount --;
-        this.sendPlayerCount();
     }
 
     private onDataInbound(length: number) {
@@ -131,16 +125,14 @@ export default class WebServer {
     }
 
     private sendPlayerCount() {
-        const currentTime = performance.now();
-        if (currentTime >= this.lastSendTime + WebServer.PLAYER_COUNT_COOLDOWN) {
-            this.sendPlayerCountDataToSubscribers();
-        } else if (!this.nextSendScheduled) {
-            const timeDiff = this.lastSendTime + WebServer.PLAYER_COUNT_COOLDOWN;
-            setTimeout(() => {
+
+        let lastValueSent = this.playerCount;
+        setInterval(() => {
+            if (lastValueSent !== this.playerCount) {
                 this.sendPlayerCountDataToSubscribers();
-            }, timeDiff);
-            this.nextSendScheduled = true;
-        }
+                lastValueSent = this.playerCount;
+            }
+        }, WebServer.SSE_INTERVAL);
     }
 
     private sendPlayerCountDataToSubscribers() {
@@ -150,7 +142,7 @@ export default class WebServer {
     }
 
     private sendPlayerCountData(res: express.Response) {
-        res.send(this.playerCount + "\n\n");
+        res.write("data: " + this.playerCount + "\n\n");
     }
 
     // private onPostToken(req: express.Request, res: express.Response) {
