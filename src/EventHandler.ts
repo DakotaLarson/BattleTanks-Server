@@ -38,6 +38,9 @@ enum Event {
 
     DATA_INBOUND,
     DATA_OUTBOUND,
+
+    LOBBY_CREATION,
+    LOBBY_GAME_NO_PLAYERS_REMAINING,
 }
 
 enum Level {

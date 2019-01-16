@@ -151,6 +151,7 @@ export default class TeamEliminationGamemode extends Gamemode {
     }
 
     private onFinalDeath(target: Player) {
+        // Check if there are valid players on KO'd player's team.
         for (const player of this.match.lobby.players) {
             if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
                 if (this.isPlayerValid(player)) {

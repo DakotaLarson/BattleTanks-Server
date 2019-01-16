@@ -8,17 +8,20 @@ import Player from "./Player";
 
 export default class PlayerConnector {
 
+    public static getNextId() {
+        return PlayerConnector.playerId ++;
+    }
+
+    private static playerId = 1;
+
     private static readonly CONNECTION_HEADER_CODE = 0x00;
     private static readonly MAX_NAME_LENGTH = 16;
     private static readonly MAX_PACKET_LENGTH = 2048;
     private static readonly CLIENT_ID = "42166570332-0egs4928q7kfsnhh4nib3o8hjn62f9u5.apps.googleusercontent.com";
 
-    private playerId: number;
-
     private oauthClient: OAuth2Client;
 
     constructor() {
-        this.playerId = 1;
         this.oauthClient = new OAuth2Client(PlayerConnector.CLIENT_ID);
     }
 
@@ -61,7 +64,7 @@ export default class PlayerConnector {
     }
 
     private createPlayer(ws: WebSocket, name: string, sub?: string) {
-        const id = this.playerId ++;
+        const id = PlayerConnector.getNextId();
         const player = new Player(name, id, sub);
 
         DomEventHandler.removeListener(this, ws, "message", this.checkMessage);

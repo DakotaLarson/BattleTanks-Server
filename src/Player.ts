@@ -262,6 +262,10 @@ export default class Player {
         this.alterShield(Player.shieldBoost);
     }
 
+    public isBot() {
+        return false;
+    }
+
     private resetSpeed() {
         PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
         this.hasSpeedBoost = false;

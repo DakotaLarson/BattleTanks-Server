@@ -1,4 +1,5 @@
 import Arena from "../Arena";
+import EventHandler from "../EventHandler";
 import Lobby from "../lobby/Lobby";
 import TeamEliminationLobby from "../lobby/TeamEliminationLobby";
 import Player from "../Player";
@@ -60,6 +61,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
             lobby = this.getMostFullLobby(belowMinLobbies);
         } else {
             lobby = this.createLobby();
+            EventHandler.callEvent(EventHandler.Event.LOBBY_CREATION);
         }
         lobby.addPlayer(player);
     }

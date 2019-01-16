@@ -137,8 +137,6 @@ export default abstract class Lobby {
     }
 
     public finishMatch() {
-        // TODO: send players match stats
-
         (this.match as Match).finish();
         this.match = undefined;
         this.spectators = [];
@@ -177,7 +175,7 @@ export default abstract class Lobby {
     }
 
     private wait(message?: string) {
-        // this.updateStatus(GameStatus.WAITING); previously called in both cases.
+        // Status update called previously in both cases.
         if (message) {
             for (const player of this.players) {
                 player.sendAlert(message);

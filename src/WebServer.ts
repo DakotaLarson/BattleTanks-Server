@@ -99,6 +99,7 @@ export default class WebServer {
                 this.subscribers.splice(this.subscribers.indexOf(res), 1);
             }
         });
+        res.setTimeout(0);
         res.status(200).set({
             // "connection": "keep-alive",
             "cache-control": "no-cache",
