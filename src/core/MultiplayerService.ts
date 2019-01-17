@@ -1,20 +1,22 @@
 import Arena from "../Arena";
 import EventHandler from "../EventHandler";
-import Lobby from "../lobby/Lobby";
-import TeamEliminationLobby from "../lobby/TeamEliminationLobby";
 import Player from "../Player";
-import MultiplayerService from "./MultiplayerService";
+import Lobby from "./Lobby";
 
-export default class TeamEliminationMultiplayerService extends MultiplayerService {
+export default class MultiplayerService {
 
-    protected lobbies: TeamEliminationLobby[];
+    private lobbies: Lobby[];
 
     constructor() {
-        super();
         this.lobbies = [];
     }
 
-    public onMatchEnd(lobby: TeamEliminationLobby): boolean {
+    public start() {
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
+    }
+
+    public onMatchEnd(lobby: Lobby): boolean {
         const amountToMove = lobby.players.length;
         if (lobby.isBelowMaximumPlayerCount() && amountToMove) {
             const availableSpace = this.getAvailableLobbySpace(this.lobbies, lobby);
@@ -27,7 +29,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         return false;
     }
 
-    protected onPlayerJoin(player: Player): void {
+    private onPlayerJoin(player: Player): void {
 
         /*
         Find a lobby below maximum that is starting.
@@ -66,7 +68,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         lobby.addPlayer(player);
     }
 
-    protected onPlayerLeave(player: Player): void {
+    private onPlayerLeave(player: Player): void {
         for (const lobby of this.lobbies) {
             if (lobby.hasPlayer(player)) {
                 lobby.removePayer(player);
@@ -115,7 +117,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         });
     }
 
-    private migratePlayers(lobbies: Lobby[], currentLobby: TeamEliminationLobby) {
+    private migratePlayers(lobbies: Lobby[], currentLobby: Lobby) {
         const players = currentLobby.removePlayers(currentLobby.players);
         for (const player of players) {
             for (const lobby of lobbies) {
@@ -130,7 +132,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         }
     }
 
-    private migrateWaitingPlayers(lobbies: TeamEliminationLobby[], destinationLobby: Lobby) {
+    private migrateWaitingPlayers(lobbies: Lobby[], destinationLobby: Lobby) {
         const playersToMove = Arena.maximumPlayerCount - destinationLobby.players.length;
         let movedPlayers = 0;
         for (const lobby of lobbies) {
@@ -159,13 +161,13 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
     }
 
     private createLobby() {
-        const lobby = new TeamEliminationLobby(this);
+        const lobby = new Lobby(this);
         lobby.enable();
         this.lobbies.push(lobby);
         return lobby;
     }
 
-    private removeLobby(lobby: TeamEliminationLobby) {
+    private removeLobby(lobby: Lobby) {
         lobby.disable();
         this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
         EventHandler.callEvent(EventHandler.Event.LOBBY_REMOVAL, lobby);

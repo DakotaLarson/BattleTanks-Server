@@ -1,15 +1,15 @@
 import {performance} from "perf_hooks";
 import ArenaLoader from "./ArenaLoader";
 import BotHandler from "./BotHandler";
+import MultiplayerService from "./core/MultiplayerService";
 import DatastoreHandler from "./DatastoreHandler";
 import EventHandler from "./EventHandler";
 import PlayerConnector from "./PlayerConnector";
-import TeamEliminationMultiplayerService from "./service/TeamEliminationMultiplayerService";
 import WebSocketServer from "./WebSocketServer";
 
 const wss = new WebSocketServer();
 const playerConnector = new PlayerConnector();
-const teamElmMPService = new TeamEliminationMultiplayerService();
+const teamElmMPService = new MultiplayerService();
 const datastoreHandler = new DatastoreHandler();
 const botHandler = new BotHandler();
 

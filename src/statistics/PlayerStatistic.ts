@@ -1,4 +1,4 @@
-export default class TeamEliminationPlayerStatistic {
+export default class PlayerStatistic {
 
     private shots: number;
     private hits: number;

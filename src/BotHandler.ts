@@ -1,7 +1,6 @@
 import Bot from "./Bot";
+import Lobby from "./core/Lobby";
 import EventHandler from "./EventHandler";
-import Lobby from "./lobby/Lobby";
-import TeamEliminationLobby from "./lobby/TeamEliminationLobby";
 import PlayerConnector from "./PlayerConnector";
 
 export default class BotHandler {
@@ -36,7 +35,7 @@ export default class BotHandler {
         this.bots.delete(lobby);
     }
 
-    private onNoPlayersRemaining(lobby: TeamEliminationLobby) {
+    private onNoPlayersRemaining(lobby: Lobby) {
         const botArr = this.bots.get(lobby);
         if (botArr) {
             this.removeBots(botArr);

@@ -1,11 +1,11 @@
+import Match from "../core/Match";
 import EventHandler from "../EventHandler";
-import TeamEliminationMatch from "../match/TeamEliminationMatch";
 import * as PacketSender from "../PacketSender";
-import TeamEliminationPlayerStatistic from "./TeamEliminationPlayerStatistic";
+import PlayerStatistic from "./PlayerStatistic";
 
-export default class TeamEliminationMatchStatistics {
+export default class MatchStatistics {
 
-    private match: TeamEliminationMatch;
+    private match: Match;
 
     private teamAShots: number;
     private teamBShots: number;
@@ -16,10 +16,10 @@ export default class TeamEliminationMatchStatistics {
     private teamAKills: number;
     private teamBKills: number;
 
-    private teamAPlayerStatistics: Map<number, TeamEliminationPlayerStatistic>;
-    private teamBPlayerStatistics: Map<number, TeamEliminationPlayerStatistic>;
+    private teamAPlayerStatistics: Map<number, PlayerStatistic>;
+    private teamBPlayerStatistics: Map<number, PlayerStatistic>;
 
-    constructor(match: TeamEliminationMatch, teamAPlayers: number[], teamBPlayers: number[]) {
+    constructor(match: Match, teamAPlayers: number[], teamBPlayers: number[]) {
         this.match = match;
 
         this.teamAShots = 0;
@@ -35,11 +35,11 @@ export default class TeamEliminationMatchStatistics {
         this.teamBPlayerStatistics = new Map();
 
         for (const id of teamAPlayers) {
-            this.teamAPlayerStatistics.set(id, new TeamEliminationPlayerStatistic());
+            this.teamAPlayerStatistics.set(id, new PlayerStatistic());
         }
 
         for (const id of teamBPlayers) {
-            this.teamBPlayerStatistics.set(id, new TeamEliminationPlayerStatistic());
+            this.teamBPlayerStatistics.set(id, new PlayerStatistic());
         }
     }
 
@@ -67,12 +67,12 @@ export default class TeamEliminationMatchStatistics {
             const teamALost = this.teamAPlayerStatistics.has(data.playerId);
             const teamBLost = this.teamBPlayerStatistics.has(data.playerId);
 
-            this.teamAPlayerStatistics.forEach((stat: TeamEliminationPlayerStatistic, id: number) => {
+            this.teamAPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamALost, this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills);
                 PacketSender.sendMatchStatistics(id, stats);
             });
 
-            this.teamBPlayerStatistics.forEach((stat: TeamEliminationPlayerStatistic, id: number) => {
+            this.teamBPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamBLost, this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills);
                 PacketSender.sendMatchStatistics(id, stats);
             });
@@ -82,11 +82,11 @@ export default class TeamEliminationMatchStatistics {
     private onShot(data: any) {
         if (data.match === this.match) {
             if (this.teamAPlayerStatistics.has(data.player)) {
-                (this.teamAPlayerStatistics.get(data.player) as TeamEliminationPlayerStatistic).incrementShots();
+                (this.teamAPlayerStatistics.get(data.player) as PlayerStatistic).incrementShots();
 
                 this.teamAShots ++;
             } else if (this.teamBPlayerStatistics.has(data.player)) {
-                (this.teamBPlayerStatistics.get(data.player) as TeamEliminationPlayerStatistic).incrementShots();
+                (this.teamBPlayerStatistics.get(data.player) as PlayerStatistic).incrementShots();
 
                 this.teamBShots ++;
             } else {
@@ -98,11 +98,11 @@ export default class TeamEliminationMatchStatistics {
     private onHit(data: any) {
         if (data.match === this.match) {
             if (this.teamAPlayerStatistics.has(data.player)) {
-                (this.teamAPlayerStatistics.get(data.player) as TeamEliminationPlayerStatistic).incrementHits();
+                (this.teamAPlayerStatistics.get(data.player) as PlayerStatistic).incrementHits();
 
                 this.teamAHits ++;
             } else if (this.teamBPlayerStatistics.has(data.player)) {
-                (this.teamBPlayerStatistics.get(data.player) as TeamEliminationPlayerStatistic).incrementHits();
+                (this.teamBPlayerStatistics.get(data.player) as PlayerStatistic).incrementHits();
 
                 this.teamBHits ++;
             } else {
@@ -115,18 +115,18 @@ export default class TeamEliminationMatchStatistics {
         // shooter is not guaranteed.
         if (data.match === this.match) {
             if (this.teamAPlayerStatistics.has(data.player)) {
-                (this.teamAPlayerStatistics.get(data.player) as TeamEliminationPlayerStatistic).incrementDeaths();
+                (this.teamAPlayerStatistics.get(data.player) as PlayerStatistic).incrementDeaths();
 
                 if (this.teamBPlayerStatistics.has(data.shooter)) {
-                    (this.teamBPlayerStatistics.get(data.shooter) as TeamEliminationPlayerStatistic).incrementKills();
+                    (this.teamBPlayerStatistics.get(data.shooter) as PlayerStatistic).incrementKills();
 
                     this.teamBKills ++;
                 }
             } else if (this.teamBPlayerStatistics.has(data.player)) {
-                (this.teamBPlayerStatistics.get(data.player) as TeamEliminationPlayerStatistic).incrementDeaths();
+                (this.teamBPlayerStatistics.get(data.player) as PlayerStatistic).incrementDeaths();
 
                 if (this.teamAPlayerStatistics.has(data.shooter)) {
-                    (this.teamAPlayerStatistics.get(data.shooter) as TeamEliminationPlayerStatistic).incrementKills();
+                    (this.teamAPlayerStatistics.get(data.shooter) as PlayerStatistic).incrementKills();
 
                     this.teamAKills ++;
                 }

@@ -1,5 +1,5 @@
+import Match from "../core/Match";
 import EventHandler from "../EventHandler";
-import Match from "../match/Match";
 import Player from "../Player";
 import Vector3 from "../vector/Vector3";
 import Projectile from "./Projectile";

@@ -1,5 +1,5 @@
+import Match from "../core/Match";
 import EventHandler from "../EventHandler";
-import Match from "../match/Match";
 import * as PacketSender from "../PacketSender";
 import Player from "../Player";
 import AmmoPowerup from "./AmmoPowerup";

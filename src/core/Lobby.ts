@@ -2,13 +2,12 @@ import Arena from "../Arena";
 import ArenaLoader from "../ArenaLoader";
 import EventHandler from "../EventHandler";
 import GameStatus from "../GameStatus";
-import Match from "../match/Match";
 import * as PacketSender from "../PacketSender";
 import Player from "../Player";
-import MultiplayerService from "../service/MultiplayerService";
+import Match from "./Match";
+import MultiplayerService from "./MultiplayerService";
 
-export default abstract class Lobby {
-
+export default class Lobby {
     private static WAIT_BETWEEN_MATCHES = 10000;
     private static DEV_WAIT_BETWEEN_MATCHES = 2500;
 
@@ -154,8 +153,11 @@ export default abstract class Lobby {
         }
     }
 
-    protected abstract createMatch(arena: Arena): Match;
-
+    private createMatch(arena: Arena) {
+        const match = new Match(arena, this);
+        match.run();
+        return match;
+    }
     private startMatch() {
         this.updateStatus(GameStatus.STARTING);
 

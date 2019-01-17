@@ -1,10 +1,9 @@
 import Audio from "../Audio";
 import EventHandler from "../EventHandler";
-import TeamEliminationMatch from "../match/TeamEliminationMatch";
 import Player from "../Player";
-import Gamemode from "./Gamemode";
+import Match from "./Match";
 
-export default class TeamEliminationGamemode extends Gamemode {
+export default class Gamemode {
 
     private static readonly DAMAGE = 0.20;
     private static readonly LIFE_COUNT = 3;
@@ -12,22 +11,21 @@ export default class TeamEliminationGamemode extends Gamemode {
     private static readonly RESPAWN_TIME = 5000;
     private static readonly PROTECTED_TIME = 3000;
 
+    private match: Match;
+
     private lives: Map<number, number>;
     private protected: number[];
-
-    constructor(match: TeamEliminationMatch) {
-        super(match);
-
+    constructor(match: Match) {
+        this.match = match;
         this.lives = new Map();
         this.protected = [];
     }
-
     public enable(): void {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
 
         for (const player of this.match.lobby.players) {
-            this.lives.set(player.id, TeamEliminationGamemode.LIFE_COUNT);
+            this.lives.set(player.id, Gamemode.LIFE_COUNT);
         }
     }
 
@@ -39,7 +37,7 @@ export default class TeamEliminationGamemode extends Gamemode {
     }
 
     public handleOutOfBounds(player: Player) {
-        this.killPlayer(player, TeamEliminationGamemode.OOB_ID);
+        this.killPlayer(player, Gamemode.OOB_ID);
     }
 
     public isPlayerValid(player: Player) {
@@ -52,11 +50,11 @@ export default class TeamEliminationGamemode extends Gamemode {
 
     private onHit(data: any) {
         if (data.match === this.match) {
-            if (!(this.match as TeamEliminationMatch).onSameTeam(data.player, data.target)) {
+            if (!(this.match as Match).onSameTeam(data.player, data.target)) {
                 const protectedIndex = this.protected.indexOf(data.target.id);
                 if (protectedIndex === -1) {
                     const previousShield = data.target.shield;
-                    const targetData = data.target.damage(TeamEliminationGamemode.DAMAGE);
+                    const targetData = data.target.damage(Gamemode.DAMAGE);
 
                     const targetHealth = targetData[0];
                     const targetShield = targetData[1];
@@ -145,15 +143,15 @@ export default class TeamEliminationGamemode extends Gamemode {
                     if (index > -1) {
                         this.protected.splice(index, 1);
                     }
-                }, TeamEliminationGamemode.PROTECTED_TIME);
+                }, Gamemode.PROTECTED_TIME);
             }
-        }, TeamEliminationGamemode.RESPAWN_TIME);
+        }, Gamemode.RESPAWN_TIME);
     }
 
     private onFinalDeath(target: Player) {
         // Check if there are valid players on KO'd player's team.
         for (const player of this.match.lobby.players) {
-            if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
+            if ((this.match as Match).onSameTeam(player, target)) {
                 if (this.isPlayerValid(player)) {
                     if (this.match.hasOnlyBotsRemaining()) {
                         EventHandler.callEvent(EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, this.match.lobby);
@@ -165,7 +163,7 @@ export default class TeamEliminationGamemode extends Gamemode {
             }
         }
         for (const player of this.match.lobby.players) {
-            if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
+            if ((this.match as Match).onSameTeam(player, target)) {
                 player.sendAudioRequest(Audio.LOSE);
             } else {
                 player.sendAudioRequest(Audio.WIN);

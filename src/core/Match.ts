@@ -1,52 +1,75 @@
 import Arena from "../Arena";
-import TeamEliminationGamemode from "../gamemode/TeamEliminationGamemode";
-import TeamEliminationLobby from "../lobby/TeamEliminationLobby";
+import EventHandler from "../EventHandler";
 import Player from "../Player";
-import TeamEliminationMatchStats from "../statistics/TeamEliminationMatchStatistics";
+import PowerupHandler from "../powerup/PowerupHandler";
+import ProjectileHandler from "../projectile/ProjectileHandler";
+import MatchStatistics from "../statistics/MatchStatistics";
 import Vector4 from "../vector/Vector4";
-import Match from "./Match";
+import Gamemode from "./Gamemode";
+import Lobby from "./Lobby";
 
-export default class TeamEliminationMatch extends Match {
+export default class Match {
 
     private static readonly TEAM_A_COLOR = 0xf00e30;
     private static readonly TEAM_B_COLOR = 0x0e52f0;
 
-    protected gamemode: TeamEliminationGamemode;
+    public arena: Arena;
+    public lobby: Lobby;
+
+    private powerupHandler: PowerupHandler;
+
+    private gamemode: Gamemode;
 
     private teamAPlayers: number[];
     private teamBPlayers: number[];
 
-    private matchStats: TeamEliminationMatchStats | undefined;
+    private matchStats: MatchStatistics | undefined;
 
-    constructor(arena: Arena, lobby: TeamEliminationLobby) {
-        super(arena, lobby);
-        this.gamemode = new TeamEliminationGamemode(this);
+    private projectileHandler: ProjectileHandler;
+
+    constructor(arena: Arena, lobby: Lobby) {
+        this.arena = arena;
+        this.lobby = lobby;
+
+        this.projectileHandler = new ProjectileHandler(this);
+        this.powerupHandler = new PowerupHandler(this);
+
+        this.gamemode = new Gamemode(this);
 
         this.teamAPlayers = [];
         this.teamBPlayers = [];
     }
-    public run(): void {
-        super.run();
+
+    public run() {
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
+        EventHandler.addListener(this, EventHandler.Event.RAM_COLLISION, this.onRamCollision);
+
+        for (const player of this.lobby.players) {
+            player.sendArena(this.arena.getRawData());
+        }
+        this.projectileHandler.enable();
+        this.powerupHandler.enable();
+        this.gamemode.enable();
 
         for (const player of this.lobby.players) {
             let spawn: Vector4;
 
             if (this.teamAPlayers.length < this.teamBPlayers.length) {
                 this.teamAPlayers.push(player.id);
-                player.color = TeamEliminationMatch.TEAM_A_COLOR;
+                player.color = Match.TEAM_A_COLOR;
                 spawn = this.arena.getNextTeamASpawn();
             } else if (this.teamBPlayers.length < this.teamAPlayers.length) {
                 this.teamBPlayers.push(player.id);
-                player.color = TeamEliminationMatch.TEAM_B_COLOR;
+                player.color = Match.TEAM_B_COLOR;
                 spawn = this.arena.getNextTeamBSpawn();
             } else {
                 if (Math.random() >= 0.5) {
                     this.teamAPlayers.push(player.id);
-                    player.color = TeamEliminationMatch.TEAM_A_COLOR;
+                    player.color = Match.TEAM_A_COLOR;
                     spawn = this.arena.getNextTeamASpawn();
                 } else {
                     this.teamBPlayers.push(player.id);
-                    player.color = TeamEliminationMatch.TEAM_B_COLOR;
+                    player.color = Match.TEAM_B_COLOR;
                     spawn = this.arena.getNextTeamBSpawn();
                 }
             }
@@ -59,13 +82,54 @@ export default class TeamEliminationMatch extends Match {
             }
         }
 
-        this.matchStats = new TeamEliminationMatchStats(this, this.teamAPlayers, this.teamBPlayers);
+        this.matchStats = new MatchStatistics(this, this.teamAPlayers, this.teamBPlayers);
         this.matchStats.enable();
     }
 
     public finish() {
-        super.finish();
-        (this.matchStats as TeamEliminationMatchStats).disable();
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
+        EventHandler.removeListener(this, EventHandler.Event.RAM_COLLISION, this.onRamCollision);
+
+        for (const player of this.lobby.players) {
+            player.despawn();
+            for (const otherPlayer of this.lobby.players) {
+                if (player !== otherPlayer) {
+                    player.sendConnectedPlayerRemoval(otherPlayer.id);
+                }
+            }
+        }
+        this.projectileHandler.disable();
+        this.powerupHandler.disable();
+        this.gamemode.disable();
+
+        (this.matchStats as MatchStatistics).disable();
+    }
+
+    public hasPlayer(player: Player) {
+        for (const otherPlayer of this.lobby.players) {
+            if (otherPlayer === player) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public getPlayerById(playerId: number): Player {
+        for (const player of this.lobby.players) {
+            if (player.id === playerId) {
+                return player;
+            }
+        }
+        throw new Error("Player not found with id: " + playerId);
+    }
+
+    public hasOnlyBotsRemaining() {
+        for (const player of this.lobby.players) {
+            if (this.gamemode.isPlayerValid(player) && !player.isBot()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public addPlayer(player: Player): void { // adding spectator, not regular player
@@ -138,5 +202,38 @@ export default class TeamEliminationMatch extends Match {
 
     protected handlePlayerOutOfBounds(player: Player) {
         this.gamemode.handleOutOfBounds(player);
+    }
+
+    private onPlayerMove(player: Player) {
+
+        if (this.hasPlayer(player)) {
+            if (this.isPlayerInBounds(player, this.arena)) {
+                for (const otherPlayer of this.lobby.players) {
+                    if (player !== otherPlayer) {
+                        otherPlayer.sendConnectedPlayerMove(player);
+                    }
+                }
+            } else {
+                this.handlePlayerOutOfBounds(player);
+            }
+        }
+    }
+
+    private onRamCollision(data: any) {
+        if (this.hasPlayer(data.player)) {
+            // collision between players
+            console.log("collision");
+        }
+
+    }
+
+    private isPlayerInBounds(player: Player, arena: Arena) {
+        const xPos = player.position.x + 0.5;
+        const zPos = player.position.z + 0.5;
+
+        const width = arena.width + 2;
+        const height = arena.height + 2;
+
+        return xPos >= 0 && xPos <= width && zPos >= 0 && zPos <= height;
     }
 }
