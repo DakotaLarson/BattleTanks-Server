@@ -73,6 +73,15 @@ export default abstract class Match {
         throw new Error("Player not found with id: " + playerId);
     }
 
+    public hasOnlyBotsRemaining() {
+        for (const player of this.lobby.players) {
+            if (this.gamemode.isPlayerValid(player) && !player.isBot()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public abstract addPlayer(player: Player): void;
 
     public abstract removePlayer(player: Player): void;

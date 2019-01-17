@@ -61,7 +61,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
             lobby = this.getMostFullLobby(belowMinLobbies);
         } else {
             lobby = this.createLobby();
-            EventHandler.callEvent(EventHandler.Event.LOBBY_CREATION);
+            EventHandler.callEvent(EventHandler.Event.LOBBY_CREATION, lobby);
         }
         lobby.addPlayer(player);
     }
@@ -72,8 +72,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
                 lobby.removePayer(player);
                 if (lobby.isEnabled()) {
                     if (lobby.isEmpty()) {
-                        lobby.disable();
-                        this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
+                        this.removeLobby(lobby);
                     } else {
                         this.migrateWaitingPlayers(this.lobbies, lobby);
                     }
@@ -127,8 +126,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
             }
         }
         if (currentLobby.isEmpty()) {
-            currentLobby.disable();
-            this.lobbies.splice(this.lobbies.indexOf(currentLobby), 1);
+            this.removeLobby(currentLobby);
         }
     }
 
@@ -145,8 +143,7 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
                     }
 
                     if (lobby.isEmpty()) {
-                        lobby.disable();
-                        this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
+                        this.removeLobby(lobby);
                     }
 
                     movedPlayers += players.length;
@@ -166,5 +163,11 @@ export default class TeamEliminationMultiplayerService extends MultiplayerServic
         lobby.enable();
         this.lobbies.push(lobby);
         return lobby;
+    }
+
+    private removeLobby(lobby: TeamEliminationLobby) {
+        lobby.disable();
+        this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
+        EventHandler.callEvent(EventHandler.Event.LOBBY_REMOVAL, lobby);
     }
 }

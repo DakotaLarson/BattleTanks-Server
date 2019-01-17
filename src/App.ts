@@ -1,5 +1,6 @@
 import {performance} from "perf_hooks";
 import ArenaLoader from "./ArenaLoader";
+import BotHandler from "./BotHandler";
 import DatastoreHandler from "./DatastoreHandler";
 import EventHandler from "./EventHandler";
 import PlayerConnector from "./PlayerConnector";
@@ -10,6 +11,7 @@ const wss = new WebSocketServer();
 const playerConnector = new PlayerConnector();
 const teamElmMPService = new TeamEliminationMultiplayerService();
 const datastoreHandler = new DatastoreHandler();
+const botHandler = new BotHandler();
 
 wss.start();
 playerConnector.start();
@@ -18,6 +20,7 @@ ArenaLoader.loadArenas().then((message) => {
     console.log(message);
     teamElmMPService.start();
     datastoreHandler.start();
+    botHandler.start();
 }).catch((message) => {
     console.error(message);
 });

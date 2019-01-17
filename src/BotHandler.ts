@@ -1,5 +1,6 @@
 import Bot from "./Bot";
 import EventHandler from "./EventHandler";
+import Lobby from "./lobby/Lobby";
 import TeamEliminationLobby from "./lobby/TeamEliminationLobby";
 import PlayerConnector from "./PlayerConnector";
 
@@ -10,38 +11,47 @@ export default class BotHandler {
 
     private botQuantity: number;
 
-    private bots: Bot[];
+    private bots: Map<Lobby, Bot[]>;
 
     constructor() {
         this.botQuantity = 0;
-        this.bots = [];
+        this.bots = new Map();
     }
 
     public start() {
         EventHandler.addListener(this, EventHandler.Event.LOBBY_CREATION, this.onLobbyCreation);
-        EventHandler.addListener(this, EventHandler.Event.LOBBY_GAME_NO_PLAYERS_REMAINING, this.onNoPlayersRemaining);
+        EventHandler.addListener(this, EventHandler.Event.LOBBY_REMOVAL, this.onLobbyRemoval);
+        EventHandler.addListener(this, EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, this.onNoPlayersRemaining);
         this.updateBotQuantity();
     }
 
-    private onLobbyCreation() {
+    private onLobbyCreation(lobby: Lobby) {
+        this.bots.set(lobby, []);
         for (let i = 0; i < this.botQuantity; i ++) {
-            this.createBot();
+            this.createBot(lobby);
         }
     }
 
-    private onNoPlayersRemaining(lobby: TeamEliminationLobby) {
-
+    private onLobbyRemoval(lobby: Lobby) {
+        this.bots.delete(lobby);
     }
 
-    private createBot() {
+    private onNoPlayersRemaining(lobby: TeamEliminationLobby) {
+        const botArr = this.bots.get(lobby);
+        if (botArr) {
+            this.removeBots(botArr);
+        }
+    }
+
+    private createBot(lobby: Lobby) {
         const bot = new Bot(PlayerConnector.getNextId());
-        this.bots.push(bot);
+        (this.bots.get(lobby) as Bot[]).push(bot);
         EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, bot);
     }
 
-    private removeBot(bot: Bot) {
-        if (this.bots.includes(bot)) {
-            this.bots.splice(this.bots.indexOf(bot), 1);
+    private removeBots(bots: Bot[]) {
+        for (const bot of bots) {
+            bots.splice(bots.indexOf(bot), 1);
             EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, bot);
         }
     }

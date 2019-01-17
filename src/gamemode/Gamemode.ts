@@ -10,5 +10,6 @@ export default abstract class Gamemode {
 
     public abstract enable(): void;
     public abstract disable(): void;
+    public abstract isPlayerValid(player: Player): boolean;
     protected abstract onDeath(target: Player, player: Player): void;
 }

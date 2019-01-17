@@ -74,6 +74,10 @@ export default abstract class Lobby {
         if (this.status === GameStatus.RUNNING) {
             (this.match as Match).removePlayer(player);
 
+            if ((this.match as Match).hasOnlyBotsRemaining()) {
+                EventHandler.callEvent(EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, this);
+            }
+
             if (!(this.match as Match).hasEnoughPlayers()) {
                 this.finishMatch();
             }

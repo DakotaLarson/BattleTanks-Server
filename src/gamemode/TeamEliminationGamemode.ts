@@ -155,7 +155,11 @@ export default class TeamEliminationGamemode extends Gamemode {
         for (const player of this.match.lobby.players) {
             if ((this.match as TeamEliminationMatch).onSameTeam(player, target)) {
                 if (this.isPlayerValid(player)) {
-                    target.sendAudioRequest(Audio.DEATH_NORESPAWN);
+                    if (this.match.hasOnlyBotsRemaining()) {
+                        EventHandler.callEvent(EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, this.match.lobby);
+                    } else {
+                        target.sendAudioRequest(Audio.DEATH_NORESPAWN);
+                    }
                     return;
                 }
             }
