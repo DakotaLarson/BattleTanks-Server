@@ -1,4 +1,5 @@
 import Match from "../core/Match";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import Player from "../Player";
 import Vector3 from "../vector/Vector3";
@@ -52,7 +53,7 @@ export default class CollisionHandler {
                 testBlockPositions.push(blockPos);
             }
         }
-        for (const player of this.match.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             if (player.position.clone().add(new Vector3(0.5, 0, 0.5)).distanceSquared(proj.position) <= distanceCovered + playerRadius) {
                 if (player.id !== proj.shooterId && player.isAlive) {
                     testPlayers.push(player);

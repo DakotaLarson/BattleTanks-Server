@@ -1,4 +1,5 @@
 import Match from "../core/Match";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import * as PacketSender from "../PacketSender";
 import Player from "../Player";
@@ -34,7 +35,7 @@ export default class ProjectileHandler {
         EventHandler.removeListener(this, EventHandler.Event.PROJECTILE_REMOVAL, this.onRemoval);
 
         this.projectiles = [];
-        for (const player of this.match.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             PacketSender.sendProjectileClear(player.id);
         }
     }
@@ -48,7 +49,7 @@ export default class ProjectileHandler {
             const data = [position.x, position.y, position.z, rotation, id];
 
             shooter.sendPlayerShoot();
-            for (const player of this.match.lobby.players) {
+            for (const player of PlayerHandler.getMatchPlayers(this.match)) {
                 if (player.id !== shooter.id) {
                     player.sendConnectedPlayerShoot(shooter.id);
                 }
@@ -69,7 +70,7 @@ export default class ProjectileHandler {
         if (index > -1) {
             this.projectiles.splice(index, 1);
             proj.destroy();
-            for (const player of this.match.lobby.players) {
+            for (const player of PlayerHandler.getMatchPlayers(this.match)) {
                 PacketSender.sendProjectileRemoval(player.id, proj.id);
             }
         }

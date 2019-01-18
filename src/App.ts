@@ -20,7 +20,7 @@ ArenaLoader.loadArenas().then((message) => {
     console.log(message);
     teamElmMPService.start();
     datastoreHandler.start();
-    botHandler.start();
+    // botHandler.start();
 }).catch((message) => {
     console.error(message);
 });

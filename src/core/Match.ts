@@ -1,4 +1,5 @@
 import Arena from "../Arena";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import Player from "../Player";
 import PowerupHandler from "../powerup/PowerupHandler";
@@ -6,7 +7,6 @@ import ProjectileHandler from "../projectile/ProjectileHandler";
 import MatchStatistics from "../statistics/MatchStatistics";
 import Vector4 from "../vector/Vector4";
 import Gamemode from "./Gamemode";
-import Lobby from "./Lobby";
 
 export default class Match {
 
@@ -14,7 +14,6 @@ export default class Match {
     private static readonly TEAM_B_COLOR = 0x0e52f0;
 
     public arena: Arena;
-    public lobby: Lobby;
 
     private powerupHandler: PowerupHandler;
 
@@ -27,9 +26,8 @@ export default class Match {
 
     private projectileHandler: ProjectileHandler;
 
-    constructor(arena: Arena, lobby: Lobby) {
+    constructor(arena: Arena) {
         this.arena = arena;
-        this.lobby = lobby;
 
         this.projectileHandler = new ProjectileHandler(this);
         this.powerupHandler = new PowerupHandler(this);
@@ -44,14 +42,14 @@ export default class Match {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
         EventHandler.addListener(this, EventHandler.Event.RAM_COLLISION, this.onRamCollision);
 
-        for (const player of this.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this)) {
             player.sendArena(this.arena.getRawData());
         }
         this.projectileHandler.enable();
         this.powerupHandler.enable();
         this.gamemode.enable();
 
-        for (const player of this.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this)) {
             let spawn: Vector4;
 
             if (this.teamAPlayers.length < this.teamBPlayers.length) {
@@ -75,7 +73,7 @@ export default class Match {
             }
             player.spawn(spawn);
 
-            for (const otherPlayer of this.lobby.players) {
+            for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
                 if (otherPlayer !== player) {
                     otherPlayer.sendConnectedPlayerAddition(player);
                 }
@@ -90,9 +88,9 @@ export default class Match {
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_MOVE, this.onPlayerMove);
         EventHandler.removeListener(this, EventHandler.Event.RAM_COLLISION, this.onRamCollision);
 
-        for (const player of this.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this)) {
             player.despawn();
-            for (const otherPlayer of this.lobby.players) {
+            for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
                 if (player !== otherPlayer) {
                     player.sendConnectedPlayerRemoval(otherPlayer.id);
                 }
@@ -106,7 +104,7 @@ export default class Match {
     }
 
     public hasPlayer(player: Player) {
-        for (const otherPlayer of this.lobby.players) {
+        for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
             if (otherPlayer === player) {
                 return true;
             }
@@ -115,7 +113,7 @@ export default class Match {
     }
 
     public getPlayerById(playerId: number): Player {
-        for (const player of this.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this)) {
             if (player.id === playerId) {
                 return player;
             }
@@ -124,7 +122,7 @@ export default class Match {
     }
 
     public hasOnlyBotsRemaining() {
-        for (const player of this.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this)) {
             if (this.gamemode.isPlayerValid(player) && !player.isBot()) {
                 return false;
             }
@@ -137,7 +135,7 @@ export default class Match {
         player.sendArena(this.arena.getRawData());
         this.powerupHandler.onPlayerAddition(player);
 
-        for (const otherPlayer of this.lobby.players) {
+        for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
             if (player !== otherPlayer && otherPlayer.isAlive) {
                 player.sendConnectedPlayerAddition(otherPlayer);
             }
@@ -158,7 +156,7 @@ export default class Match {
             }
         }
 
-        for (const otherPlayer of this.lobby.players) {
+        for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
             otherPlayer.sendConnectedPlayerRemoval(player.id, -1);
         }
     }
@@ -184,7 +182,7 @@ export default class Match {
     public hasEnoughPlayers() {
         let teamAValid = false;
         let teamBValid = false;
-        for (const player of this.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this)) {
             if (!teamAValid && this.teamAPlayers.indexOf(player.id) > -1) {
                 if (this.gamemode.isPlayerValid(player)) {
                     teamAValid = true;
@@ -208,7 +206,7 @@ export default class Match {
 
         if (this.hasPlayer(player)) {
             if (this.isPlayerInBounds(player, this.arena)) {
-                for (const otherPlayer of this.lobby.players) {
+                for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
                     if (player !== otherPlayer) {
                         otherPlayer.sendConnectedPlayerMove(player);
                     }

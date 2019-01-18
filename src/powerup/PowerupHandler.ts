@@ -1,4 +1,5 @@
 import Match from "../core/Match";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import * as PacketSender from "../PacketSender";
 import Player from "../Player";
@@ -51,13 +52,13 @@ export default class PowerupHandler {
     }
 
     public addPowerup(powerup: Powerup) {
-        for (const player of this.match.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             PacketSender.sendPowerupAddition(player.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
         }
     }
 
     public removePowerup(powerup: Powerup) {
-        for (const player of this.match.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             PacketSender.sendPowerupRemoval(player.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
         }
     }
@@ -106,7 +107,7 @@ export default class PowerupHandler {
         if (type === 0) {
             player.boostShield();
 
-            for (const otherPlayer of this.match.lobby.players) {
+            for (const otherPlayer of PlayerHandler.getMatchPlayers(this.match)) {
                 if (otherPlayer !== player) {
                     otherPlayer.sendConnectedPlayerShield(player.id, player.shield);
                 }
@@ -114,7 +115,7 @@ export default class PowerupHandler {
         } else if (type === 1) {
             player.boostHealth();
 
-            for (const otherPlayer of this.match.lobby.players) {
+            for (const otherPlayer of PlayerHandler.getMatchPlayers(this.match)) {
                 if (otherPlayer !== player) {
                     otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
                 }

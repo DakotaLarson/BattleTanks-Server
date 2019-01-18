@@ -1,15 +1,10 @@
 import Arena from "../Arena";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import Player from "../Player";
 import Lobby from "./Lobby";
 
 export default class MultiplayerService {
-
-    private lobbies: Lobby[];
-
-    constructor() {
-        this.lobbies = [];
-    }
 
     public start() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
@@ -17,12 +12,13 @@ export default class MultiplayerService {
     }
 
     public onMatchEnd(lobby: Lobby): boolean {
-        const amountToMove = lobby.players.length;
+        const amountToMove = PlayerHandler.getLobbyPlayerCount(lobby);
         if (lobby.isBelowMaximumPlayerCount() && amountToMove) {
-            const availableSpace = this.getAvailableLobbySpace(this.lobbies, lobby);
+            const lobbies = PlayerHandler.getLobbies();
+            const availableSpace = this.getAvailableLobbySpace(lobbies, lobby);
             if (availableSpace >= amountToMove) {
-                this.sortLobbies(this.lobbies);
-                this.migratePlayers(this.lobbies, lobby);
+                const sortedLobbies = this.sortLobbies(lobbies);
+                this.migratePlayers(sortedLobbies, lobby);
                 return true;
             }
         }
@@ -43,7 +39,7 @@ export default class MultiplayerService {
 
         const belowMinLobbies = [];
 
-        for (const lobby of this.lobbies) {
+        for (const lobby of PlayerHandler.getLobbies()) {
             if (lobby.isBelowMinimumPlayerCount()) {
                 belowMinLobbies.push(lobby);
             } else if (lobby.isBelowMaximumPlayerCount()) {
@@ -65,18 +61,19 @@ export default class MultiplayerService {
             lobby = this.createLobby();
             EventHandler.callEvent(EventHandler.Event.LOBBY_CREATION, lobby);
         }
-        lobby.addPlayer(player);
+        this.addPlayerToLobby(player, lobby);
     }
 
     private onPlayerLeave(player: Player): void {
-        for (const lobby of this.lobbies) {
-            if (lobby.hasPlayer(player)) {
-                lobby.removePayer(player);
+        const lobbies = PlayerHandler.getLobbies();
+        for (const lobby of lobbies) {
+            if (PlayerHandler.lobbyHasPlayer(lobby, player)) {
+                this.removePlayerFromLobby(player, lobby);
                 if (lobby.isEnabled()) {
                     if (lobby.isEmpty()) {
                         this.removeLobby(lobby);
                     } else {
-                        this.migrateWaitingPlayers(this.lobbies, lobby);
+                        this.migrateWaitingPlayers(lobbies, lobby);
                     }
                 }
             }
@@ -86,11 +83,11 @@ export default class MultiplayerService {
 
     private getMostFullLobby(lobbies: Lobby[]) {
         let mostFullLobby = lobbies[0];
-        let playerCount = lobbies[0].players.length;
+        let playerCount = PlayerHandler.getLobbyPlayerCount(lobbies[0]);
 
         for (let i = 1; i < lobbies.length; i ++) {
             const lobby = lobbies[i];
-            const lobbyPlayerCount = lobby.players.length;
+            const lobbyPlayerCount = PlayerHandler.getLobbyPlayerCount(lobby);
 
             if (lobbyPlayerCount > playerCount) {
                 mostFullLobby = lobby;
@@ -101,28 +98,33 @@ export default class MultiplayerService {
         return mostFullLobby;
     }
 
-    private getAvailableLobbySpace(lobbies: Lobby[], exemptLobby: Lobby) {
+    private getAvailableLobbySpace(lobbies: IterableIterator<Lobby>, exemptLobby: Lobby) {
         let playerCount = 0;
         for (const lobby of lobbies) {
             if (lobby !== exemptLobby) {
-                playerCount += Arena.maximumPlayerCount - lobby.players.length;
+                playerCount += Arena.maximumPlayerCount - PlayerHandler.getLobbyPlayerCount(lobby);
             }
         }
         return playerCount;
     }
 
-    private sortLobbies(lobbies: Lobby[]) {
-        lobbies.sort((a: Lobby, b: Lobby) => {
-            return b.players.length - a.players.length;
+    private sortLobbies(lobbies: IterableIterator<Lobby>) {
+
+        const lobbyArr = Array.from(lobbies);
+
+        lobbyArr.sort((a: Lobby, b: Lobby) => {
+            return PlayerHandler.getLobbyPlayerCount(b) - PlayerHandler.getLobbyPlayerCount(a);
         });
+
+        return lobbyArr;
     }
 
     private migratePlayers(lobbies: Lobby[], currentLobby: Lobby) {
-        const players = currentLobby.removePlayers(currentLobby.players);
+        const players = PlayerHandler.removeAllPlayers(currentLobby);
         for (const player of players) {
             for (const lobby of lobbies) {
                 if (lobby.isBelowMaximumPlayerCount() && lobby !== currentLobby) {
-                    lobby.addPlayer(player);
+                    this.addPlayerToLobby(player, lobby);
                     break;
                 }
             }
@@ -132,16 +134,16 @@ export default class MultiplayerService {
         }
     }
 
-    private migrateWaitingPlayers(lobbies: Lobby[], destinationLobby: Lobby) {
-        const playersToMove = Arena.maximumPlayerCount - destinationLobby.players.length;
+    private migrateWaitingPlayers(lobbies: IterableIterator<Lobby>, destinationLobby: Lobby) {
+        const playersToMove = Arena.maximumPlayerCount - PlayerHandler.getLobbyPlayerCount(destinationLobby);
         let movedPlayers = 0;
         for (const lobby of lobbies) {
             if (lobby !== destinationLobby && lobby.isBelowMinimumPlayerCount()) {
-                if (lobby.players.length <= playersToMove - movedPlayers) {
-                    const players = lobby.removePlayers(lobby.players);
+                if (PlayerHandler.getLobbyPlayerCount(lobby) <= playersToMove - movedPlayers) {
+                    const players = this.removeAllPlayersFromLobby(lobby);
 
                     for (const player of players) {
-                        destinationLobby.addPlayer(player);
+                        this.addPlayerToLobby(player, destinationLobby);
                     }
 
                     if (lobby.isEmpty()) {
@@ -163,13 +165,29 @@ export default class MultiplayerService {
     private createLobby() {
         const lobby = new Lobby(this);
         lobby.enable();
-        this.lobbies.push(lobby);
+        PlayerHandler.addLobby(lobby);
         return lobby;
     }
 
     private removeLobby(lobby: Lobby) {
         lobby.disable();
-        this.lobbies.splice(this.lobbies.indexOf(lobby), 1);
+        PlayerHandler.removeLobby(lobby);
         EventHandler.callEvent(EventHandler.Event.LOBBY_REMOVAL, lobby);
+    }
+
+    private addPlayerToLobby(player: Player, lobby: Lobby) {
+        PlayerHandler.addPlayer(lobby, player);
+        lobby.addPlayer(player);
+    }
+
+    private removePlayerFromLobby(player: Player, lobby: Lobby) {
+        PlayerHandler.removePlayer(lobby, player);
+        lobby.removePlayer(player);
+    }
+
+    private removeAllPlayersFromLobby(lobby: Lobby) {
+        const players = PlayerHandler.removeAllPlayers(lobby);
+        lobby.removePlayers(players);
+        return players;
     }
 }

@@ -1,4 +1,5 @@
 import Audio from "../Audio";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import Player from "../Player";
 import Match from "./Match";
@@ -24,7 +25,7 @@ export default class Gamemode {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
 
-        for (const player of this.match.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             this.lives.set(player.id, Gamemode.LIFE_COUNT);
         }
     }
@@ -60,14 +61,14 @@ export default class Gamemode {
                     const targetShield = targetData[1];
 
                     if (previousShield !== targetShield) {
-                        for (const player of this.match.lobby.players) {
+                        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
                             if (player !== data.target) {
                                 player.sendConnectedPlayerShield(data.target.id, targetShield);
                             }
                         }
                     }
 
-                    for (const player of this.match.lobby.players) {
+                    for (const player of PlayerHandler.getMatchPlayers(this.match)) {
                         if (player !== data.target) {
                             player.sendConnectedPlayerHealth(data.target.id, targetHealth);
                         }
@@ -97,7 +98,7 @@ export default class Gamemode {
             livesRemaining --;
             target.despawn(playerId, livesRemaining);
 
-            for (const otherPlayer of this.match.lobby.players) {
+            for (const otherPlayer of PlayerHandler.getMatchPlayers(this.match)) {
                 if (otherPlayer !== target) {
                     otherPlayer.sendConnectedPlayerRemoval(target.id, playerId, livesRemaining);
                 }
@@ -131,7 +132,7 @@ export default class Gamemode {
 
                 this.protected.push(player.id);
 
-                for (const otherPlayer of this.match.lobby.players) {
+                for (const otherPlayer of PlayerHandler.getMatchPlayers(this.match)) {
                     if (otherPlayer !== player) {
                         otherPlayer.sendConnectedPlayerAddition(player);
                         otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
@@ -150,11 +151,12 @@ export default class Gamemode {
 
     private onFinalDeath(target: Player) {
         // Check if there are valid players on KO'd player's team.
-        for (const player of this.match.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             if ((this.match as Match).onSameTeam(player, target)) {
                 if (this.isPlayerValid(player)) {
                     if (this.match.hasOnlyBotsRemaining()) {
-                        EventHandler.callEvent(EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, this.match.lobby);
+                        const lobby = PlayerHandler.getMatchLobby(this.match);
+                        EventHandler.callEvent(EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, lobby);
                     } else {
                         target.sendAudioRequest(Audio.DEATH_NORESPAWN);
                     }
@@ -162,7 +164,7 @@ export default class Gamemode {
                 }
             }
         }
-        for (const player of this.match.lobby.players) {
+        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             if ((this.match as Match).onSameTeam(player, target)) {
                 player.sendAudioRequest(Audio.LOSE);
             } else {
@@ -173,6 +175,7 @@ export default class Gamemode {
             match: this.match,
             playerId: target.id,
         });
-        this.match.lobby.finishMatch();
+        const lobby = PlayerHandler.getMatchLobby(this.match);
+        lobby.finishMatch();
     }
 }
