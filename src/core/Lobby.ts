@@ -12,8 +12,6 @@ export default class Lobby {
     private static WAIT_BETWEEN_MATCHES = 10000;
     private static DEV_WAIT_BETWEEN_MATCHES = 2500;
 
-    public spectators: Player[];
-
     private status: GameStatus;
     private service: MultiplayerService;
 
@@ -22,7 +20,6 @@ export default class Lobby {
     private match: Match | undefined;
 
     constructor(service: MultiplayerService) {
-        this.spectators = [];
 
         this.status = GameStatus.WAITING;
         this.service = service;
@@ -36,7 +33,6 @@ export default class Lobby {
     }
 
     public disable() {
-        this.spectators = [];
         this.status = GameStatus.WAITING;
         EventHandler.removeListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
         this.enabled = false;
@@ -54,13 +50,10 @@ export default class Lobby {
             }
         } else if (this.status === GameStatus.RUNNING) {
             this.getMatch().addPlayer(player);
-            this.spectators.push(player);
         }
     }
 
     public removePlayer(player: Player) {
-        this.removePlayerFromLobby(player);
-
         if (this.status === GameStatus.RUNNING) {
             this.getMatch().removePlayer(player);
 
@@ -80,10 +73,6 @@ export default class Lobby {
         // apply function didn't work in this context.
         for (const player of players) {
             removedPlayers.push(player);
-        }
-
-        for (const player of removedPlayers) {
-            this.removePlayerFromLobby(player);
         }
 
         if (this.status === GameStatus.RUNNING) {
@@ -122,21 +111,12 @@ export default class Lobby {
         return PlayerHandler.getLobbyPlayerCount(this) < Arena.maximumPlayerCount;
     }
 
-    public getSpectatorCount() {
-        const playerCount = PlayerHandler.getLobbyPlayerCount(this);
-        if (playerCount <= Arena.maximumPlayerCount) {
-            return 0;
-        } else {
-            return Math.min(this.spectators.length, playerCount - Arena.maximumPlayerCount);
-        }
-    }
-
     public finishMatch() {
         this.getMatch().finish();
+
         PlayerHandler.removeMatch(this.getMatch());
         this.match = undefined;
 
-        this.spectators = [];
         this.updateStatus(GameStatus.WAITING);
         if (!this.service.onMatchEnd(this)) {
             if (PlayerHandler.getLobbyPlayerCount(this) >= Arena.minimumPlayerCount) {
@@ -224,12 +204,5 @@ export default class Lobby {
             text: ": " + message,
         });
         return segments;
-    }
-
-    private removePlayerFromLobby(player: Player) {
-        const index = this.spectators.indexOf(player);
-        if (index > -1) {
-            this.spectators.splice(index, 1);
-        }
     }
 }

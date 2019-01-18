@@ -59,7 +59,6 @@ export default class MultiplayerService {
             lobby = this.getMostFullLobby(belowMinLobbies);
         } else {
             lobby = this.createLobby();
-            EventHandler.callEvent(EventHandler.Event.LOBBY_CREATION, lobby);
         }
         this.addPlayerToLobby(player, lobby);
     }
@@ -166,6 +165,7 @@ export default class MultiplayerService {
         const lobby = new Lobby(this);
         lobby.enable();
         PlayerHandler.addLobby(lobby);
+        EventHandler.callEvent(EventHandler.Event.LOBBY_CREATION, lobby);
         return lobby;
     }
 
