@@ -1,6 +1,6 @@
 import Match from "../core/Match";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
-import * as PacketSender from "../PacketSender";
 import PlayerStatistic from "./PlayerStatistic";
 
 export default class MatchStatistics {
@@ -69,12 +69,12 @@ export default class MatchStatistics {
 
             this.teamAPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamALost, this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills);
-                PacketSender.sendMatchStatistics(id, stats);
+                PlayerHandler.getMatchPlayer(this.match, id).sendMatchStatistics(stats);
             });
 
             this.teamBPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamBLost, this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills);
-                PacketSender.sendMatchStatistics(id, stats);
+                PlayerHandler.getMatchPlayer(this.match, id).sendMatchStatistics(stats);
             });
         }
     }

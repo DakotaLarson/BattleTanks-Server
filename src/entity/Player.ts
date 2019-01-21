@@ -1,9 +1,10 @@
 import {performance} from "perf_hooks";
-import Audio from "./Audio";
-import EventHandler from "./EventHandler";
-import * as PacketSender from "./PacketSender";
-import Vector3 from "./vector/Vector3";
-import Vector4 from "./vector/Vector4";
+import Audio from "../Audio";
+import EventHandler from "../EventHandler";
+import * as PacketSender from "../PacketSender";
+import Powerup from "../powerup/Powerup";
+import Vector3 from "../vector/Vector3";
+import Vector4 from "../vector/Vector4";
 
 export default class Player {
 
@@ -86,57 +87,129 @@ export default class Player {
     }
 
     public sendPlayerShoot() {
-        PacketSender.sendPlayerShoot(this.id);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerShoot(this.id);
+        }
     }
 
     public sendPlayerSpectating() {
-        PacketSender.sendPlayerSpectating(this.id);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerSpectating(this.id);
+        }
     }
 
     public sendConnectedPlayerAddition(player: Player) {
-        PacketSender.sendConnectedPlayerAddition(this.id, {
-            id: player.id,
-            name: player.name,
-            pos: [player.position.x, player.position.y, player.position.z, player.bodyRot],
-            headRot: player.headRot,
-            color: player.color,
-        });
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerAddition(this.id, {
+                id: player.id,
+                name: player.name,
+                pos: [player.position.x, player.position.y, player.position.z, player.bodyRot],
+                headRot: player.headRot,
+                color: player.color,
+            });
+        }
     }
 
     public sendConnectedPlayerShoot(playerId: number) {
-        PacketSender.sendConnectedPlayerShoot(this.id, playerId);
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerShoot(this.id, playerId);
+        }
     }
 
     public sendConnectedPlayerMove(player: Player) {
-        PacketSender.sendConnectedPlayerMove(this.id, player.position, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerMove(this.id, player.position, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
+        }
     }
 
     public sendConnectedPlayerRemoval(playerId: number, involvedId?: number, livesRemaining?: number) {
-        PacketSender.sendConnectedPlayerRemoval(this.id, playerId, involvedId, livesRemaining);
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerRemoval(this.id, playerId, involvedId, livesRemaining);
+        }
     }
 
     public sendConnectedPlayerHealth(playerId: number, health: number) {
-        PacketSender.sendConnectedPlayerHealth(this.id, playerId, health);
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerHealth(this.id, playerId, health);
+        }
     }
 
     public sendConnectedPlayerShield(playerId: number, shield: number) {
-        PacketSender.sendConnectedPlayerShield(this.id, playerId, shield);
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerShield(this.id, playerId, shield);
+        }
     }
 
     public sendArena(arena: any) {
-        PacketSender.sendArena(this.id, arena);
+        if (!this.isBot()) {
+            PacketSender.sendArena(this.id, arena);
+        }
     }
 
     public sendGameStatus(status: number) {
-        PacketSender.sendGameStatus(this.id, status);
+        if (!this.isBot()) {
+            PacketSender.sendGameStatus(this.id, status);
+        }
     }
 
     public sendAlert(message: string) {
-        PacketSender.sendAlert(this.id, message);
+        if (!this.isBot()) {
+            PacketSender.sendAlert(this.id, message);
+        }
     }
 
     public sendAudioRequest(audio: Audio) {
-        PacketSender.sendAudioRequest(this.id, audio);
+        if (!this.isBot()) {
+            PacketSender.sendAudioRequest(this.id, audio);
+        }
+    }
+
+    public sendChatMessage(message: string) {
+        if (!this.isBot()) {
+            PacketSender.sendChatMessage(this.id, message);
+        }
+    }
+
+    public sendPowerupAddition(powerup: Powerup) {
+        if (!this.isBot()) {
+            PacketSender.sendPowerupAddition(this.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
+        }
+    }
+
+    public sendPowerupRemoval(powerup: Powerup) {
+        if (!this.isBot()) {
+            PacketSender.sendPowerupRemoval(this.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
+        }
+    }
+
+    public sendPowerupPickup() {
+        if (!this.isBot()) {
+            PacketSender.sendPlayerPowerupPickup(this.id);  // Sound.
+        }
+    }
+
+    public sendProjectileLaunch(data: any) {
+        if (!this.isBot()) {
+            PacketSender.sendProjectileLaunch(this.id, data);
+        }
+    }
+
+    public sendProjectileRemoval(id: number) {
+        if (!this.isBot()) {
+            PacketSender.sendProjectileRemoval(this.id, id);
+        }
+    }
+
+    public sendProjectileClear() {
+        if (!this.isBot()) {
+            PacketSender.sendProjectileClear(this.id);
+        }
+    }
+
+    public sendMatchStatistics(stats: number[]) {
+        if (!this.isBot()) {
+            PacketSender.sendMatchStatistics(this.id, stats);
+        }
     }
 
     public onMove(data: number[]) {
@@ -157,7 +230,9 @@ export default class Player {
                 if (this.ammoCount === 0) {
                     this.reload();
                 }
-                PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+                if (!this.isBot()) {
+                    PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+                }
             }
         });
     }
@@ -166,14 +241,18 @@ export default class Player {
         const currentTime = Date.now();
         if (currentTime - this.ramTime > Player.ramCooldown) {
             this.ramTime = currentTime;
-            PacketSender.sendPlayerRam(this.id, Player.ramUsageTime);
+            if (!this.isBot()) {
+                PacketSender.sendPlayerRam(this.id, Player.ramUsageTime);
+            }
         }
     }
 
     public resetAmmo() {
         this.reloadPercentage = 1;
         this.ammoCount = 10;
-        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+        }
     }
 
     public reload() {
@@ -199,10 +278,12 @@ export default class Player {
         this.bodyRot = pos.w;
         this.headRot = 0;
 
-        PacketSender.sendPlayerAddition(this.id, pos, this.color);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerAddition(this.id, pos, this.color);
 
-        PacketSender.sendPlayerHealth(this.id, this.health);
-        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+            PacketSender.sendPlayerHealth(this.id, this.health);
+            PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+        }
     }
 
     public despawn(involvedId?: number, livesRemaining?: number) {
@@ -214,8 +295,10 @@ export default class Player {
 
         this.resetSpeed();
 
-        PacketSender.sendPlayerRemoval(this.id, involvedId, livesRemaining);
-        PacketSender.sendPlayerHealth(this.id, this.health);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerRemoval(this.id, involvedId, livesRemaining);
+            PacketSender.sendPlayerHealth(this.id, this.health);
+        }
     }
 
     public damage(amount: number) {
@@ -245,7 +328,9 @@ export default class Player {
             this.reloadPercentage = 1;
         }
         this.ammoCount = Player.fullAmmoCount + Player.ammoBoost;
-        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+        }
     }
 
     public boostHealth() {
@@ -254,7 +339,9 @@ export default class Player {
 
     public boostSpeed() {
         this.hasSpeedBoost = true;
-        PacketSender.sendPlayerSpeedMultiplier(this.id, Player.speedBoost);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerSpeedMultiplier(this.id, Player.speedBoost);
+        }
         setTimeout(this.resetSpeed.bind(this), Player.speedBoostTime * 1000);
     }
 
@@ -267,20 +354,25 @@ export default class Player {
     }
 
     private resetSpeed() {
-        PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
+        }
         this.hasSpeedBoost = false;
     }
 
     private alterHealth(amount: number) {
         this.health = Math.round(Math.max(Math.min(this.health + amount, 1), 0) * 100) / 100;
-        PacketSender.sendPlayerHealth(this.id, this.health);
-
+        if (!this.isBot()) {
+            PacketSender.sendPlayerHealth(this.id, this.health);
+        }
         return this.health;
     }
 
     private alterShield(amount: number) {
         this.shield = Math.round(Math.max(Math.min(this.shield + amount, 1), 0) * 100) / 100;
-        PacketSender.sendPlayerShield(this.id, this.shield);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerShield(this.id, this.shield);
+        }
 
         return this.shield;
     }
@@ -301,7 +393,9 @@ export default class Player {
         if (this.reloadPercentage === 1) {
             this.finishReload();
         }
-        PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+        if (!this.isBot()) {
+            PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
+        }
     }
 
     private finishReload() {
@@ -328,21 +422,4 @@ export default class Player {
             }
         }
     }
-
-    // public sendMatchStatistics(stats: any) {
-    //     PacketSender.sendMatchStatistics(this.id, JSON.stringify(stats));
-    // }
-// public sendPlayerMove(pos: Vector4) {
-    //     this.position.x = pos.x;
-    //     this.position.y = pos.y;
-    //     this.position.z = pos.z;
-    //     this.bodyRot = pos.w;
-    //     PacketSender.sendPlayerMove(this.id, this.position, this.headRot, this.bodyRot);
-    // }
-    // public sendInvalidShot() {
-    //     PacketSender.sendPlayerShootInvalid(this.id);
-    // }
-    // public sendCooldownTime(time: number) {
-    //     PacketSender.sendCooldownTime(this.id, time);
-    // }
 }

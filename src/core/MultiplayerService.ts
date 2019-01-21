@@ -1,7 +1,7 @@
 import Arena from "../Arena";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
-import Player from "../Player";
 import Lobby from "./Lobby";
 
 export default class MultiplayerService {
@@ -9,9 +9,13 @@ export default class MultiplayerService {
     public start() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
+
+        EventHandler.addListener(this, EventHandler.Event.BOT_JOIN, this.onBotJoin);
+        EventHandler.addListener(this, EventHandler.Event.BOT_LEAVE, this.onBotLeave);
     }
 
     public onMatchEnd(lobby: Lobby): boolean {
+        EventHandler.callEvent(EventHandler.Event.BOTS_MATCH_END, lobby);
         const amountToMove = PlayerHandler.getLobbyPlayerCount(lobby);
         if (lobby.isBelowMaximumPlayerCount() && amountToMove) {
             const lobbies = PlayerHandler.getLobbies();
@@ -68,16 +72,22 @@ export default class MultiplayerService {
         for (const lobby of lobbies) {
             if (PlayerHandler.lobbyHasPlayer(lobby, player)) {
                 this.removePlayerFromLobby(player, lobby);
-                if (lobby.isEnabled()) {
-                    if (lobby.isEmpty()) {
-                        this.removeLobby(lobby);
-                    } else {
-                        this.migrateWaitingPlayers(lobbies, lobby);
-                    }
+                if (lobby.isEmpty()) {
+                    this.removeLobby(lobby);
+                } else {
+                    this.migrateWaitingPlayers(lobbies, lobby);
                 }
             }
         }
         player.destroy();
+    }
+
+    private onBotJoin(data: any) {
+        this.addPlayerToLobby(data.bot, data.lobby);
+    }
+
+    private onBotLeave(data: any) {
+        // todo
     }
 
     private getMostFullLobby(lobbies: Lobby[]) {
@@ -165,14 +175,12 @@ export default class MultiplayerService {
         const lobby = new Lobby(this);
         lobby.enable();
         PlayerHandler.addLobby(lobby);
-        EventHandler.callEvent(EventHandler.Event.LOBBY_CREATION, lobby);
         return lobby;
     }
 
     private removeLobby(lobby: Lobby) {
         lobby.disable();
         PlayerHandler.removeLobby(lobby);
-        EventHandler.callEvent(EventHandler.Event.LOBBY_REMOVAL, lobby);
     }
 
     private addPlayerToLobby(player: Player, lobby: Lobby) {

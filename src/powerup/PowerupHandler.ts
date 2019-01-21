@@ -1,8 +1,7 @@
 import Match from "../core/Match";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
-import * as PacketSender from "../PacketSender";
-import Player from "../Player";
 import AmmoPowerup from "./AmmoPowerup";
 import HealthPowerup from "./HealthPowerup";
 import Powerup from "./Powerup";
@@ -53,20 +52,20 @@ export default class PowerupHandler {
 
     public addPowerup(powerup: Powerup) {
         for (const player of PlayerHandler.getMatchPlayers(this.match)) {
-            PacketSender.sendPowerupAddition(player.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
+            player.sendPowerupAddition(powerup);
         }
     }
 
     public removePowerup(powerup: Powerup) {
         for (const player of PlayerHandler.getMatchPlayers(this.match)) {
-            PacketSender.sendPowerupRemoval(player.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
+            player.sendPowerupRemoval(powerup);
         }
     }
 
     public onPlayerAddition(player: Player) {
         for (const powerup of this.powerups) {
             if (powerup.enabled) {
-                PacketSender.sendPowerupAddition(player.id, [powerup.typeId, powerup.position.x, powerup.position.y, powerup.position.z]);
+                player.sendPowerupAddition(powerup);
             }
         }
     }
@@ -103,7 +102,7 @@ export default class PowerupHandler {
     }
 
     private pickup(player: Player, type: number) {
-        PacketSender.sendPlayerPowerupPickup(player.id);  // Sound.
+        player.sendPowerupPickup();  // Sound.
         if (type === 0) {
             player.boostShield();
 

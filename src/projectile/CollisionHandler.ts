@@ -1,7 +1,7 @@
 import Match from "../core/Match";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
-import Player from "../Player";
 import Vector3 from "../vector/Vector3";
 import Projectile from "./Projectile";
 

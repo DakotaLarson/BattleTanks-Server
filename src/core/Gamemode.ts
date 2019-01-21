@@ -1,7 +1,7 @@
 import Audio from "../Audio";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
-import Player from "../Player";
 import Match from "./Match";
 
 export default class Gamemode {
@@ -16,10 +16,13 @@ export default class Gamemode {
 
     private lives: Map<number, number>;
     private protected: number[];
+
+    private timeouts: NodeJS.Timeout[];
     constructor(match: Match) {
         this.match = match;
         this.lives = new Map();
         this.protected = [];
+        this.timeouts = [];
     }
     public enable(): void {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
@@ -35,6 +38,10 @@ export default class Gamemode {
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
         this.lives.clear();
         this.protected = [];
+        for (const timeout of this.timeouts) {
+            clearTimeout(timeout);
+        }
+        this.timeouts = [];
     }
 
     public handleOutOfBounds(player: Player) {
@@ -123,7 +130,7 @@ export default class Gamemode {
 
     private respawn(player: Player, livesRemaining: number) {
         player.sendAudioRequest(Audio.DEATH_RESPAWN);
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
             if (this.match.hasPlayer(player)) {
                 this.lives.set(player.id, livesRemaining);
 
@@ -139,31 +146,37 @@ export default class Gamemode {
                     }
                 }
 
-                setTimeout(() => {
+                const protectionTimeout = setTimeout(() => {
                     const index = this.protected.indexOf(player.id);
                     if (index > -1) {
                         this.protected.splice(index, 1);
                     }
+                    if (this.timeouts.includes(protectionTimeout)) {
+                        this.timeouts.splice(this.timeouts.indexOf(protectionTimeout), 1);
+                    }
                 }, Gamemode.PROTECTED_TIME);
+                this.timeouts.push(protectionTimeout);
+            }
+            if (this.timeouts.includes(timeout)) {
+                this.timeouts.splice(this.timeouts.indexOf(timeout), 1);
             }
         }, Gamemode.RESPAWN_TIME);
+        this.timeouts.push(timeout);
     }
 
     private onFinalDeath(target: Player) {
         // Check if there are valid players on KO'd player's team.
-        for (const player of PlayerHandler.getMatchPlayers(this.match)) {
-            if ((this.match as Match).onSameTeam(player, target)) {
-                if (this.isPlayerValid(player)) {
-                    if (this.match.hasOnlyBotsRemaining()) {
-                        const lobby = PlayerHandler.getMatchLobby(this.match);
-                        EventHandler.callEvent(EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, lobby);
-                    } else {
+        if (this.match.hasRealPlayers()) {
+            for (const player of PlayerHandler.getMatchPlayers(this.match)) {
+                if ((this.match as Match).onSameTeam(player, target)) {
+                    if (this.isPlayerValid(player)) {
                         target.sendAudioRequest(Audio.DEATH_NORESPAWN);
+                        return;
                     }
-                    return;
                 }
             }
         }
+
         for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             if ((this.match as Match).onSameTeam(player, target)) {
                 player.sendAudioRequest(Audio.LOSE);

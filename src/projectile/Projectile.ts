@@ -16,7 +16,7 @@ export default class Projectile {
     public id: number;
 
     private collisionHandler: CollisionHandler;
-    private taskId: NodeJS.Timer;
+    private taskId: NodeJS.Timeout;
 
     constructor(collisionHandler: CollisionHandler, position: Vector3, rotation: number, id: number, shooterId: number) {
         this.collisionHandler = collisionHandler;

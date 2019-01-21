@@ -7,6 +7,6 @@ export default class Bot extends Player {
     }
 
     public isBot() {
-        return false;
+        return true;
     }
 }

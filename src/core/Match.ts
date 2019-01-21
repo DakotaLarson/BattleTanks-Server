@@ -1,7 +1,7 @@
 import Arena from "../Arena";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
-import Player from "../Player";
 import PowerupHandler from "../powerup/PowerupHandler";
 import ProjectileHandler from "../projectile/ProjectileHandler";
 import MatchStatistics from "../statistics/MatchStatistics";
@@ -121,15 +121,6 @@ export default class Match {
         throw new Error("Player not found with id: " + playerId);
     }
 
-    public hasOnlyBotsRemaining() {
-        for (const player of PlayerHandler.getMatchPlayers(this)) {
-            if (this.gamemode.isPlayerValid(player) && !player.isBot()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public addPlayer(player: Player): void { // adding spectator, not regular player
         player.sendPlayerSpectating();
         player.sendArena(this.arena.getRawData());
@@ -196,6 +187,15 @@ export default class Match {
             }
         }
         return teamAValid && teamBValid;
+    }
+
+    public hasRealPlayers() {
+        for (const player of PlayerHandler.getMatchPlayers(this)) {
+            if (this.gamemode.isPlayerValid(player) && !player.isBot()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected handlePlayerOutOfBounds(player: Player) {

@@ -1,15 +1,15 @@
 import {performance} from "perf_hooks";
 import ArenaLoader from "./ArenaLoader";
-import BotHandler from "./BotHandler";
 import MultiplayerService from "./core/MultiplayerService";
 import DatastoreHandler from "./DatastoreHandler";
+import BotHandler from "./entity/BotHandler";
 import EventHandler from "./EventHandler";
 import PlayerConnector from "./PlayerConnector";
 import WebSocketServer from "./WebSocketServer";
 
 const wss = new WebSocketServer();
 const playerConnector = new PlayerConnector();
-const teamElmMPService = new MultiplayerService();
+const multiplayerService = new MultiplayerService();
 const datastoreHandler = new DatastoreHandler();
 const botHandler = new BotHandler();
 
@@ -18,9 +18,9 @@ playerConnector.start();
 
 ArenaLoader.loadArenas().then((message) => {
     console.log(message);
-    teamElmMPService.start();
+    multiplayerService.start();
     datastoreHandler.start();
-    // botHandler.start();
+    botHandler.start();
 }).catch((message) => {
     console.error(message);
 });

@@ -1,7 +1,7 @@
 import Datastore = require("@google-cloud/datastore");
 import * as path from "path";
+import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
-import Player from "./Player";
 
 export default class DatastoreHandler {
     private datastore: Datastore;

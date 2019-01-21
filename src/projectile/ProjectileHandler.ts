@@ -1,8 +1,7 @@
 import Match from "../core/Match";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
-import * as PacketSender from "../PacketSender";
-import Player from "../Player";
 import Vector3 from "../vector/Vector3";
 import CollisionHandler from "./CollisionHandler";
 import Projectile from "./Projectile";
@@ -36,7 +35,7 @@ export default class ProjectileHandler {
 
         this.projectiles = [];
         for (const player of PlayerHandler.getMatchPlayers(this.match)) {
-            PacketSender.sendProjectileClear(player.id);
+            player.sendProjectileClear();
         }
     }
 
@@ -53,7 +52,7 @@ export default class ProjectileHandler {
                 if (player.id !== shooter.id) {
                     player.sendConnectedPlayerShoot(shooter.id);
                 }
-                PacketSender.sendProjectileLaunch(player.id, data);
+                player.sendProjectileLaunch(data);
             }
 
             this.projectiles.push(new Projectile(this.collisionHandler, position, rotation, id, shooter.id));
@@ -71,7 +70,7 @@ export default class ProjectileHandler {
             this.projectiles.splice(index, 1);
             proj.destroy();
             for (const player of PlayerHandler.getMatchPlayers(this.match)) {
-                PacketSender.sendProjectileRemoval(player.id, proj.id);
+                player.sendProjectileRemoval(proj.id);
             }
         }
     }

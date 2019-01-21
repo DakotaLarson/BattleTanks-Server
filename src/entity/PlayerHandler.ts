@@ -1,6 +1,6 @@
 import Lobby from "../core/Lobby";
 import Match from "../core/Match";
-import Player from "../Player";
+import Player from "./Player";
 
 export default class PlayerHandler {
 
@@ -98,6 +98,15 @@ export default class PlayerHandler {
 
     public static getLobbies() {
         return PlayerHandler.players.keys();
+    }
+
+    public static getMatchPlayer(match: Match, id: number) {
+        for (const player of this.getMatchPlayers(match)) {
+            if (player.id === id) {
+                return player;
+            }
+        }
+        throw new Error("Player is not part of match");
     }
 
     // public static getLobbyMatch(selectedLobby: Lobby) {

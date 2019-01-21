@@ -24,8 +24,8 @@
   },
   "scripts": {
     "start-supervisor": "supervisor --inspect ./build/App.js",
-	"start-dev": "node --inspect ./build/App.js dev",
-	"start": "node ./build/App.js"
+    "start-dev": "node --inspect ./build/App.js dev",
+    "start": "node ./build/App.js"
   },
   "repository": {
     "type": "git",

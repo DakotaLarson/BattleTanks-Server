@@ -1,5 +1,5 @@
+import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
-import Player from "./Player";
 import Vector3 from "./vector/Vector3";
 
 const receivePlayerMove = (player: Player, data: number[]) => {

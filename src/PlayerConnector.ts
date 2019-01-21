@@ -1,10 +1,10 @@
 import { OAuth2Client } from "google-auth-library";
 import WebSocket = require("ws");
 import DomEventHandler from "./DomEventHandler";
+import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
 import PacketReceiver from "./PacketReceiver";
 import * as PacketSender from "./PacketSender";
-import Player from "./Player";
 
 export default class PlayerConnector {
 

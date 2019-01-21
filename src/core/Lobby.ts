@@ -1,10 +1,9 @@
 import Arena from "../Arena";
 import ArenaLoader from "../ArenaLoader";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import GameStatus from "../GameStatus";
-import * as PacketSender from "../PacketSender";
-import Player from "../Player";
 import Match from "./Match";
 import MultiplayerService from "./MultiplayerService";
 
@@ -15,27 +14,26 @@ export default class Lobby {
     private status: GameStatus;
     private service: MultiplayerService;
 
-    private enabled: boolean;
-
     private match: Match | undefined;
+
+    private startTimeout: NodeJS.Timeout | undefined;
 
     constructor(service: MultiplayerService) {
 
         this.status = GameStatus.WAITING;
         this.service = service;
-
-        this.enabled = false;
     }
 
     public enable() {
         EventHandler.addListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
-        this.enabled = true;
     }
 
     public disable() {
         this.status = GameStatus.WAITING;
         EventHandler.removeListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
-        this.enabled = false;
+        if (this.startTimeout) {
+            clearTimeout(this.startTimeout);
+        }
     }
 
     public addPlayer(player: Player) {
@@ -43,11 +41,12 @@ export default class Lobby {
         player.sendGameStatus(this.status);
 
         if (this.status === GameStatus.WAITING) {
-            if (PlayerHandler.getLobbyPlayerCount(this) >= Arena.minimumPlayerCount) {
-                this.startMatch();
-            } else {
-                this.wait();
-            }
+            // if (PlayerHandler.getLobbyPlayerCount(this) >= Arena.minimumPlayerCount) {
+            //     this.startMatch();
+            // } else {
+            //     this.wait();
+            // }
+            this.startMatch();
         } else if (this.status === GameStatus.RUNNING) {
             this.getMatch().addPlayer(player);
         }
@@ -57,34 +56,24 @@ export default class Lobby {
         if (this.status === GameStatus.RUNNING) {
             this.getMatch().removePlayer(player);
 
-            if (this.getMatch().hasOnlyBotsRemaining()) {
-                EventHandler.callEvent(EventHandler.Event.LOBBY_ONLY_BOTS_REMAINING, this);
-            }
-
-            if (!this.getMatch().hasEnoughPlayers()) {
+            if (!this.getMatch().hasEnoughPlayers() || !this.getMatch().hasRealPlayers()) {
                 this.finishMatch();
             }
         }
     }
 
     public removePlayers(players: Player[]) {
-        const removedPlayers: Player[] = [];
-
-        // apply function didn't work in this context.
-        for (const player of players) {
-            removedPlayers.push(player);
-        }
 
         if (this.status === GameStatus.RUNNING) {
-            for (const player of removedPlayers) {
+            for (const player of players) {
                 this.getMatch().removePlayer(player);
             }
 
-            if (!this.getMatch().hasEnoughPlayers()) {
+            if (!this.getMatch().hasEnoughPlayers() || !this.getMatch().hasRealPlayers()) {
                 this.finishMatch();
             }
         }
-        return removedPlayers;
+        return players;
     }
 
     public isRunning() {
@@ -97,10 +86,6 @@ export default class Lobby {
 
     public isEmpty() {
         return PlayerHandler.getLobbyPlayerCount(this) === 0;
-    }
-
-    public isEnabled() {
-        return this.enabled;
     }
 
     public isBelowMinimumPlayerCount() {
@@ -139,14 +124,14 @@ export default class Lobby {
         if (process.argv.includes("dev")) {
             waitTime = Lobby.DEV_WAIT_BETWEEN_MATCHES;
         }
-        setTimeout(() => {
 
+        this.startTimeout = setTimeout(() => {
+            EventHandler.callEvent(EventHandler.Event.BOTS_MATCH_START, this);
             const playerCount = PlayerHandler.getLobbyPlayerCount(this);
+
             if (playerCount >= Arena.minimumPlayerCount) {
                 const arena = ArenaLoader.getArena(playerCount);
-
                 this.createMatch(arena);
-
                 this.updateStatus(GameStatus.RUNNING);
             } else {
                 this.updateStatus(GameStatus.WAITING);
@@ -154,6 +139,7 @@ export default class Lobby {
                     this.wait("Not enough players to start a match");
                 }
             }
+            this.startTimeout = undefined;
         }, waitTime);
     }
 
@@ -188,7 +174,7 @@ export default class Lobby {
         if (PlayerHandler.lobbyHasPlayer(this, sender)) {
             const constructedData = JSON.stringify(this.constructChatMessage(sender, message));
             for (const player of PlayerHandler.getLobbyPlayers(this)) {
-                PacketSender.sendChatMessage(player.id, constructedData);
+                player.sendChatMessage(constructedData);
             }
         }
     }
