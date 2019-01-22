@@ -2,7 +2,7 @@ import {performance} from "perf_hooks";
 import ArenaLoader from "./ArenaLoader";
 import MultiplayerService from "./core/MultiplayerService";
 import DatastoreHandler from "./DatastoreHandler";
-import BotHandler from "./entity/BotHandler";
+import BotHandler from "./entity/bot/BotHandler";
 import EventHandler from "./EventHandler";
 import PlayerConnector from "./PlayerConnector";
 import WebSocketServer from "./WebSocketServer";
@@ -20,7 +20,7 @@ ArenaLoader.loadArenas().then((message) => {
     console.log(message);
     multiplayerService.start();
     datastoreHandler.start();
-    botHandler.start();
+    botHandler.enable();
 }).catch((message) => {
     console.error(message);
 });

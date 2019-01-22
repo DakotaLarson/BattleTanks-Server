@@ -16,6 +16,7 @@ export default class MultiplayerService {
 
     public onMatchEnd(lobby: Lobby): boolean {
         EventHandler.callEvent(EventHandler.Event.BOTS_MATCH_END, lobby);
+
         const amountToMove = PlayerHandler.getLobbyPlayerCount(lobby);
         if (lobby.isBelowMaximumPlayerCount() && amountToMove) {
             const lobbies = PlayerHandler.getLobbies();
@@ -87,7 +88,7 @@ export default class MultiplayerService {
     }
 
     private onBotLeave(data: any) {
-        // todo
+        this.removePlayerFromLobby(data.bot, data.lobby);
     }
 
     private getMostFullLobby(lobbies: Lobby[]) {

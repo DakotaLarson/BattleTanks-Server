@@ -41,11 +41,6 @@ export default class Lobby {
         player.sendGameStatus(this.status);
 
         if (this.status === GameStatus.WAITING) {
-            // if (PlayerHandler.getLobbyPlayerCount(this) >= Arena.minimumPlayerCount) {
-            //     this.startMatch();
-            // } else {
-            //     this.wait();
-            // }
             this.startMatch();
         } else if (this.status === GameStatus.RUNNING) {
             this.getMatch().addPlayer(player);
@@ -76,6 +71,10 @@ export default class Lobby {
         return players;
     }
 
+    public getRandomEnemy(player: Player) {
+        return this.getMatch().getRandomEnemy(player);
+    }
+
     public isRunning() {
         return this.status === GameStatus.RUNNING;
     }
@@ -104,11 +103,7 @@ export default class Lobby {
 
         this.updateStatus(GameStatus.WAITING);
         if (!this.service.onMatchEnd(this)) {
-            if (PlayerHandler.getLobbyPlayerCount(this) >= Arena.minimumPlayerCount) {
-                this.startMatch();
-            } else {
-                this.wait("Not enough players to start a new match");
-            }
+            this.startMatch();
         }
     }
 
@@ -133,6 +128,10 @@ export default class Lobby {
                 const arena = ArenaLoader.getArena(playerCount);
                 this.createMatch(arena);
                 this.updateStatus(GameStatus.RUNNING);
+                EventHandler.callEvent(EventHandler.Event.BOTS_AFTER_MATCH_START, {
+                    lobby: this,
+                    arena,
+                });
             } else {
                 this.updateStatus(GameStatus.WAITING);
                 if (!this.service.onMatchEnd(this)) {

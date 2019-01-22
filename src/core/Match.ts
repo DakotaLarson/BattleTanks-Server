@@ -198,7 +198,20 @@ export default class Match {
         return false;
     }
 
-    protected handlePlayerOutOfBounds(player: Player) {
+    public getRandomEnemy(player: Player) {
+        let otherPlayers;
+        if (this.teamAPlayers.includes(player.id)) {
+            otherPlayers = this.teamBPlayers;
+        } else if (this.teamBPlayers.includes(player.id)) {
+            otherPlayers = this.teamAPlayers;
+        } else {
+            throw new Error("Player not part of either team.");
+        }
+        const index = this.getRandomInt(0, otherPlayers.length);
+        return this.getPlayerById(otherPlayers[index]);
+    }
+
+    private handlePlayerOutOfBounds(player: Player) {
         this.gamemode.handleOutOfBounds(player);
     }
 
@@ -233,5 +246,9 @@ export default class Match {
         const height = arena.height + 2;
 
         return xPos >= 0 && xPos <= width && zPos >= 0 && zPos <= height;
+    }
+
+    private getRandomInt(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min) + min);
     }
 }

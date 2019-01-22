@@ -12,6 +12,7 @@ export default class WebServer {
     public server: http.Server;
 
     private playerCount: number;
+    private botCount: number;
 
     private inboundCount: number;
     private outboundCount: number;
@@ -26,7 +27,9 @@ export default class WebServer {
     constructor() {
         const app = express();
         this.server = http.createServer(app);
+
         this.playerCount = 0;
+        this.botCount = 0;
 
         this.inboundCount = 0;
         this.outboundCount = 0;
@@ -69,6 +72,7 @@ export default class WebServer {
 
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
+        EventHandler.addListener(this, EventHandler.Event.BOTS_QUANTITY_UPDATE, this.onBotsQuantityUpdate);
         EventHandler.addListener(this, EventHandler.Event.DATA_INBOUND, this.onDataInbound);
         EventHandler.addListener(this, EventHandler.Event.DATA_OUTBOUND, this.onDataOutbound);
 
@@ -89,6 +93,7 @@ export default class WebServer {
             outbound: this.lastSecondOutbound,
             inbound: this.lastSecondInbound,
             subscribers: this.subscribers.length,
+            bots: this.botCount,
         };
         res.send(JSON.stringify(data));
     }
@@ -118,6 +123,10 @@ export default class WebServer {
         this.playerCount --;
     }
 
+    private onBotsQuantityUpdate(quantity: number) {
+        this.botCount = quantity;
+    }
+
     private onDataInbound(length: number) {
         this.inboundCount += length;
     }
@@ -144,7 +153,8 @@ export default class WebServer {
     }
 
     private sendPlayerCountData(res: express.Response) {
-        res.write("data: " + this.playerCount + "\n\n");
+        const count = this.playerCount + Math.max(this.botCount - this.playerCount, 0);
+        res.write("data: " + count + "\n\n");
     }
 
     // private onPostToken(req: express.Request, res: express.Response) {

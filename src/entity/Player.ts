@@ -40,8 +40,8 @@ export default class Player {
 
     public ammoCount: number;
 
-    private movementVelocity: number;
-    private rotationVelocity: number;
+    protected movementVelocity: number;
+    protected rotationVelocity: number;
 
     private reloadPercentage: number;
     private reloading: boolean;
@@ -276,7 +276,7 @@ export default class Player {
         this.position.y = pos.y;
         this.position.z = pos.z;
         this.bodyRot = pos.w;
-        this.headRot = 0;
+        this.headRot = pos.w;
 
         if (!this.isBot()) {
             PacketSender.sendPlayerAddition(this.id, pos, this.color);
@@ -353,6 +353,12 @@ export default class Player {
         return false;
     }
 
+    protected onTick(delta: number) {
+        if (this.reloading) {
+            this.updateReload(delta);
+        }
+    }
+
     private resetSpeed() {
         if (!this.isBot()) {
             PacketSender.sendPlayerSpeedMultiplier(this.id, 1);
@@ -375,12 +381,6 @@ export default class Player {
         }
 
         return this.shield;
-    }
-
-    private onTick(delta: number) {
-        if (this.reloading) {
-            this.updateReload(delta);
-        }
     }
 
     private updateReload(delta: number) {

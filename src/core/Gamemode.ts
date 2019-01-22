@@ -49,10 +49,11 @@ export default class Gamemode {
     }
 
     public isPlayerValid(player: Player) {
-        return player.isAlive || this.lives.get(player.id) !== 0;
+        const lives = this.lives.get(player.id);
+        return lives !== undefined && (player.isAlive || lives > 0);
     }
 
-    protected onDeath(target: Player, player: Player): void {
+    protected onDeath(target: Player, player: Player)  {
         this.killPlayer(target, player.id);
     }
 
