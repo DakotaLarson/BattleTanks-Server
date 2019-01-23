@@ -51,6 +51,8 @@ export default class Bot extends Player {
 
     public think() {
         const time = Math.random() * (Bot.LONG_THINK_TIME - Bot.SHORT_THINK_TIME) + Bot.SHORT_THINK_TIME;
+        this.path = undefined;
+        this.movementVelocity = 0;
         const timeout = setTimeout(() => {
             this.makeDecision();
             this.completeTimeout(timeout);
@@ -66,11 +68,9 @@ export default class Bot extends Player {
                 this.position.z += delta * Bot.SPEED * Math.cos(this.bodyRot);
                 this.updatePosition(this.position, this.bodyRot);
             } else {
-
                 const time = this.getNextTargetPosition();
                 if (time < 0) {
-                    this.path = undefined;
-                    this.makeDecision();
+                    this.think();
                 } else {
                     this.movingToNextPathIndex = true;
                     const timeout = setTimeout(() => {
