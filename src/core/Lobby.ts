@@ -75,6 +75,10 @@ export default class Lobby {
         return this.getMatch().getRandomEnemy(player);
     }
 
+    public getEnemies(player: Player) {
+        return this.getMatch().getEnemies(player);
+    }
+
     public isRunning() {
         return this.status === GameStatus.RUNNING;
     }

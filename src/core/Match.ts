@@ -211,6 +211,24 @@ export default class Match {
         return this.getPlayerById(otherPlayers[index]);
     }
 
+    public getEnemies(player: Player) {
+        const enemies = [];
+        let otherPlayers;
+        if (this.teamAPlayers.includes(player.id)) {
+            otherPlayers = this.teamBPlayers;
+        } else if (this.teamBPlayers.includes(player.id)) {
+            otherPlayers = this.teamAPlayers;
+        } else {
+            throw new Error("Player not part of either team.");
+        }
+
+        for (const playerId of otherPlayers) {
+            const enemy = this.getPlayerById(playerId);
+            enemies.push(enemy);
+        }
+        return enemies;
+    }
+
     private handlePlayerOutOfBounds(player: Player) {
         this.gamemode.handleOutOfBounds(player);
     }

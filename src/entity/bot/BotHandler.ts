@@ -40,6 +40,15 @@ export default class BotHandler {
         }
     }
 
+    public hasLineOfSight(lobby: Lobby, from: Vector3, to: Vector3) {
+        const pathHandler = this.pathHandlers.get(lobby);
+        if (pathHandler) {
+            return pathHandler.hasLineOfSight(from, to);
+        } else {
+            throw new Error("No pathhandler for lobby");
+        }
+    }
+
     private onMatchStart(lobby: Lobby) {
         const playerCount = PlayerHandler.getLobbyPlayerCount(lobby);
         if (playerCount) {

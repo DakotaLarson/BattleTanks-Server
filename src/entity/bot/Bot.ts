@@ -53,6 +53,7 @@ export default class Bot extends Player {
         const time = Math.random() * (Bot.LONG_THINK_TIME - Bot.SHORT_THINK_TIME) + Bot.SHORT_THINK_TIME;
         this.path = undefined;
         this.movementVelocity = 0;
+
         const timeout = setTimeout(() => {
             this.makeDecision();
             this.completeTimeout(timeout);
@@ -62,27 +63,38 @@ export default class Bot extends Player {
 
     protected onTick(delta: number) {
         super.onTick(delta);
-        if (this.path) {
-            if (this.movingToNextPathIndex) {
-                this.position.x += delta * Bot.SPEED * Math.sin(this.bodyRot),
-                this.position.z += delta * Bot.SPEED * Math.cos(this.bodyRot);
-                this.updatePosition(this.position, this.bodyRot);
-            } else {
-                const time = this.getNextTargetPosition();
-                if (time < 0) {
-                    this.think();
+        const closestEnemy = this.getClosestVisibleEnemy();
+        if (closestEnemy) {
+            const xDiff = closestEnemy.position.x - this.position.x;
+            const zDiff = closestEnemy.position.z - this.position.z;
+            const angle = Math.atan2(xDiff, zDiff);
+            this.updateHeadRotation(angle);
+        } else {
+            if (this.path) {
+                if (this.movingToNextPathIndex) {
+                    this.position.x += delta * Bot.SPEED * Math.sin(this.bodyRot),
+                    this.position.z += delta * Bot.SPEED * Math.cos(this.bodyRot);
+                    this.updatePosition(this.position, this.bodyRot);
                 } else {
-                    this.movingToNextPathIndex = true;
-                    const timeout = setTimeout(() => {
-                        this.movingToNextPathIndex = false;
-                        this.currentPathIndex ++;
-                        this.completeTimeout(timeout);
-                    }, time);
-                    this.timeouts.push(timeout);
+                    const time = this.getNextTargetPosition();
+                    if (time < 0) {
+                        this.think();
+                    } else {
+                        this.movingToNextPathIndex = true;
+                        const timeout = setTimeout(() => {
+                            this.movingToNextPathIndex = false;
+                            this.currentPathIndex ++;
+                            this.completeTimeout(timeout);
+                        }, time);
+                        this.timeouts.push(timeout);
+                    }
                 }
+                EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, this);
+            } else {
+                this.updateHeadRotation(this.bodyRot);
             }
-            EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, this);
         }
+
     }
 
     private getNextTargetPosition() {
@@ -124,12 +136,43 @@ export default class Bot extends Player {
         }
     }
 
-    private updatePosition(position: Vector3, angle: number) {
-        this.bodyRot = angle;
-        this.headRot = angle;
+    private updatePosition(position: Vector3, rot: number) {
+        this.bodyRot = rot;
+        this.headRot = rot;
         this.position = position;
         this.movementVelocity = Bot.SPEED;
 
         EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, this);
+    }
+
+    private updateHeadRotation(rot: number) {
+        this.headRot = rot;
+        this.movementVelocity = 0;
+        EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, this);
+    }
+
+    private getClosestVisibleEnemy() {
+        const enemies = this.lobby.getEnemies(this);
+        const visibleEnemies = [];
+
+        for (const enemy of enemies) {
+            if (this.botHandler.hasLineOfSight(this.lobby, this.position, enemy.position)) {
+                visibleEnemies.push(enemy);
+            }
+        }
+
+        if (visibleEnemies.length) {
+            let selectedEnemy = visibleEnemies[0];
+            let selectedDistance = this.position.distanceSquared(selectedEnemy.position);
+            for (let i = 1; i < visibleEnemies.length; i ++) {
+                const distance = this.position.distanceSquared(visibleEnemies[i].position);
+                if (distance < selectedDistance) {
+                    selectedEnemy = visibleEnemies[i];
+                    selectedDistance = distance;
+                }
+            }
+            return selectedEnemy;
+        }
+        return undefined;
     }
 }
