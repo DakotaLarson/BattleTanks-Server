@@ -9,6 +9,8 @@ import BotQuantityHandler from "./BotQuantityHandler";
 
 export default class BotHandler {
 
+    private static readonly LOGIC_TICK_INTERVAL = 500;
+
     private botQuantityHandler: BotQuantityHandler;
 
     private botQuantity: number;
@@ -29,6 +31,7 @@ export default class BotHandler {
         EventHandler.addListener(this, EventHandler.Event.BOTS_AFTER_MATCH_START, this.onAfterMatchStart);
         EventHandler.addListener(this, EventHandler.Event.BOTS_MATCH_END, this.onMatchEnd);
         this.botQuantityHandler.enable();
+        this.runLogicTick();
     }
 
     public getPath(lobby: Lobby, from: Vector3, to: Vector3) {
@@ -105,4 +108,11 @@ export default class BotHandler {
             bots.splice(0, bots.length);
         }
     }
+
+    private runLogicTick() {
+        setInterval(() => {
+            EventHandler.callEvent(EventHandler.Event.BOTS_LOGIC_TICK);
+        }, BotHandler.LOGIC_TICK_INTERVAL);
+    }
+
 }

@@ -19,8 +19,8 @@ export default class Match {
 
     private gamemode: Gamemode;
 
-    private teamAPlayers: number[];
-    private teamBPlayers: number[];
+    private teamAPlayers: Player[];
+    private teamBPlayers: Player[];
 
     private matchStats: MatchStatistics | undefined;
 
@@ -53,20 +53,20 @@ export default class Match {
             let spawn: Vector4;
 
             if (this.teamAPlayers.length < this.teamBPlayers.length) {
-                this.teamAPlayers.push(player.id);
+                this.teamAPlayers.push(player);
                 player.color = Match.TEAM_A_COLOR;
                 spawn = this.arena.getNextTeamASpawn();
             } else if (this.teamBPlayers.length < this.teamAPlayers.length) {
-                this.teamBPlayers.push(player.id);
+                this.teamBPlayers.push(player);
                 player.color = Match.TEAM_B_COLOR;
                 spawn = this.arena.getNextTeamBSpawn();
             } else {
                 if (Math.random() >= 0.5) {
-                    this.teamAPlayers.push(player.id);
+                    this.teamAPlayers.push(player);
                     player.color = Match.TEAM_A_COLOR;
                     spawn = this.arena.getNextTeamASpawn();
                 } else {
-                    this.teamBPlayers.push(player.id);
+                    this.teamBPlayers.push(player);
                     player.color = Match.TEAM_B_COLOR;
                     spawn = this.arena.getNextTeamBSpawn();
                 }
@@ -134,11 +134,11 @@ export default class Match {
     }
 
     public removePlayer(player: Player): void {
-        let index = this.teamAPlayers.indexOf(player.id);
+        let index = this.teamAPlayers.indexOf(player);
         if (index > -1) {
             this.teamAPlayers.splice(index, 1);
         } else {
-            index = this.teamBPlayers.indexOf(player.id);
+            index = this.teamBPlayers.indexOf(player);
 
             if (index > -1) {
                 this.teamBPlayers.splice(index, 1);
@@ -153,11 +153,11 @@ export default class Match {
     }
 
     public getSpawn(player: Player): Vector4 {
-        let index = this.teamAPlayers.indexOf(player.id);
+        let index = this.teamAPlayers.indexOf(player);
         if (index > -1) {
             return this.arena.getNextTeamASpawn();
         } else {
-            index = this.teamBPlayers.indexOf(player.id);
+            index = this.teamBPlayers.indexOf(player);
             if (index > -1) {
                 return this.arena.getNextTeamBSpawn();
             } else {
@@ -167,19 +167,19 @@ export default class Match {
     }
 
     public onSameTeam(player: Player, otherPlayer: Player) {
-        return this.teamAPlayers.indexOf(player.id) > -1 && this.teamAPlayers.indexOf(otherPlayer.id) > -1 || this.teamBPlayers.indexOf(player.id) > -1 && this.teamBPlayers.indexOf(otherPlayer.id) > -1;
+        return this.teamAPlayers.indexOf(player) > -1 && this.teamAPlayers.indexOf(otherPlayer) > -1 || this.teamBPlayers.indexOf(player) > -1 && this.teamBPlayers.indexOf(otherPlayer) > -1;
     }
 
     public hasEnoughPlayers() {
         let teamAValid = false;
         let teamBValid = false;
         for (const player of PlayerHandler.getMatchPlayers(this)) {
-            if (!teamAValid && this.teamAPlayers.indexOf(player.id) > -1) {
+            if (!teamAValid && this.teamAPlayers.indexOf(player) > -1) {
                 if (this.gamemode.isPlayerValid(player)) {
                     teamAValid = true;
                     continue;
                 }
-            } else if (!teamBValid && this.teamBPlayers.indexOf(player.id) > -1) {
+            } else if (!teamBValid && this.teamBPlayers.indexOf(player) > -1) {
                 if (this.gamemode.isPlayerValid(player)) {
                     teamBValid = true;
                     continue;
@@ -198,33 +198,20 @@ export default class Match {
         return false;
     }
 
-    public getRandomEnemy(player: Player) {
-        let otherPlayers;
-        if (this.teamAPlayers.includes(player.id)) {
-            otherPlayers = this.teamBPlayers;
-        } else if (this.teamBPlayers.includes(player.id)) {
-            otherPlayers = this.teamAPlayers;
-        } else {
-            throw new Error("Player not part of either team.");
-        }
-        const index = this.getRandomInt(0, otherPlayers.length);
-        return this.getPlayerById(otherPlayers[index]);
-    }
-
     public getEnemies(player: Player) {
         const enemies = [];
         let otherPlayers;
-        if (this.teamAPlayers.includes(player.id)) {
+        if (this.teamAPlayers.includes(player)) {
             otherPlayers = this.teamBPlayers;
-        } else if (this.teamBPlayers.includes(player.id)) {
+        } else if (this.teamBPlayers.includes(player)) {
             otherPlayers = this.teamAPlayers;
         } else {
             throw new Error("Player not part of either team.");
         }
-
-        for (const playerId of otherPlayers) {
-            const enemy = this.getPlayerById(playerId);
-            enemies.push(enemy);
+        for (const otherPlayer of otherPlayers) {
+            if (otherPlayer.isAlive) {
+                enemies.push(otherPlayer);
+            }
         }
         return enemies;
     }
@@ -264,9 +251,5 @@ export default class Match {
         const height = arena.height + 2;
 
         return xPos >= 0 && xPos <= width && zPos >= 0 && zPos <= height;
-    }
-
-    private getRandomInt(min: number, max: number) {
-        return Math.floor(Math.random() * (max - min) + min);
     }
 }

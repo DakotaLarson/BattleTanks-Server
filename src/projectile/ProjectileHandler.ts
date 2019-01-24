@@ -33,6 +33,10 @@ export default class ProjectileHandler {
         EventHandler.removeListener(this, EventHandler.Event.PLAYER_SHOOT, this.onShoot);
         EventHandler.removeListener(this, EventHandler.Event.PROJECTILE_REMOVAL, this.onRemoval);
 
+        for (const projectile of this.projectiles) {
+            projectile.destroy();
+        }
+
         this.projectiles = [];
         for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             player.sendProjectileClear();

@@ -1,4 +1,5 @@
 import Match from "../core/Match";
+import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import PlayerStatistic from "./PlayerStatistic";
@@ -19,7 +20,7 @@ export default class MatchStatistics {
     private teamAPlayerStatistics: Map<number, PlayerStatistic>;
     private teamBPlayerStatistics: Map<number, PlayerStatistic>;
 
-    constructor(match: Match, teamAPlayers: number[], teamBPlayers: number[]) {
+    constructor(match: Match, teamAPlayers: Player[], teamBPlayers: Player[]) {
         this.match = match;
 
         this.teamAShots = 0;
@@ -34,12 +35,12 @@ export default class MatchStatistics {
         this.teamAPlayerStatistics = new Map();
         this.teamBPlayerStatistics = new Map();
 
-        for (const id of teamAPlayers) {
-            this.teamAPlayerStatistics.set(id, new PlayerStatistic());
+        for (const player of teamAPlayers) {
+            this.teamAPlayerStatistics.set(player.id, new PlayerStatistic());
         }
 
-        for (const id of teamBPlayers) {
-            this.teamBPlayerStatistics.set(id, new PlayerStatistic());
+        for (const player of teamBPlayers) {
+            this.teamBPlayerStatistics.set(player.id, new PlayerStatistic());
         }
     }
 

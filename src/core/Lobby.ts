@@ -71,10 +71,6 @@ export default class Lobby {
         return players;
     }
 
-    public getRandomEnemy(player: Player) {
-        return this.getMatch().getRandomEnemy(player);
-    }
-
     public getEnemies(player: Player) {
         return this.getMatch().getEnemies(player);
     }

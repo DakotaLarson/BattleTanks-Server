@@ -7,6 +7,8 @@ import Projectile from "./Projectile";
 
 export default class CollisionHandler {
 
+    private static readonly MAX_COLLISIONS = 35;
+
     private match: Match;
 
     constructor(match: Match) {
@@ -16,8 +18,8 @@ export default class CollisionHandler {
     public getProjectileCollision(proj: Projectile, initialPosition: Vector3, travelScalar: number, perpendicularAxis: Vector3, radius: number, internal: number) {
 
         const search = (originalScalar: number, increaseDistance: boolean, newInternal: number) => {
-            if (newInternal > 50) {
-                console.log("Collision was calculated 50x.");
+            if (newInternal > CollisionHandler.MAX_COLLISIONS) {
+                // Collision calculated a lot. Just return.
                 return;
             }
             const difference = originalScalar / 2;
