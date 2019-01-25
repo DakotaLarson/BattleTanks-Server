@@ -94,6 +94,7 @@ export default class WebServer {
             inbound: this.lastSecondInbound,
             subscribers: this.subscribers.length,
             bots: this.botCount,
+            memory: this.getMemoryString(),
         };
         res.send(JSON.stringify(data));
     }
@@ -155,6 +156,14 @@ export default class WebServer {
     private sendPlayerCountData(res: express.Response) {
         const count = this.playerCount + Math.max(this.botCount - this.playerCount, 0);
         res.write("data: " + count + "\n\n");
+    }
+
+    private getMemoryString() {
+        const memoryUsage = process.memoryUsage();
+        const total = memoryUsage.heapTotal;
+        const used = memoryUsage.heapUsed;
+        const percentage = Math.round(used / total * 100) + "%";
+        return used + " / " + total + " (" + percentage + ")";
     }
 
     // private onPostToken(req: express.Request, res: express.Response) {
