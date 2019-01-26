@@ -9,7 +9,7 @@ import BotQuantityHandler from "./BotQuantityHandler";
 
 export default class BotHandler {
 
-    private static readonly LOGIC_TICK_INTERVAL = 500;
+    private static readonly LOGIC_TICK_INTERVAL = 250;
 
     private botQuantityHandler: BotQuantityHandler;
 
@@ -43,10 +43,10 @@ export default class BotHandler {
         }
     }
 
-    public hasLineOfSight(lobby: Lobby, from: Vector3, to: Vector3) {
+    public hasLineOfSight(lobby: Lobby, from: Vector3, to: Vector3, targetRot: number) {
         const pathHandler = this.pathHandlers.get(lobby);
         if (pathHandler) {
-            return pathHandler.hasLineOfSight(from, to);
+            return pathHandler.hasLineOfSight(from, to, targetRot);
         } else {
             throw new Error("No pathhandler for lobby");
         }

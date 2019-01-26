@@ -83,7 +83,7 @@ export default class Bot extends Player {
     protected onTick(delta: number) {
         super.onTick(delta);
         if (this.isAlive) {
-            if (this.targetPlayer) {
+            if (this.targetPlayer && this.targetPlayer.isAlive) {
                 const xDiff = this.targetPlayer.position.x - this.position.x;
                 const zDiff = this.targetPlayer.position.z - this.position.z;
                 const angle = Math.atan2(xDiff, zDiff);
@@ -102,8 +102,10 @@ export default class Bot extends Player {
                         } else {
                             this.movingToNextPathIndex = true;
                             const timeout = setTimeout(() => {
-                                this.movingToNextPathIndex = false;
-                                this.currentPathIndex ++;
+                                if (this.movingToNextPathIndex) {
+                                    this.movingToNextPathIndex = false;
+                                    this.currentPathIndex ++;
+                                }
                                 this.completeTimeout(timeout);
                             }, time);
                             this.timeouts.push(timeout);
@@ -136,7 +138,7 @@ export default class Bot extends Player {
             const targetPathPostion = this.path[this.currentPathIndex + 1];
             this.targetPosition = new Vector3(targetPathPostion[0], 0, targetPathPostion[1]);
 
-            const distance = 1; // Distance is always 1 (diagonal or straight)
+            const distance = this.position.distance(this.targetPosition);
 
             const xDiff = this.targetPosition.x - this.position.x;
             const zDiff = this.targetPosition.z - this.position.z;
@@ -173,11 +175,17 @@ export default class Bot extends Player {
     }
 
     private targetEnemy() {
+
         this.canTargetPlayer = false;
         const shootTime = this.getRandomTime();
         const timeout = setTimeout(() => {
-            this.think();
-            this.completeTimeout(timeout);
+            if (this.targetPlayer && this.targetPlayer.isAlive && this.targetPlayer.position.distance(this.position) < 3) {
+                this.targetEnemy();
+                console.log("retargeting");
+            } else {
+                this.think();
+                this.completeTimeout(timeout);
+            }
         }, shootTime);
         this.timeouts.push(timeout);
     }
@@ -214,7 +222,7 @@ export default class Bot extends Player {
         const visibleEnemies = [];
 
         for (const enemy of enemies) {
-            if (this.botHandler.hasLineOfSight(this.lobby, this.position, enemy.position)) {
+            if (enemy.isAlive && this.botHandler.hasLineOfSight(this.lobby, this.position, enemy.position, enemy.bodyRot)) {
                 visibleEnemies.push(enemy);
             }
         }
