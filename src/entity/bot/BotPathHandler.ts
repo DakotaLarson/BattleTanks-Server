@@ -1,6 +1,8 @@
+import * as path from "path";
+import * as WorkerThreads from "worker_threads";
 import Arena from "../../Arena";
 import Lobby from "../../core/Lobby";
-import {Grid, ThetaStarFinder } from "../../pathfinding/PathFinding";
+import {Grid} from "../../pathfinding/PathFinding";
 import Vector3 from "../../vector/Vector3";
 import Player from "../Player";
 import PlayerHandler from "../PlayerHandler";
@@ -17,6 +19,10 @@ export default class BotPathHandler {
     private botHandler: BotHandler;
     private lobby: Lobby;
 
+    private worker: WorkerThreads.Worker;
+    private workerCallbacks: Map<number, any>;
+    private pathId: number;
+
     constructor(arena: Arena, botHandler: BotHandler, lobby: Lobby) {
         this.grid = new Grid(arena.width + 2, arena.height + 2);
         for (const pos of arena.blockPositions) {
@@ -25,12 +31,39 @@ export default class BotPathHandler {
         this.hitscanHandler = new BotHitscanHandler(arena);
         this.botHandler = botHandler;
         this.lobby = lobby;
+
+        this.worker = new WorkerThreads.Worker(path.join(__dirname, "BotPathWorker.js"), {
+            workerData: arena,
+        });
+        this.worker.on("message", (value: any) => {
+            const callback = this.workerCallbacks.get(value.id);
+            if (callback) {
+                callback(value.path);
+                this.workerCallbacks.delete(value.id);
+            } else {
+                console.warn("No callback for worker result");
+            }
+        });
+        this.worker.on("error", console.log);
+
+        this.workerCallbacks = new Map();
+        this.pathId = 0;
     }
 
-    public getPath(from: Vector3, to: Vector3) {
-        const grid = this.grid.clone();
-        const finder = new ThetaStarFinder({});
-        return finder.findPath(Math.round(from.x), Math.round(from.z), Math.round(to.x), Math.round(to.z), grid);
+    public disable() {
+        this.worker.terminate();
+    }
+
+    public getPath(from: Vector3, to: Vector3): Promise<number[][]> {
+        return new Promise((resolve) => {
+            const id = this.pathId ++;
+            this.worker.postMessage({
+                id,
+                to,
+                from,
+            });
+            this.workerCallbacks.set(id, resolve);
+        });
     }
 
     public hasLineOfSight(from: Vector3, to: Vector3, targetRot: number) {
@@ -57,7 +90,7 @@ export default class BotPathHandler {
         return true;
     }
 
-    public isPlayerClose(bot: Bot, player: Player, to: Vector3) {
+    private isPlayerClose(bot: Bot, player: Player, to: Vector3) {
         if (player !== bot && player.isAlive) {
             const nextDistance = player.position.distanceSquared(to);
             if (nextDistance <= BotPathHandler.PLAYER_SQUARE_RADIUS) {

@@ -190,7 +190,9 @@ export default class Bot extends Player {
             this.visibleEnemy = undefined;
             const selectedEnemy = this.getRandomEnemy();
             if (selectedEnemy) {
-                this.path = this.botHandler.getPath(this.lobby, this.position, selectedEnemy.position);
+                this.botHandler.getPath(this.lobby, this.position, selectedEnemy.position).then((path) => {
+                    this.path = path;
+                });
                 this.currentPathIndex = 0;
                 this.movementVelocity = 0;
                 this.movingToNextPathIndex = false;

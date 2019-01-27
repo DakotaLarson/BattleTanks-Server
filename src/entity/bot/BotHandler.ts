@@ -107,7 +107,11 @@ export default class BotHandler {
     private onMatchEnd(lobby: Lobby) {
         this.removeBots(lobby);
         this.bots.delete(lobby);
-        this.pathHandlers.delete(lobby);
+        const pathHandler = this.pathHandlers.get(lobby);
+        if (pathHandler) {
+            pathHandler.disable();
+            this.pathHandlers.delete(lobby);
+        }
     }
 
     private onQuantityUpdate(quantity: number) {
