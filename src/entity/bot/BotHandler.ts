@@ -30,6 +30,7 @@ export default class BotHandler {
         EventHandler.addListener(this, EventHandler.Event.BOTS_MATCH_START, this.onMatchStart);
         EventHandler.addListener(this, EventHandler.Event.BOTS_AFTER_MATCH_START, this.onAfterMatchStart);
         EventHandler.addListener(this, EventHandler.Event.BOTS_MATCH_END, this.onMatchEnd);
+
         this.botQuantityHandler.enable();
         this.runLogicTick();
     }
@@ -52,6 +53,23 @@ export default class BotHandler {
         }
     }
 
+    public canMove(lobby: Lobby, bot: Bot, to: Vector3) {
+        const pathHandler = this.pathHandlers.get(lobby);
+        if (pathHandler) {
+            return pathHandler.canMove(bot, to);
+        } else {
+            throw new Error("No pathhandler for lobby");
+        }
+    }
+
+    public getBots(lobby: Lobby) {
+        const bots = this.bots.get(lobby);
+        if (!bots) {
+            throw new Error("No bots for lobby");
+        }
+        return bots;
+    }
+
     private onMatchStart(lobby: Lobby) {
         const playerCount = PlayerHandler.getLobbyPlayerCount(lobby);
         if (playerCount) {
@@ -65,20 +83,31 @@ export default class BotHandler {
     }
 
     private onAfterMatchStart(data: any) {
-        const pathHandler = new BotPathHandler(data.arena);
+        const bots = this.bots.get(data.lobby);
+        if (!bots) {
+            throw new Error("No bots for lobby");
+        }
+        const players = [];
+
+        for (const player of PlayerHandler.getLobbyPlayers(data.lobby)) {
+            players.push(player);
+        }
+        for (const bot of bots) {
+            players.push(bot);
+        }
+
+        const pathHandler = new BotPathHandler(data.arena, this, data.lobby);
         this.pathHandlers.set(data.lobby, pathHandler);
 
-        const bots = this.bots.get(data.lobby);
-        if (bots) {
-            for (const bot of bots) {
-                bot.think();
-            }
+        for (const bot of bots) {
+            bot.think();
         }
     }
 
     private onMatchEnd(lobby: Lobby) {
         this.removeBots(lobby);
         this.bots.delete(lobby);
+        this.pathHandlers.delete(lobby);
     }
 
     private onQuantityUpdate(quantity: number) {

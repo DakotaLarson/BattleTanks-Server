@@ -3,8 +3,9 @@ import Vector3 from "../../vector/Vector3";
 
 export default class BotHitscanHandler {
 
-    private static readonly X_OFFSET = 0.5;
-    private static readonly Z_OFFSET = 0.75;
+    // Use half size values to increase accuracy.
+    private static readonly X_OFFSET = 0.25;
+    private static readonly Z_OFFSET = 0.35;
 
     private blockPositions: Vector3[];
 

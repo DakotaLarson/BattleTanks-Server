@@ -17,23 +17,20 @@ export default class Bot extends Player {
     private botHandler: BotHandler;
 
     private path: number[][] | undefined;
-    private targetPlayer: Player | undefined;
-    private targetPosition: Vector3;
+    private visibleEnemy: Player | undefined;
     private currentPathIndex: number;
     private movingToNextPathIndex: boolean;
-    private canTargetPlayer: boolean;
 
     private timeouts: NodeJS.Timeout[];
+    private pathTimeout: NodeJS.Timeout | undefined;
 
     constructor(id: number, lobby: Lobby, botHandler: BotHandler) {
         super("Bot#" + id, id);
         this.lobby = lobby;
         this.botHandler = botHandler;
 
-        this.targetPosition = new Vector3();
         this.currentPathIndex = 0;
         this.movingToNextPathIndex = false;
-        this.canTargetPlayer = false;
 
         this.timeouts = [];
     }
@@ -57,8 +54,7 @@ export default class Bot extends Player {
 
     public think() {
         const time = this.getRandomTime();
-        this.path = undefined;
-        this.movementVelocity = 0;
+        this.reset(true);
 
         const timeout = setTimeout(() => {
             this.makeDecision();
@@ -75,40 +71,44 @@ export default class Bot extends Player {
 
     public despawn(involvedId?: number, livesRemaining?: number) {
         super.despawn(involvedId, livesRemaining);
-        this.path = undefined;
-        this.movingToNextPathIndex = false;
-        this.movementVelocity = 0;
+        this.reset(true);
     }
 
     protected onTick(delta: number) {
         super.onTick(delta);
         if (this.isAlive) {
-            if (this.targetPlayer && this.targetPlayer.isAlive) {
-                const xDiff = this.targetPlayer.position.x - this.position.x;
-                const zDiff = this.targetPlayer.position.z - this.position.z;
-                const angle = Math.atan2(xDiff, zDiff);
-                this.updateHeadRotation(angle);
+            if (this.lookAtVisibleEnemy()) {
                 this.attemptToShoot();
             } else {
                 if (this.path) {
                     if (this.movingToNextPathIndex) {
-                        this.position.x += delta * Bot.SPEED * Math.sin(this.bodyRot),
-                        this.position.z += delta * Bot.SPEED * Math.cos(this.bodyRot);
-                        this.updatePosition(this.position, this.bodyRot);
+                        const newPosition = this.movePositionAlongPath(this.position, this.bodyRot, delta);
+                        if (this.botHandler.canMove(this.lobby, this, newPosition)) {
+                            this.updatePosition(newPosition, this.bodyRot);
+                        } else {
+                            this.think();
+                        }
                     } else {
                         const time = this.getNextTargetPosition();
                         if (time < 0) {
                             this.think();
                         } else {
                             this.movingToNextPathIndex = true;
-                            const timeout = setTimeout(() => {
+                            if (this.pathTimeout) {
+                                console.warn("Clearing previous pathtimeout");
+                                clearTimeout(this.pathTimeout);
+                            }
+                            this.pathTimeout = setTimeout(() => {
                                 if (this.movingToNextPathIndex) {
                                     this.movingToNextPathIndex = false;
                                     this.currentPathIndex ++;
                                 }
-                                this.completeTimeout(timeout);
+                                if (this.pathTimeout) {
+                                    this.completeTimeout(this.pathTimeout);
+                                    this.pathTimeout = undefined;
+                                }
                             }, time);
-                            this.timeouts.push(timeout);
+                            this.timeouts.push(this.pathTimeout);
                         }
                     }
                     EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, this);
@@ -121,31 +121,64 @@ export default class Bot extends Player {
 
     private onLogicTick() {
         if (this.isAlive) {
-            if (this.canTargetPlayer && !this.targetPlayer) {
-                this.targetPlayer = this.getClosestVisibleEnemy();
-                if (this.targetPlayer) {
+            if (!this.visibleEnemy) {
+                this.visibleEnemy = this.getClosestVisibleEnemy();
+                if (this.visibleEnemy) {
                     this.targetEnemy();
+                    this.reset(false);
                 }
             }
         }
     }
 
+    private movePositionAlongPath(position: Vector3, bodyRot: number, delta: number) {
+        const newPosition = position.clone();
+        newPosition.x += delta * Bot.SPEED * Math.sin(bodyRot),
+        newPosition.z += delta * Bot.SPEED * Math.cos(bodyRot);
+        return newPosition;
+    }
+
+    private getNextPathPosition(path: number[][], currentIndex: number) {
+        return this.getPathPosition(path, currentIndex + 1);
+    }
+
+    private getTimeToNextPathPosition(from: Vector3, to: Vector3) {
+        const distance = from.distance(to);
+        return distance / Bot.SPEED * 1000;
+
+    }
+
+    private getPathPosition(path: number[][], index: number) {
+        const pathPosition = path[index];
+        return new Vector3(pathPosition[0], 0, pathPosition[1]);
+    }
+
+    private getAngleToPosition(from: Vector3, to: Vector3) {
+        const xDiff = to.x - from.x;
+        const zDiff = to.z - from.z;
+        return Math.atan2(xDiff, zDiff);
+    }
+
+    private lookAtVisibleEnemy() {
+        if (this.visibleEnemy && this.visibleEnemy.isAlive) {
+            const xDiff = (this.visibleEnemy as Player).position.x - this.position.x;
+            const zDiff = (this.visibleEnemy as Player).position.z - this.position.z;
+            const angle = Math.atan2(xDiff, zDiff);
+            this.updateHeadRotation(angle);
+            return true;
+        }
+        return false;
+    }
+
     private getNextTargetPosition() {
         if (this.path && this.currentPathIndex < this.path.length - 2) {
-            const currentPathPosition = this.path[this.currentPathIndex];
-            this.position = new Vector3(currentPathPosition[0], 0, currentPathPosition[1]);
+            const position  = this.getPathPosition(this.path, this.currentPathIndex);
+            const targetPosition = this.getNextPathPosition(this.path, this.currentPathIndex);
 
-            const targetPathPostion = this.path[this.currentPathIndex + 1];
-            this.targetPosition = new Vector3(targetPathPostion[0], 0, targetPathPostion[1]);
+            const angle = this.getAngleToPosition(position, targetPosition);
+            const time = this.getTimeToNextPathPosition(position, targetPosition);
+            this.updatePosition(position, angle);
 
-            const distance = this.position.distance(this.targetPosition);
-
-            const xDiff = this.targetPosition.x - this.position.x;
-            const zDiff = this.targetPosition.z - this.position.z;
-            const angle = Math.atan2(xDiff, zDiff);
-            this.updatePosition(this.position, angle);
-
-            const time = distance / Bot.SPEED * 1000;
             return time;
         } else {
             return -1;
@@ -154,20 +187,13 @@ export default class Bot extends Player {
 
     private makeDecision() {
         if (!this.path) {
-            this.targetPlayer = undefined;
+            this.visibleEnemy = undefined;
             const selectedEnemy = this.getRandomEnemy();
             if (selectedEnemy) {
                 this.path = this.botHandler.getPath(this.lobby, this.position, selectedEnemy.position);
                 this.currentPathIndex = 0;
                 this.movementVelocity = 0;
                 this.movingToNextPathIndex = false;
-                if (!this.canTargetPlayer) {
-                    const timeout = setTimeout(() => {
-                        this.canTargetPlayer = true;
-                        this.completeTimeout(timeout);
-                    }, this.getRandomTime());
-                    this.timeouts.push(timeout);
-                }
             } else {
                 this.think();
             }
@@ -175,13 +201,10 @@ export default class Bot extends Player {
     }
 
     private targetEnemy() {
-
-        this.canTargetPlayer = false;
         const shootTime = this.getRandomTime();
         const timeout = setTimeout(() => {
-            if (this.targetPlayer && this.targetPlayer.isAlive && this.targetPlayer.position.distance(this.position) < 3) {
+            if (this.visibleEnemy && this.visibleEnemy.isAlive && this.visibleEnemy.position.distance(this.position) < 3) {
                 this.targetEnemy();
-                console.log("retargeting");
             } else {
                 this.think();
                 this.completeTimeout(timeout);
@@ -203,6 +226,9 @@ export default class Bot extends Player {
     }
 
     private updatePosition(position: Vector3, rot: number) {
+        if (position.distanceSquared(this.position) > 1) {
+            console.warn("long update distance");
+        }
         this.bodyRot = rot;
         this.headRot = rot;
         this.position = position;
@@ -253,5 +279,19 @@ export default class Bot extends Player {
             return enemies[index];
         }
         return undefined;
+    }
+
+    private reset(updateVelocity: boolean) {
+        this.path = undefined;
+        this.movingToNextPathIndex = false;
+        this.currentPathIndex = 0;
+        if (updateVelocity) {
+            this.movementVelocity = 0;
+        }
+        if (this.pathTimeout) {
+            clearTimeout(this.pathTimeout);
+            this.completeTimeout(this.pathTimeout);
+            this.pathTimeout = undefined;
+        }
     }
 }
