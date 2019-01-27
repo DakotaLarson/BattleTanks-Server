@@ -2,8 +2,8 @@ import EventHandler from "../../EventHandler";
 
 export default class BotQuantityHandler {
 
-    private static readonly LOW_PLAYER_QUANTITY = 4;
-    private static readonly HIGH_PLAYER_QUANITY = 6;
+    private static readonly LOW_QUANTITY = 3;
+    private static readonly HIGH_QUANITY = 5;
 
     public enable() {
         this.updateBotQuantity();
@@ -24,9 +24,9 @@ export default class BotQuantityHandler {
 
     private getNextBotQuantity() {
         if (Math.random() < 0.66) {
-            return BotQuantityHandler.LOW_PLAYER_QUANTITY;
+            return BotQuantityHandler.LOW_QUANTITY;
         } else {
-            return BotQuantityHandler.HIGH_PLAYER_QUANITY;
+            return BotQuantityHandler.HIGH_QUANITY;
         }
     }
 }

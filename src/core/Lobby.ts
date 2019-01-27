@@ -4,17 +4,20 @@ import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import GameStatus from "../GameStatus";
+import MatchTimer from "../MatchTimer";
 import Match from "./Match";
 import MultiplayerService from "./MultiplayerService";
 
 export default class Lobby {
-    private static WAIT_BETWEEN_MATCHES = 10000;
-    private static DEV_WAIT_BETWEEN_MATCHES = 2500;
+    private static readonly WAIT_BETWEEN_MATCHES = 10000;
+    private static readonly DEV_WAIT_BETWEEN_MATCHES = 2500;
+    private static readonly MATCH_TIME = 180;
 
     private status: GameStatus;
     private service: MultiplayerService;
 
     private match: Match | undefined;
+    private matchTimer: MatchTimer | undefined;
 
     private startTimeout: NodeJS.Timeout | undefined;
 
@@ -26,11 +29,14 @@ export default class Lobby {
 
     public enable() {
         EventHandler.addListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
+        EventHandler.addListener(this, EventHandler.Event.MATCH_TIMER_COMPLETE, this.onMatchTimerComplete);
     }
 
     public disable() {
         this.status = GameStatus.WAITING;
         EventHandler.removeListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
+        EventHandler.removeListener(this, EventHandler.Event.MATCH_TIMER_COMPLETE, this.onMatchTimerComplete);
+
         if (this.startTimeout) {
             clearTimeout(this.startTimeout);
         }
@@ -101,6 +107,9 @@ export default class Lobby {
         PlayerHandler.removeMatch(this.getMatch());
         this.match = undefined;
 
+        (this.matchTimer as MatchTimer).stop();
+        this.matchTimer = undefined;
+
         this.updateStatus(GameStatus.WAITING);
         if (!this.service.onMatchEnd(this)) {
             this.startMatch();
@@ -109,8 +118,10 @@ export default class Lobby {
 
     private createMatch(arena: Arena) {
         this.match = new Match(arena);
+        this.matchTimer = new MatchTimer(Lobby.MATCH_TIME, this.match);
         PlayerHandler.addMatch(this.match, this);
         this.match.run();
+        this.matchTimer.start();
     }
     private startMatch() {
         this.updateStatus(GameStatus.STARTING);
@@ -140,6 +151,12 @@ export default class Lobby {
             }
             this.startTimeout = undefined;
         }, waitTime);
+    }
+
+    private onMatchTimerComplete(match: Match) {
+        if (this.match && match === this.match) {
+            this.finishMatch();
+        }
     }
 
     private getMatch() {

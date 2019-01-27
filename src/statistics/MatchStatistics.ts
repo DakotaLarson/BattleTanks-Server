@@ -49,6 +49,7 @@ export default class MatchStatistics {
         EventHandler.addListener(this, EventHandler.Event.STATS_HIT, this.onHit);
         EventHandler.addListener(this, EventHandler.Event.STATS_KILL, this.onKill);
         EventHandler.addListener(this, EventHandler.Event.STATS_SEND, this.onSend);
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
     }
 
     public disable() {
@@ -56,6 +57,7 @@ export default class MatchStatistics {
         EventHandler.removeListener(this, EventHandler.Event.STATS_HIT, this.onHit);
         EventHandler.removeListener(this, EventHandler.Event.STATS_KILL, this.onKill);
         EventHandler.removeListener(this, EventHandler.Event.STATS_SEND, this.onSend);
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
 
         this.teamAPlayerStatistics.clear();
         this.teamBPlayerStatistics.clear();
@@ -134,6 +136,15 @@ export default class MatchStatistics {
             } else {
                 console.log("No stats registered for death");
             }
+        }
+    }
+
+    private onPlayerLeave(player: Player) {
+        if (this.teamAPlayerStatistics.has(player.id)) {
+            this.teamAPlayerStatistics.delete(player.id);
+        }
+        if (this.teamBPlayerStatistics.has(player.id)) {
+            this.teamBPlayerStatistics.delete(player.id);
         }
     }
 }

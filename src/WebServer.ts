@@ -107,7 +107,6 @@ export default class WebServer {
         });
         res.setTimeout(0);
         res.status(200).set({
-            // "connection": "keep-alive",
             "cache-control": "no-cache",
             "content-type": "text/event-stream",
             "access-control-allow-origin": "*",
@@ -138,11 +137,11 @@ export default class WebServer {
 
     private sendPlayerCount() {
 
-        let lastValueSent = this.playerCount;
+        let lastValueSent = this.playerCount + this.botCount;
         setInterval(() => {
-            if (lastValueSent !== this.playerCount) {
+            if (lastValueSent !== this.playerCount + this.botCount) {
                 this.sendPlayerCountDataToSubscribers();
-                lastValueSent = this.playerCount;
+                lastValueSent = this.playerCount + this.botCount;
             }
         }, WebServer.SSE_INTERVAL);
     }
@@ -154,7 +153,7 @@ export default class WebServer {
     }
 
     private sendPlayerCountData(res: express.Response) {
-        const count = this.playerCount + Math.max(this.botCount - this.playerCount, 0);
+        const count = this.playerCount + this.botCount;
         res.write("data: " + count + "\n\n");
     }
 

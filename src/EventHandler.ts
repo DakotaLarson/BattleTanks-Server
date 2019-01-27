@@ -39,6 +39,7 @@ enum Event {
     DATA_INBOUND,
     DATA_OUTBOUND,
 
+    // BOTS
     BOTS_LOGIC_TICK,
     BOTS_MATCH_START,
     BOTS_AFTER_MATCH_START,
@@ -46,6 +47,9 @@ enum Event {
     BOTS_QUANTITY_UPDATE,
     BOT_JOIN,
     BOT_LEAVE,
+
+    // TIMER
+    MATCH_TIMER_COMPLETE,
 }
 
 enum Level {
