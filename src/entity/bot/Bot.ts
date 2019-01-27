@@ -25,7 +25,7 @@ export default class Bot extends Player {
     private pathTimeout: NodeJS.Timeout | undefined;
 
     constructor(id: number, lobby: Lobby, botHandler: BotHandler) {
-        super("Bot#" + id, id);
+        super("Guest", id);
         this.lobby = lobby;
         this.botHandler = botHandler;
 
