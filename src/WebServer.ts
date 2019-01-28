@@ -112,7 +112,7 @@ export default class WebServer {
             "access-control-allow-origin": "*",
         });
         this.subscribers.push(res);
-        this.sendPlayerCountData(res);
+        this.sendPlayerCountData(res, this.playerCount + this.botCount, this.subscribers.length);
     }
 
     private onPlayerJoin() {
@@ -137,24 +137,27 @@ export default class WebServer {
 
     private sendPlayerCount() {
 
-        let lastValueSent = this.playerCount + this.botCount;
+        let lastPlayerCount = this.playerCount + this.botCount;
+        let lastActiveUserCount = this.subscribers.length;
         setInterval(() => {
-            if (lastValueSent !== this.playerCount + this.botCount) {
-                this.sendPlayerCountDataToSubscribers();
-                lastValueSent = this.playerCount + this.botCount;
+            const currentPlayerCount = this.playerCount + this.botCount;
+            const currentActiveUserCount = this.subscribers.length;
+            if (currentActiveUserCount && (currentPlayerCount !== lastPlayerCount || currentActiveUserCount !== lastActiveUserCount)) {
+                this.sendDataToSubscribers(currentPlayerCount, currentActiveUserCount);
+                lastPlayerCount = currentPlayerCount;
+                lastActiveUserCount = currentActiveUserCount;
             }
         }, WebServer.SSE_INTERVAL);
     }
 
-    private sendPlayerCountDataToSubscribers() {
+    private sendDataToSubscribers(playerCount: number, activeUserCount: number) {
         for (const res of this.subscribers) {
-            this.sendPlayerCountData(res);
+            this.sendPlayerCountData(res, playerCount, activeUserCount);
         }
     }
 
-    private sendPlayerCountData(res: express.Response) {
-        const count = this.playerCount + this.botCount;
-        res.write("data: " + count + "\n\n");
+    private sendPlayerCountData(res: express.Response, playerCount: number, activeUserCount: number) {
+        res.write("data: " + playerCount + "," + activeUserCount + "\n\n");
     }
 
     private getMemoryString() {
