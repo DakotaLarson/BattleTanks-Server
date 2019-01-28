@@ -84,23 +84,22 @@ export default class BotHandler {
 
     private onAfterMatchStart(data: any) {
         const bots = this.bots.get(data.lobby);
-        if (!bots) {
-            throw new Error("No bots for lobby");
-        }
-        const players = [];
+        if (bots) {
+            const players = [];
 
-        for (const player of PlayerHandler.getLobbyPlayers(data.lobby)) {
-            players.push(player);
-        }
-        for (const bot of bots) {
-            players.push(bot);
-        }
+            for (const player of PlayerHandler.getLobbyPlayers(data.lobby)) {
+                players.push(player);
+            }
+            for (const bot of bots) {
+                players.push(bot);
+            }
 
-        const pathHandler = new BotPathHandler(data.arena, this, data.lobby);
-        this.pathHandlers.set(data.lobby, pathHandler);
+            const pathHandler = new BotPathHandler(data.arena, this, data.lobby);
+            this.pathHandlers.set(data.lobby, pathHandler);
 
-        for (const bot of bots) {
-            bot.think();
+            for (const bot of bots) {
+                bot.think();
+            }
         }
     }
 
