@@ -70,15 +70,19 @@ export default class MatchStatistics {
             const teamALost = this.teamAPlayerStatistics.has(data.playerId);
             const teamBLost = this.teamBPlayerStatistics.has(data.playerId);
 
+            const databaseStats: Map<string, any> = new Map();
+
             this.teamAPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamALost, this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills);
-                PlayerHandler.getMatchPlayer(this.match, id).sendMatchStatistics(stats);
+                this.sendStatsToPlayer(id, stats, databaseStats);
             });
 
             this.teamBPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamBLost, this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills);
-                PlayerHandler.getMatchPlayer(this.match, id).sendMatchStatistics(stats);
+                this.sendStatsToPlayer(id, stats, databaseStats);
             });
+
+            EventHandler.callEvent(EventHandler.Event.DB_PLAYERS_UPDATE, databaseStats);
         }
     }
 
@@ -145,6 +149,25 @@ export default class MatchStatistics {
         }
         if (this.teamBPlayerStatistics.has(player.id)) {
             this.teamBPlayerStatistics.delete(player.id);
+        }
+    }
+
+    private sendStatsToPlayer(id: number, stats: number[], databaseStats: Map<string, any>) {
+        const player = PlayerHandler.getMatchPlayer(this.match, id);
+        player.sendMatchStatistics(stats);
+
+        if (player.sub) {
+            const data = {
+                victories: stats[0] ? 1 : 0,
+                defeats: stats[0] ? 0 : 1,
+                shots: stats[7],
+                hits: stats[8],
+                kills: stats[9],
+                deaths: stats[10],
+                points: stats[11],
+                currency: stats[12],
+            };
+            databaseStats.set(player.sub, data);
         }
     }
 }

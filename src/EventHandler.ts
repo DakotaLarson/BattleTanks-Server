@@ -50,6 +50,11 @@ enum Event {
 
     // TIMER
     MATCH_TIMER_COMPLETE,
+
+    // DATABASE
+    DB_PLAYER_JOIN,
+    DB_PLAYER_UPDATE,
+    DB_PLAYERS_UPDATE,
 }
 
 enum Level {

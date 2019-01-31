@@ -101,6 +101,11 @@ export default class PlayerConnector {
                 const payload =  ticket.getPayload();
                 if (payload) {
                     if (payload.aud === PlayerConnector.CLIENT_ID && (payload.iss === "accounts.google.com" || payload.iss === "https://accounts.google.com")) {
+                        EventHandler.callEvent(EventHandler.Event.DB_PLAYER_JOIN, {
+                            id: payload.sub,
+                            name: payload.name,
+                            email: payload.email,
+                        });
                         resolve(payload.sub);
                     }
                 }
