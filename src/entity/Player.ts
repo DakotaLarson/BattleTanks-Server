@@ -53,6 +53,8 @@ export default class Player {
 
     private ramTime: number;
 
+    private timeouts: NodeJS.Timeout[];
+
     constructor(name: string, id: number, sub?: string) {
         this.name = name;
         this.id = id;
@@ -84,6 +86,7 @@ export default class Player {
         this.nextShotScheduled = false;
 
         this.ramTime = 0;
+        this.timeouts = [];
     }
 
     public sendPlayerShoot() {
@@ -316,6 +319,9 @@ export default class Player {
         if (this.reloading) {
             this.finishReload();
         }
+        for (const timeout of this.timeouts) {
+            clearTimeout(timeout);
+        }
     }
 
     public onReloadMoveToggle(moving: boolean) {
@@ -342,6 +348,11 @@ export default class Player {
         if (!this.isBot()) {
             PacketSender.sendPlayerSpeedMultiplier(this.id, Player.speedBoost);
         }
+        const timeout = setTimeout(() => {
+            this.resetSpeed();
+            this.removeTimeout(timeout);
+        }, Player.speedBoostTime * 1000);
+        this.timeouts.push(timeout);
         setTimeout(this.resetSpeed.bind(this), Player.speedBoostTime * 1000);
     }
 
@@ -414,12 +425,21 @@ export default class Player {
             if (!this.nextShotScheduled) {
                 const timeRemaining = Player.shotCooldown - timeDiff;
                 this.nextShotScheduled = true;
-                setTimeout(() => {
+                const timeout = setTimeout(() => {
                     callback();
                     this.nextShotScheduled = false;
                     this.lastShotTime = performance.now();
+                    this.removeTimeout(timeout);
                 }, timeRemaining);
+                this.timeouts.push(timeout);
             }
+        }
+    }
+
+    private removeTimeout(timeout: NodeJS.Timeout) {
+        const index = this.timeouts.indexOf(timeout);
+        if (index > -1) {
+            this.timeouts.splice(index, 1);
         }
     }
 }
