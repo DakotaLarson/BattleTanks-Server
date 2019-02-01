@@ -21,7 +21,6 @@ export default class Bot extends Player {
     private currentPathIndex: number;
     private movingToNextPathIndex: boolean;
 
-    private timeouts: NodeJS.Timeout[];
     private pathTimeout: NodeJS.Timeout | undefined;
 
     constructor(id: number, lobby: Lobby, botHandler: BotHandler) {

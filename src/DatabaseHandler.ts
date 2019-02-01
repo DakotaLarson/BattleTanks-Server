@@ -8,22 +8,24 @@ export default class DatabaseHandler {
     private static readonly DIRECTORY_NAME = "keys";
     private static readonly FILE_NAME = "database.json";
 
-    private static readonly TIMEOUT = 30000;
+    private static readonly TIMEOUT = 5000;
 
-    private host: string | undefined;
-    private port: number | undefined;
-    private username: string | undefined;
-    private password: string | undefined;
-    private database: string | undefined;
+    private pool: mysql.Pool | undefined;
 
     public start() {
         return new Promise((resolve, reject) => {
             this.getConnectionData().then((data: any) => {
-                this.host = data.host;
-                this.port = data.port;
-                this.username = data.username;
-                this.password = data.password;
-                this.database = data.database;
+                let database = data.database;
+                if (process.argv.includes("dev")) {
+                    database = data["database-dev"];
+                }
+                this.pool = mysql.createPool({
+                    host: data.host,
+                    port: data.port,
+                    user: data.username,
+                    password: data.password,
+                    database,
+                });
 
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYER_JOIN, this.onPlayerJoin);
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYER_UPDATE, this.onPlayerUpdate);
@@ -35,43 +37,63 @@ export default class DatabaseHandler {
     }
 
     private onPlayerJoin(data: any) {
-        const connection = this.createConnection();
         let username = data.username;
         if (!username) {
             username = "Guest";
         }
-        this.hasPlayer(connection, data.id).then((hasPlayer) => {
+        this.hasPlayer(data.id).then((hasPlayer) => {
             if (!hasPlayer) {
-                this.createPlayer(connection, data.id, data.email, data.name, "Guest").then(() => {
-                    connection.end();
-                }).catch((err: any) => {
+                this.createPlayer(data.id, data.email, data.name, "Guest").catch((err: any) => {
                     console.log(err);
-                    connection.end();
                 });
             }
-        });
+        }).catch((err) => {
+            console.log(err);
+        }) ;
     }
 
     private onPlayerUpdate(data: any) {
         // const connection = this.createConnection();
     }
 
-    private onPlayersUpdate(data: Map<string, any>) {
+    private onPlayersUpdate(matchData: Map<string, any>) {
         const fields = ["id", "points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths"];
+        const mutableFields = fields.slice(1);
         const ids = [];
-        for (const [id] of data) {
+        for (const [id] of matchData) {
             ids.push(id);
         }
-        const connection = this.createConnection();
-        this.getPlayersData(connection, ids, fields).then((results) => {
-            console.log(results);
-        }).catch(console.log);
+
+        this.getPlayersData(ids, fields).then((results) => {
+            const newStats: Map<string, any> = new Map();
+
+            for (const result of results) {
+                const userId = result.id;
+                const userMatchStats = matchData.get(userId);
+
+                if (userMatchStats) {
+
+                    const newUserStats: any = {};
+                    for (const field of Object.keys(userMatchStats)) {
+                        newUserStats[field] = userMatchStats[field] + result[field];
+                    }
+
+                    newStats.set(userId, newUserStats);
+                }
+            }
+            this.updatePlayersData(newStats, mutableFields).catch((err: any) => {
+                console.log(err);
+            });
+
+        }).catch((err: any) => {
+            console.log(err);
+        });
     }
 
-    private createPlayer(connection: mysql.Connection, id: string, email: string, name: string, username: string) {
+    private createPlayer(id: string, email: string, name: string, username: string) {
         return new Promise((resolve, reject) => {
             const sql = "INSERT INTO `players` (`id`, `email`, `name`, `username`, `points`, `currency`, `shots`, `hits`, `kills`, `deaths`, `victories`, `defeats`, `draws`, `subscribed`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            connection.query({
+            (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id, email, name, username, 0, 0, 0, 0, 0, 0, 0, 0, 0, false],
@@ -85,10 +107,10 @@ export default class DatabaseHandler {
         });
     }
 
-    private hasPlayer(connection: mysql.Connection, id: string): Promise<boolean> {
+    private hasPlayer(id: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT COUNT(*) AS count FROM `players` WHERE `id` = ?";
-            connection.query({
+            (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -106,23 +128,19 @@ export default class DatabaseHandler {
         });
     }
 
-    private getPlayersData(connection: mysql.Connection, ids: string[], fields: string[]) {
+    private getPlayersData(ids: string[], fields: string[]): Promise<[any]> {
         return new Promise((resolve, reject) => {
-            const wildcards = ", ?".repeat(fields.length - 1);
+            let fieldString = "`" + fields[0] + "`";
+            for (let i = 1; i < fields.length; i ++) {
+                fieldString += ", `" + fields[i] + "`";
+            }
             const idWildcards = ", ?".repeat(ids.length - 1);
-            const sql = "SELECT ?" + wildcards + " FROM `players` WHERE `id` IN (?" + idWildcards + ")";
-            fields.forEach((value, index, arr) => {
-                arr[index] = "`" + value + "`";
-            });
-            ids.forEach((value, index, arr) => {
-                arr[index] = "'" + value + "'";
-            });
-            const values = fields.concat(ids);
-            console.log(values);
-            connection.query({
+            const sql = "SELECT " + fieldString + " FROM `players` WHERE `id` IN (?" + idWildcards + ")";
+
+            (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
-                values,
+                values: ids,
             }, (err, results) => {
                 if (err) {
                     reject(err);
@@ -133,13 +151,54 @@ export default class DatabaseHandler {
         });
     }
 
-    private createConnection() {
-        return mysql.createConnection({
-            host: this.host,
-            port: this.port,
-            user: this.username,
-            password: this.password,
-            database: this.database,
+    private updatePlayersData(userData: Map<string, any>, mutableFields: string[]) {
+        return new Promise((resolve, reject) => {
+            const values = [];
+            let sql = "UPDATE `players` SET";
+            // UPDATE `players` SET `points` = CASE
+        //                                     WHEN `id` = ? THEN ?
+        //                                     WHEN `id` = ? THEN ?
+        //                                     END
+
+            for (let i = 0; i < mutableFields.length; i ++) {
+                const field = mutableFields[i];
+                let fieldMutation = "";
+                if (i) {
+                    fieldMutation += ",";
+                }
+                fieldMutation += " `" + field + "` = CASE ";
+                for (const [id, data] of userData) {
+                    fieldMutation += "WHEN `id` = ? THEN ? ";
+                    values.push(id, data[field]);
+                }
+                fieldMutation += "END";
+                sql += fieldMutation;
+            }
+
+            sql += " WHERE `id` IN (";
+            let hasAddedWildcard = false;
+            for (const [id] of userData) {
+                if (hasAddedWildcard) {
+                    sql += ", ?";
+                } else {
+                    sql += "?";
+                    hasAddedWildcard = true;
+                }
+                values.push(id);
+            }
+            sql += ")";
+
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values,
+            }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
         });
     }
 
@@ -159,7 +218,7 @@ export default class DatabaseHandler {
                     reject("Error parsing content in " + DatabaseHandler.FILE_NAME);
                 }
 
-                if (data.host && data.port && data.username && data.password && data.database) {
+                if (data.host && data.port && data.username && data.password && data.database && data["database-dev"]) {
                     resolve(data);
                 }
             });

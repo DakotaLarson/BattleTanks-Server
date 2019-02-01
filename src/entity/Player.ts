@@ -43,6 +43,8 @@ export default class Player {
     protected movementVelocity: number;
     protected rotationVelocity: number;
 
+    protected timeouts: NodeJS.Timeout[];
+
     private reloadPercentage: number;
     private reloading: boolean;
 
@@ -52,8 +54,6 @@ export default class Player {
     private nextShotScheduled: boolean;
 
     private ramTime: number;
-
-    private timeouts: NodeJS.Timeout[];
 
     constructor(name: string, id: number, sub?: string) {
         this.name = name;
