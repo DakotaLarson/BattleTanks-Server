@@ -8,10 +8,6 @@ import * as PacketSender from "./PacketSender";
 
 export default class PlayerConnector {
 
-    public static getNextId() {
-        return PlayerConnector.playerId ++;
-    }
-
     private static playerId = 1;
 
     private static readonly CONNECTION_HEADER_CODE = 0x00;
@@ -23,6 +19,10 @@ export default class PlayerConnector {
 
     constructor() {
         this.oauthClient = new OAuth2Client(PlayerConnector.CLIENT_ID);
+    }
+
+    public static getNextId() {
+        return PlayerConnector.playerId ++;
     }
 
     public start() {

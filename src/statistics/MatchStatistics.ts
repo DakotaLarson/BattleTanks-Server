@@ -49,7 +49,6 @@ export default class MatchStatistics {
         EventHandler.addListener(this, EventHandler.Event.STATS_HIT, this.onHit);
         EventHandler.addListener(this, EventHandler.Event.STATS_KILL, this.onKill);
         EventHandler.addListener(this, EventHandler.Event.STATS_SEND, this.onSend);
-        EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
     }
 
     public disable() {
@@ -57,11 +56,24 @@ export default class MatchStatistics {
         EventHandler.removeListener(this, EventHandler.Event.STATS_HIT, this.onHit);
         EventHandler.removeListener(this, EventHandler.Event.STATS_KILL, this.onKill);
         EventHandler.removeListener(this, EventHandler.Event.STATS_SEND, this.onSend);
-        EventHandler.removeListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
 
         this.teamAPlayerStatistics.clear();
         this.teamBPlayerStatistics.clear();
-        console.log("disabled");
+    }
+
+    public removePlayer(player: Player) {
+        let playerStatistic = this.teamAPlayerStatistics.get(player.id);
+        if (playerStatistic) {
+            const stat = playerStatistic.getEarlyStatistic();
+            this.updateDatbaseStat(player, stat);
+            this.teamAPlayerStatistics.delete(player.id);
+        }
+        playerStatistic = this.teamBPlayerStatistics.get(player.id);
+        if (playerStatistic) {
+            const stat = playerStatistic.getEarlyStatistic();
+            this.updateDatbaseStat(player, stat);
+            this.teamBPlayerStatistics.delete(player.id);
+        }
     }
 
     private onSend(data: any) {
@@ -144,22 +156,6 @@ export default class MatchStatistics {
                 console.log("No stats registered for death");
             }
         }
-    }
-
-    private onPlayerLeave(player: Player) {
-        let playerStatistic = this.teamAPlayerStatistics.get(player.id);
-        if (playerStatistic) {
-            const stat = playerStatistic.getEarlyStatistic();
-            this.updateDatbaseStat(player, stat);
-            this.teamAPlayerStatistics.delete(player.id);
-        }
-        playerStatistic = this.teamBPlayerStatistics.get(player.id);
-        if (playerStatistic) {
-            const stat = playerStatistic.getEarlyStatistic();
-            this.updateDatbaseStat(player, stat);
-            this.teamBPlayerStatistics.delete(player.id);
-        }
-        console.log("reached");
     }
 
     private sendStatsToPlayer(id: number, stats: number[]) {

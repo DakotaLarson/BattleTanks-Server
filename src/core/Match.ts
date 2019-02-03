@@ -150,6 +150,10 @@ export default class Match {
         for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
             otherPlayer.sendConnectedPlayerRemoval(player.id, -1);
         }
+
+        if (this.matchStats) {
+            this.matchStats.removePlayer(player);
+        }
     }
 
     public getSpawn(player: Player): Vector4 {
