@@ -52,8 +52,17 @@ export default class DatabaseHandler {
         }) ;
     }
 
-    private onPlayerUpdate(data: any) {
-        // const connection = this.createConnection();
+    private onPlayerUpdate(eventData: any) {
+        console.log("reached");
+        const id = eventData.id;
+        const data = eventData.data;
+
+        const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths"];
+
+        this.getPlayerData(id, fields).then((results) => {
+            console.log(results);
+            console.log(data);
+        });
     }
 
     private onPlayersUpdate(matchData: Map<string, any>) {
@@ -151,15 +160,34 @@ export default class DatabaseHandler {
         });
     }
 
+    private getPlayerData(id: string, fields: string[]): Promise<[any]> {
+        return new Promise((resolve, reject) => {
+            let fieldString = "`" + fields[0] + "`";
+            for (let i = 1; i < fields.length; i ++) {
+                fieldString += ", `" + fields[i] + "`";
+            }
+            const sql = "SELECT " + fieldString + " FROM `players` WHERE `id` = ?";
+
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [id],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    }
+
     private updatePlayersData(userData: Map<string, any>, mutableFields: string[]) {
         return new Promise((resolve, reject) => {
             const values = [];
             let sql = "UPDATE `players` SET";
-            // UPDATE `players` SET `points` = CASE
-        //                                     WHEN `id` = ? THEN ?
-        //                                     WHEN `id` = ? THEN ?
-        //                                     END
 
+            // For each field, use CASE/WHEN.
             for (let i = 0; i < mutableFields.length; i ++) {
                 const field = mutableFields[i];
                 let fieldMutation = "";
@@ -175,6 +203,7 @@ export default class DatabaseHandler {
                 sql += fieldMutation;
             }
 
+            // Where id field is in list of player Ids.
             sql += " WHERE `id` IN (";
             let hasAddedWildcard = false;
             for (const [id] of userData) {

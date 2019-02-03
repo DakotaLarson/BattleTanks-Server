@@ -61,6 +61,7 @@ export default class MatchStatistics {
 
         this.teamAPlayerStatistics.clear();
         this.teamBPlayerStatistics.clear();
+        console.log("disabled");
     }
 
     private onSend(data: any) {
@@ -74,12 +75,14 @@ export default class MatchStatistics {
 
             this.teamAPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamALost, this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills);
-                this.sendStatsToPlayer(id, stats, databaseStats);
+                const player = this.sendStatsToPlayer(id, stats);
+                this.updateDatabaseStats(player, stats, databaseStats);
             });
 
             this.teamBPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
                 const stats = stat.getStatistics(!teamBLost, this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills);
-                this.sendStatsToPlayer(id, stats, databaseStats);
+                const player = this.sendStatsToPlayer(id, stats);
+                this.updateDatabaseStats(player, stats, databaseStats);
             });
 
             EventHandler.callEvent(EventHandler.Event.DB_PLAYERS_UPDATE, databaseStats);
@@ -144,18 +147,28 @@ export default class MatchStatistics {
     }
 
     private onPlayerLeave(player: Player) {
-        if (this.teamAPlayerStatistics.has(player.id)) {
+        let playerStatistic = this.teamAPlayerStatistics.get(player.id);
+        if (playerStatistic) {
+            const stat = playerStatistic.getEarlyStatistic();
+            this.updateDatbaseStat(player, stat);
             this.teamAPlayerStatistics.delete(player.id);
         }
-        if (this.teamBPlayerStatistics.has(player.id)) {
+        playerStatistic = this.teamBPlayerStatistics.get(player.id);
+        if (playerStatistic) {
+            const stat = playerStatistic.getEarlyStatistic();
+            this.updateDatbaseStat(player, stat);
             this.teamBPlayerStatistics.delete(player.id);
         }
+        console.log("reached");
     }
 
-    private sendStatsToPlayer(id: number, stats: number[], databaseStats: Map<string, any>) {
+    private sendStatsToPlayer(id: number, stats: number[]) {
         const player = PlayerHandler.getMatchPlayer(this.match, id);
         player.sendMatchStatistics(stats);
+        return player;
+    }
 
+    private updateDatabaseStats(player: Player, stats: number[], databaseStats: Map<string, any>) {
         if (player.sub) {
             const data = {
                 victories: stats[0] ? 1 : 0,
@@ -168,6 +181,25 @@ export default class MatchStatistics {
                 currency: stats[12],
             };
             databaseStats.set(player.sub, data);
+        }
+    }
+
+    private updateDatbaseStat(player: Player, stats: number[]) {
+        if (player.sub) {
+            const data = {
+                victories: 0,
+                defeats: 0,
+                shots: stats[0],
+                hits: stats[1],
+                kills: stats[2],
+                deaths: stats[3],
+                points: stats[4],
+                currency: stats[5],
+            };
+            EventHandler.callEvent(EventHandler.Event.DB_PLAYER_UPDATE, {
+                id: player.sub,
+                data,
+            });
         }
     }
 }

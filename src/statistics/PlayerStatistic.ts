@@ -46,4 +46,8 @@ export default class PlayerStatistic {
 
         return [winData, teamShots, teamHits, teamKills, enemyTeamShots, enemyTeamHits, enemyTeamKills, this.shots, this.hits, this.kills, this.deaths, this.points, this.currency];
     }
+
+    public getEarlyStatistic() {
+        return [this.shots, this.hits, this.kills, this.deaths, this.points, this.currency];
+    }
 }
