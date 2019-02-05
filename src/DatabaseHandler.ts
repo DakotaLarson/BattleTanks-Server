@@ -36,6 +36,45 @@ export default class DatabaseHandler {
         });
     }
 
+    public getPlayerStats(id: string) {
+        return new Promise((resolve, reject) => {
+            const fields = ["points", "currency", "victories", "defeats", "draws", "shots", "hits", "kills", "deaths"];
+            let sql = "SELECT `" + fields[0] + "`";
+
+            for (let i = 1; i < fields.length; i ++) {
+                sql += ", `" + fields[i] + "`";
+            }
+
+            sql += " FROM `players` WHERE `id` = ?";
+
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [id],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    if (results.length !== 1) {
+                        resolve({});
+                    } else {
+                        resolve({
+                            points: results[0].points,
+                            currency: results[0].currency,
+                            victories: results[0].victories,
+                            defeats: results[0].defeats,
+                            draws: results[0].draws,
+                            shots: results[0].shots,
+                            hits: results[0].hits,
+                            kills: results[0].kills,
+                            deaths: results[0].deaths,
+                        });
+                    }
+                }
+            });
+        });
+    }
+
     private onPlayerJoin(data: any) {
         let username = data.username;
         if (!username) {
@@ -53,15 +92,22 @@ export default class DatabaseHandler {
     }
 
     private onPlayerUpdate(eventData: any) {
-        console.log("reached");
         const id = eventData.id;
         const data = eventData.data;
 
         const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths"];
 
-        this.getPlayerData(id, fields).then((results) => {
-            console.log(results);
-            console.log(data);
+        this.getPlayerData(id, fields).then((results: any) => {
+            if (results.length === 1) {
+                const newData: Map<string, number> = new Map();
+                for (const field of fields) {
+                    newData.set(field, results[0][field] + data[field]);
+                }
+                this.updatePlayerData(id, newData);
+            } else {
+                console.warn("Unexpected number of results on update: " + results.length);
+            }
+
         });
     }
 
@@ -216,6 +262,40 @@ export default class DatabaseHandler {
                 values.push(id);
             }
             sql += ")";
+
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values,
+            }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    private updatePlayerData(id: string, newData: Map<string, number>) {
+
+        return new Promise((resolve, reject) => {
+            let sql = "UPDATE `players` SET";
+            const values = [];
+
+            let hasAddedField = false;
+            for (const [field, data] of newData) {
+                if (hasAddedField) {
+                    sql += ", `" + field + "` = ?";
+                } else {
+                    sql += " `" + field + "` = ?";
+                    hasAddedField = true;
+                }
+                values.push(data);
+            }
+
+            sql += " WHERE `id` = ?";
+            values.push(id);
 
             (this.pool as mysql.Pool).query({
                 sql,

@@ -5,6 +5,9 @@
   "main": "./build/App.js",
   "dependencies": {
     "@google-cloud/datastore": "^2.0.0",
+    "@types/cors": "^2.8.4",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
     "express": "latest",
     "express-session": "latest",
     "google-auth-library": "^2.0.2",

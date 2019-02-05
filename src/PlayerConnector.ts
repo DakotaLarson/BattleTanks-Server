@@ -1,5 +1,5 @@
-import { OAuth2Client } from "google-auth-library";
 import WebSocket = require("ws");
+import Auth from "./Auth";
 import DomEventHandler from "./DomEventHandler";
 import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
@@ -13,13 +13,6 @@ export default class PlayerConnector {
     private static readonly CONNECTION_HEADER_CODE = 0x00;
     private static readonly MAX_NAME_LENGTH = 16;
     private static readonly MAX_PACKET_LENGTH = 2048;
-    private static readonly CLIENT_ID = "42166570332-0egs4928q7kfsnhh4nib3o8hjn62f9u5.apps.googleusercontent.com";
-
-    private oauthClient: OAuth2Client;
-
-    constructor() {
-        this.oauthClient = new OAuth2Client(PlayerConnector.CLIENT_ID);
-    }
 
     public static getNextId() {
         return PlayerConnector.playerId ++;
@@ -46,8 +39,8 @@ export default class PlayerConnector {
                     const data = JSON.parse(buffer.toString("utf8", 2));
                     if (data.name.length <= PlayerConnector.MAX_NAME_LENGTH) {
                         if (data.tokenId) {
-                            this.verifyId(data.tokenId).then((sub) => {
-                                this.createPlayer(event.target, data.name, sub);
+                            Auth.verifyId(data.tokenId).then((authData: any) => {
+                                this.createPlayer(event.target, data.name, authData.id);
                             }).catch(() => {
                                 const player = this.createPlayer(event.target, data.name);
                                 player.sendAlert("Your account couldn't be verified. Try refreshing the page if you want to save stats.");
@@ -90,26 +83,5 @@ export default class PlayerConnector {
             console.log("Player connected (No Auth)");
         }
         return player;
-    }
-
-    private verifyId(idToken: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            this.oauthClient.verifyIdToken({
-                idToken,
-                audience: PlayerConnector.CLIENT_ID,
-            }).then((ticket) => {
-                const payload =  ticket.getPayload();
-                if (payload) {
-                    if (payload.aud === PlayerConnector.CLIENT_ID && (payload.iss === "accounts.google.com" || payload.iss === "https://accounts.google.com")) {
-                        EventHandler.callEvent(EventHandler.Event.DB_PLAYER_JOIN, {
-                            id: payload.sub,
-                            name: payload.name,
-                            email: payload.email,
-                        });
-                        resolve(payload.sub);
-                    }
-                }
-            }).catch(reject);
-        });
     }
 }

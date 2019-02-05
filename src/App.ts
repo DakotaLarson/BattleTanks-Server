@@ -7,10 +7,10 @@ import EventHandler from "./EventHandler";
 import PlayerConnector from "./PlayerConnector";
 import WebSocketServer from "./WebSocketServer";
 
-const wss = new WebSocketServer();
 const playerConnector = new PlayerConnector();
 const multiplayerService = new MultiplayerService();
 const databaseHandler = new DatabaseHandler();
+const wss = new WebSocketServer(databaseHandler);
 const botHandler = new BotHandler();
 
 wss.start();
@@ -18,9 +18,12 @@ playerConnector.start();
 
 ArenaLoader.loadArenas().then((message) => {
     console.log(message);
-    multiplayerService.start();
-    botHandler.enable();
-    databaseHandler.start();
+    databaseHandler.start().then(() => {
+        multiplayerService.start();
+        botHandler.enable();
+    }).catch((err) => {
+        console.log(err);
+    });
 }).catch((message) => {
     console.error(message);
 });

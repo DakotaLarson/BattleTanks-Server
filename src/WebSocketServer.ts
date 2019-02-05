@@ -1,5 +1,6 @@
 import WebSocket = require("ws");
 
+import DatabaseHandler from "./DatabaseHandler";
 import DomEventHandler from "./DomEventHandler";
 import EventHandler from "./EventHandler";
 import WebServer from "./WebServer";
@@ -19,10 +20,10 @@ export default class WebSocketServer {
 
     private deadSockets: WebSocket[];
 
-    constructor() {
+    constructor(databaseHandler: DatabaseHandler) {
         this.connectionCheckerId = setInterval(this.checkConnections.bind(this), 30000, 30000);
 
-        this.webServer = new WebServer();
+        this.webServer = new WebServer(databaseHandler);
         this.wss = new WebSocket.Server({
             server: this.webServer.server,
             verifyClient: this.verifyClient.bind(this),

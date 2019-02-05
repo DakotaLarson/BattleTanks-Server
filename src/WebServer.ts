@@ -1,5 +1,9 @@
+import bodyParser = require("body-parser");
+import cors = require("cors");
 import express = require("express");
 import http = require("http");
+import Auth from "./Auth";
+import DatabaseHandler from "./DatabaseHandler";
 import EventHandler from "./EventHandler";
 // import uuid = require("uuid/v4");
 
@@ -10,6 +14,8 @@ export default class WebServer {
     private static SSE_INTERVAL = 1000;
 
     public server: http.Server;
+
+    private databaseHandler: DatabaseHandler;
 
     private playerCount: number;
     private botCount: number;
@@ -24,9 +30,11 @@ export default class WebServer {
 
     // private sessionIds: string[] = [];
 
-    constructor() {
+    constructor(databaseHandler: DatabaseHandler) {
         const app = express();
         this.server = http.createServer(app);
+
+        this.databaseHandler = databaseHandler;
 
         this.playerCount = 0;
         this.botCount = 0;
@@ -39,8 +47,13 @@ export default class WebServer {
 
         this.subscribers = [];
 
-        app.get("/stats", this.onGetStats.bind(this));
-        app.get("/playercount", this.onGetPlayercount.bind(this));
+        app.use(cors());
+        app.use(bodyParser.urlencoded({extended: false}));
+        app.use(bodyParser.json());
+
+        app.get("/serverstats", this.onGetServerStats.bind(this));
+        app.post("/playerstats", this.onGetPlayerStats.bind(this));
+        app.get("/playercount", this.onGetPlayerCount.bind(this));
         // this.sessionHandler = session({
         //     secret: "$eCuRiTy",
         //     resave: false,
@@ -86,7 +99,7 @@ export default class WebServer {
         this.sendPlayerCount();
     }
 
-    private onGetStats(req: express.Request, res: express.Response) {
+    private onGetServerStats(req: express.Request, res: express.Response) {
         res.set("Content-Type", "application/json");
         const data = {
             players: this.playerCount,
@@ -99,7 +112,27 @@ export default class WebServer {
         res.send(JSON.stringify(data));
     }
 
-    private onGetPlayercount(req: express.Request, res: express.Response) {
+    private onGetPlayerStats(req: express.Request, res: express.Response) {
+        if (req.body && req.body.token) {
+            Auth.verifyId(req.body.token).then((data: any) => {
+                this.databaseHandler.getPlayerStats(data.id).then((stats: any) => {
+                    res.status(200).set({
+                        "content-type": "application/json",
+                    });
+                    res.send(JSON.stringify(stats));
+                }).catch((err) => {
+                    console.log(err);
+                    res.sendStatus(500);
+                });
+            }).catch(() => {
+                res.sendStatus(403);
+            });
+        } else {
+            res.sendStatus(403);
+        }
+    }
+
+    private onGetPlayerCount(req: express.Request, res: express.Response) {
         req.on("close", () => {
             if (this.subscribers.includes(res)) {
                 this.subscribers.splice(this.subscribers.indexOf(res), 1);
