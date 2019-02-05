@@ -22,7 +22,7 @@ ArenaLoader.loadArenas().then((message) => {
         multiplayerService.start();
         botHandler.enable();
     }).catch((err) => {
-        console.log(err);
+        console.error(err);
     });
 }).catch((message) => {
     console.error(message);

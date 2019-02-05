@@ -52,7 +52,8 @@ export default class WebServer {
         app.use(bodyParser.json());
 
         app.get("/serverstats", this.onGetServerStats.bind(this));
-        app.post("/playerstats", this.onGetPlayerStats.bind(this));
+        app.post("/playerstats", this.onPostPlayerStats.bind(this));
+        app.post("/playerusername", this.onPostPlayerName.bind(this));
         app.get("/playercount", this.onGetPlayerCount.bind(this));
         // this.sessionHandler = session({
         //     secret: "$eCuRiTy",
@@ -112,7 +113,7 @@ export default class WebServer {
         res.send(JSON.stringify(data));
     }
 
-    private onGetPlayerStats(req: express.Request, res: express.Response) {
+    private onPostPlayerStats(req: express.Request, res: express.Response) {
         if (req.body && req.body.token) {
             Auth.verifyId(req.body.token).then((data: any) => {
                 this.databaseHandler.getPlayerStats(data.id).then((stats: any) => {
@@ -121,6 +122,26 @@ export default class WebServer {
                     });
                     res.send(JSON.stringify(stats));
                 }).catch((err) => {
+                    console.log(err);
+                    res.sendStatus(500);
+                });
+            }).catch(() => {
+                res.sendStatus(403);
+            });
+        } else {
+            res.sendStatus(403);
+        }
+    }
+
+    private onPostPlayerName(req: express.Request, res: express.Response) {
+        if (req.body && req.body.token) {
+            Auth.verifyId(req.body.token).then((data: any) => {
+                this.databaseHandler.getPlayerUsername(data.id).then((name: string) => {
+                    res.status(200).set({
+                        "content-type": "text/plain",
+                    });
+                    res.send(name);
+                }).catch((err: any) => {
                     console.log(err);
                     res.sendStatus(500);
                 });

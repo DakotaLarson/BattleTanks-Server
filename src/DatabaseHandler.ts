@@ -75,6 +75,28 @@ export default class DatabaseHandler {
         });
     }
 
+    public getPlayerUsername(id: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `username` FROM `players` WHERE `id` = ?";
+
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [id],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    if (results.length !== 1) {
+                        resolve("");
+                    } else {
+                        resolve(results[0].username);
+                    }
+                }
+            });
+        });
+    }
+
     private onPlayerJoin(data: any) {
         let username = data.username;
         if (!username) {
