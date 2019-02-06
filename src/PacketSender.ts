@@ -12,6 +12,7 @@ enum Packet {
 
     ALERT,
 
+    PLAYER_NAME,
     PLAYER_ADD,
     PLAYER_MOVE,
     PLAYER_REMOVE,
@@ -74,6 +75,11 @@ export const sendAlert = (id: number, message: string) => {
 };
 
 // PLAYER
+
+export const sendPlayerName = (id: number, name: string) => {
+    const data = constructData(Packet.PLAYER_NAME, name, DataType.STRING);
+    send(id, data);
+};
 
 export const sendPlayerAddition = (id: number, pos: Vector4, color: number) => {
     const dataObj = {

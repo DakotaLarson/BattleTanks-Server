@@ -146,12 +146,17 @@ export default class DatabaseHandler {
         }
         this.hasPlayer(data.id).then((hasPlayer) => {
             if (!hasPlayer) {
-                this.createPlayer(data.id, data.email, data.name, "Guest").catch((err: any) => {
-                    console.log(err);
+                this.getPlayerCount().then((count: number) => {
+                    // Player name *should* be unique.
+                    this.createPlayer(data.id, data.email, data.name, "Player#" + count).catch((err: any) => {
+                        console.error(err);
+                    });
+                }).catch((err) => {
+                    console.error(err);
                 });
             }
         }).catch((err) => {
-            console.log(err);
+            console.error(err);
         }) ;
     }
 
@@ -182,31 +187,32 @@ export default class DatabaseHandler {
         for (const [id] of matchData) {
             ids.push(id);
         }
+        if (ids.length) {
+            this.getPlayersData(ids, fields).then((results) => {
+                const newStats: Map<string, any> = new Map();
 
-        this.getPlayersData(ids, fields).then((results) => {
-            const newStats: Map<string, any> = new Map();
+                for (const result of results) {
+                    const userId = result.id;
+                    const userMatchStats = matchData.get(userId);
 
-            for (const result of results) {
-                const userId = result.id;
-                const userMatchStats = matchData.get(userId);
+                    if (userMatchStats) {
 
-                if (userMatchStats) {
+                        const newUserStats: any = {};
+                        for (const field of Object.keys(userMatchStats)) {
+                            newUserStats[field] = userMatchStats[field] + result[field];
+                        }
 
-                    const newUserStats: any = {};
-                    for (const field of Object.keys(userMatchStats)) {
-                        newUserStats[field] = userMatchStats[field] + result[field];
+                        newStats.set(userId, newUserStats);
                     }
-
-                    newStats.set(userId, newUserStats);
                 }
-            }
-            this.updatePlayersData(newStats, mutableFields).catch((err: any) => {
-                console.log(err);
-            });
+                this.updatePlayersData(newStats, mutableFields).catch((err: any) => {
+                    console.error(err);
+                });
 
-        }).catch((err: any) => {
-            console.log(err);
-        });
+            }).catch((err: any) => {
+                console.error(err);
+            });
+        }
     }
 
     private createPlayer(id: string, email: string, name: string, username: string) {
@@ -370,6 +376,22 @@ export default class DatabaseHandler {
                     reject(err);
                 } else {
                     resolve();
+                }
+            });
+        });
+    }
+
+    private getPlayerCount(): Promise<number> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT COUNT(*) FROM `players`";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results[0]["COUNT(*)"]);
                 }
             });
         });

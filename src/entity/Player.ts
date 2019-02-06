@@ -89,6 +89,12 @@ export default class Player {
         this.timeouts = [];
     }
 
+    public sendPlayerName() {
+        if (!this.isBot()) {
+            PacketSender.sendPlayerName(this.id, this.name);
+        }
+    }
+
     public sendPlayerShoot() {
         if (!this.isBot()) {
             PacketSender.sendPlayerShoot(this.id);

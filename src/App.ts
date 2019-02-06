@@ -7,9 +7,9 @@ import EventHandler from "./EventHandler";
 import PlayerConnector from "./PlayerConnector";
 import WebSocketServer from "./WebSocketServer";
 
-const playerConnector = new PlayerConnector();
 const multiplayerService = new MultiplayerService();
 const databaseHandler = new DatabaseHandler();
+const playerConnector = new PlayerConnector(databaseHandler);
 const wss = new WebSocketServer(databaseHandler);
 const botHandler = new BotHandler();
 

@@ -125,7 +125,7 @@ export default class WebServer {
                     });
                     res.send(JSON.stringify(stats));
                 }).catch((err) => {
-                    console.log(err);
+                    console.error(err);
                     res.sendStatus(500);
                 });
             }).catch(() => {
@@ -143,7 +143,7 @@ export default class WebServer {
                 const isUpdate = req.body.isUpdate;
                 if (newUsername) {
                     newUsername = newUsername.trim();
-                    if (newUsername.length < WebServer.MINIMUM_USERNAME_LENGTH || newUsername.length > WebServer.MAXIMUM_USERNAME_LENGTH) {
+                    if (this.isNameInvalid(newUsername)) {
                         res.sendStatus(403);
                     } else {
                         if (isUpdate) {
@@ -153,7 +153,7 @@ export default class WebServer {
                                 });
                                 res.send(status);
                             }).catch((err: any) => {
-                                console.log(err);
+                                console.error(err);
                                 res.sendStatus(500);
                             });
                         } else {
@@ -163,7 +163,7 @@ export default class WebServer {
                                 });
                                 res.send(status);
                             }).catch((err: any) => {
-                                console.log(err);
+                                console.error(err);
                                 res.sendStatus(500);
                             });
                         }
@@ -175,7 +175,7 @@ export default class WebServer {
                         });
                         res.send(name);
                     }).catch((err: any) => {
-                        console.log(err);
+                        console.error(err);
                         res.sendStatus(500);
                     });
                 }
@@ -254,6 +254,10 @@ export default class WebServer {
         const used = memoryUsage.heapUsed;
         const percentage = Math.round(used / total * 100) + "%";
         return used + " / " + total + " (" + percentage + ")";
+    }
+
+    private isNameInvalid(name: string) {
+        return name.length < WebServer.MINIMUM_USERNAME_LENGTH || name.length > WebServer.MAXIMUM_USERNAME_LENGTH || name.toLowerCase().startsWith("guest") || name.toLowerCase().startsWith("player");
     }
 
     // private onPostToken(req: express.Request, res: express.Response) {
