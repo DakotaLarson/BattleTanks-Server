@@ -13,6 +13,9 @@ export default class WebServer {
 
     private static SSE_INTERVAL = 1000;
 
+    private static readonly MINIMUM_USERNAME_LENGTH = 3;
+    private static readonly MAXIMUM_USERNAME_LENGTH = 16;
+
     public server: http.Server;
 
     private databaseHandler: DatabaseHandler;
@@ -136,15 +139,46 @@ export default class WebServer {
     private onPostPlayerName(req: express.Request, res: express.Response) {
         if (req.body && req.body.token) {
             Auth.verifyId(req.body.token).then((data: any) => {
-                this.databaseHandler.getPlayerUsername(data.id).then((name: string) => {
-                    res.status(200).set({
-                        "content-type": "text/plain",
+                let newUsername = req.body.username;
+                const isUpdate = req.body.isUpdate;
+                if (newUsername) {
+                    newUsername = newUsername.trim();
+                    if (newUsername.length < WebServer.MINIMUM_USERNAME_LENGTH || newUsername.length > WebServer.MAXIMUM_USERNAME_LENGTH) {
+                        res.sendStatus(403);
+                    } else {
+                        if (isUpdate) {
+                            this.databaseHandler.updatePlayerUsername(data.id, newUsername).then((status) => {
+                                res.status(200).set({
+                                    "content-type": "text/plain",
+                                });
+                                res.send(status);
+                            }).catch((err: any) => {
+                                console.log(err);
+                                res.sendStatus(500);
+                            });
+                        } else {
+                            this.databaseHandler.isUsernameTaken(newUsername).then((status) => {
+                                res.status(200).set({
+                                    "content-type": "text/plain",
+                                });
+                                res.send(status);
+                            }).catch((err: any) => {
+                                console.log(err);
+                                res.sendStatus(500);
+                            });
+                        }
+                    }
+                } else {
+                    this.databaseHandler.getPlayerUsername(data.id).then((name: string) => {
+                        res.status(200).set({
+                            "content-type": "text/plain",
+                        });
+                        res.send(name);
+                    }).catch((err: any) => {
+                        console.log(err);
+                        res.sendStatus(500);
                     });
-                    res.send(name);
-                }).catch((err: any) => {
-                    console.log(err);
-                    res.sendStatus(500);
-                });
+                }
             }).catch(() => {
                 res.sendStatus(403);
             });

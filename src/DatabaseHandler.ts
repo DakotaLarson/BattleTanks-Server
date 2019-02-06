@@ -97,6 +97,48 @@ export default class DatabaseHandler {
         });
     }
 
+    public updatePlayerUsername(id: string, username: string): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.isUsernameTaken(username).then((isTaken) => {
+                if (isTaken) {
+                    resolve(false);
+                } else {
+                    const sql = "UPDATE `players` SET `username` = ? WHERE `id` = ?";
+                    (this.pool as mysql.Pool).query({
+                        sql,
+                        timeout: DatabaseHandler.TIMEOUT,
+                        values: [username, id],
+                    }, (err) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(true);
+                        }
+                    });
+                }
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    public isUsernameTaken(username: string): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT COUNT(*) FROM `players` WHERE `username` = ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [username],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results[0]["COUNT(*)"] > 0);
+                }
+            });
+        });
+    }
+
     private onPlayerJoin(data: any) {
         let username = data.username;
         if (!username) {
