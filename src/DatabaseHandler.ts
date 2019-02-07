@@ -27,7 +27,6 @@ export default class DatabaseHandler {
                     database,
                 });
 
-                EventHandler.addListener(this, EventHandler.Event.DB_PLAYER_JOIN, this.onPlayerJoin);
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYER_UPDATE, this.onPlayerUpdate);
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYERS_UPDATE, this.onPlayersUpdate);
 
@@ -139,25 +138,21 @@ export default class DatabaseHandler {
         });
     }
 
-    private onPlayerJoin(data: any) {
-        let username = data.username;
-        if (!username) {
-            username = "Guest";
-        }
-        this.hasPlayer(data.id).then((hasPlayer) => {
-            if (!hasPlayer) {
-                this.getPlayerCount().then((count: number) => {
-                    // Player name *should* be unique.
-                    this.createPlayer(data.id, data.email, data.name, "Player#" + count).catch((err: any) => {
-                        console.error(err);
-                    });
-                }).catch((err) => {
-                    console.error(err);
-                });
-            }
-        }).catch((err) => {
-            console.error(err);
-        }) ;
+    public handlePlayerAuth(data: any) {
+        return new Promise((resolve, reject) => {
+            this.hasPlayer(data.id).then((hasPlayer) => {
+                if (!hasPlayer) {
+                    this.getPlayerCount().then((count: number) => {
+                        // Player name *should* be unique.
+                        this.createPlayer(data.id, data.email, data.name, "Player#" + count).then(() => {
+                            resolve();
+                        }).catch(reject);
+                    }).catch(reject);
+                } else {
+                    resolve();
+                }
+            }).catch(reject);
+        });
     }
 
     private onPlayerUpdate(eventData: any) {
