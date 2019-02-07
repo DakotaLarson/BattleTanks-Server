@@ -144,7 +144,7 @@ export default class DatabaseHandler {
                 if (!hasPlayer) {
                     this.getPlayerCount().then((count: number) => {
                         // Player name *should* be unique.
-                        this.createPlayer(data.id, data.email, data.name, "Player#" + count).then(() => {
+                        this.createPlayer(data.id, data.email, data.name, "Player #" + count).then(() => {
                             resolve();
                         }).catch(reject);
                     }).catch(reject);

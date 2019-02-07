@@ -100,7 +100,7 @@ export default class PlayerConnector {
             if (sub) {
                 this.databaseHandler.getPlayerUsername(sub).then(resolve).catch(reject);
             } else {
-                resolve("Guest#" + id);
+                resolve("Guest #" + id);
             }
         });
     }

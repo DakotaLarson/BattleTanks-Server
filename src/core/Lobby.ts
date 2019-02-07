@@ -202,7 +202,7 @@ export default class Lobby {
             text: sender.name,
         },
         {
-            color: 0xffffff,
+            color: sender.sub ? 0xffffff : 0xa0a0a0,
             text: ": " + message,
         });
         return segments;
