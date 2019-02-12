@@ -110,10 +110,16 @@ export default class WebServer {
         if (req.body && req.body.token) {
             Auth.verifyId(req.body.token).then((data: any) => {
                 this.databaseHandler.getPlayerStats(data.id).then((stats: any) => {
-                    res.status(200).set({
-                        "content-type": "application/json",
+                    this.databaseHandler.getPlayerRank(stats.points).then((rank: number ) => {
+                        stats.rank = rank;
+                        res.status(200).set({
+                            "content-type": "application/json",
+                        });
+                        res.send(JSON.stringify(stats));
+                    }).catch((err) => {
+                        console.error(err);
+                        res.sendStatus(500);
                     });
-                    res.send(JSON.stringify(stats));
                 }).catch((err) => {
                     console.error(err);
                     res.sendStatus(500);

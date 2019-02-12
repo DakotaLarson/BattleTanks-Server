@@ -155,17 +155,38 @@ export default class DatabaseHandler {
         });
     }
 
+    public getPlayerRank(points: number): Promise<number> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT COUNT(*) FROM `players` WHERE `points` > ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [points],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results[0]["COUNT(*)"] + 1);
+                }
+            });
+        });
+    }
+
     private onPlayerUpdate(eventData: any) {
         const id = eventData.id;
         const data = eventData.data;
 
-        const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths"];
+        const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "day_points", "week_points", "month_points"];
 
         this.getPlayerData(id, fields).then((results: any) => {
             if (results.length === 1) {
                 const newData: Map<string, number> = new Map();
                 for (const field of fields) {
-                    newData.set(field, results[0][field] + data[field]);
+                    if (data[field]) {
+                        newData.set(field, results[0][field] + data[field]);
+                    } else {
+                        newData.set(field, results[0][field] + data.points);
+                    }
                 }
                 this.updatePlayerData(id, newData);
             } else {
@@ -176,7 +197,7 @@ export default class DatabaseHandler {
     }
 
     private onPlayersUpdate(matchData: Map<string, any>) {
-        const fields = ["id", "points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths"];
+        const fields = ["id", "points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "day_points", "week_points", "month_points"];
         const mutableFields = fields.slice(1);
         const ids = [];
         for (const [id] of matchData) {
@@ -196,6 +217,9 @@ export default class DatabaseHandler {
                         for (const field of Object.keys(userMatchStats)) {
                             newUserStats[field] = userMatchStats[field] + result[field];
                         }
+                        newUserStats.day_points = userMatchStats.points + result.day_points;
+                        newUserStats.week_points = userMatchStats.points + result.week_points;
+                        newUserStats.month_points = userMatchStats.points + result.month_points;
 
                         newStats.set(userId, newUserStats);
                     }
@@ -212,11 +236,11 @@ export default class DatabaseHandler {
 
     private createPlayer(id: string, email: string, name: string, username: string) {
         return new Promise((resolve, reject) => {
-            const sql = "INSERT INTO `players` (`id`, `email`, `name`, `username`, `points`, `currency`, `shots`, `hits`, `kills`, `deaths`, `victories`, `defeats`, `draws`, `subscribed`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            const sql = "INSERT INTO `players` (`id`, `email`, `name`, `username`, `subscribed`) VALUES (?, ?, ?, ?, ?)";
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
-                values: [id, email, name, username, 0, 0, 0, 0, 0, 0, 0, 0, 0, false],
+                values: [id, email, name, username, false],
             }, (err) => {
                 if (err) {
                     reject(err);
