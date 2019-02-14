@@ -174,7 +174,14 @@ export default class DatabaseHandler {
         return new Promise((resolve, reject) => {
             const page = 1;
             const offset = (page - 1) * 10;
-            const column = "leaderboard_points_" + leaderboard;
+
+            let column;
+            if (leaderboard === 4) {
+                column = "points";
+            } else {
+                column = "leaderboard_points_" + leaderboard;
+            }
+
             const sql = "SELECT `username`, `" + column + "` AS 'points' FROM `players` ORDER BY `" + column + "` DESC LIMIT 10 OFFSET ?";
             (this.pool as mysql.Pool).query({
                 sql,
@@ -192,7 +199,13 @@ export default class DatabaseHandler {
 
     public getLeaderboardRank(id: string, leaderboard: number) {
         return new Promise((resolve) => {
-            const column = "leaderboard_points_" + leaderboard;
+
+            let column: any;
+            if (leaderboard === 4) {
+                column = "points";
+            } else {
+                column = "leaderboard_points_" + leaderboard;
+            }
             this.getPlayerPoints(id, column).then((points) => {
                 this.getPlayerRank(points, column).then((rank) => {
                     resolve(rank);

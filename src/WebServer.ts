@@ -186,7 +186,7 @@ export default class WebServer {
     }
 
     private onPostLeaderboard(req: express.Request, res: express.Response) {
-        const validLeaderboards = [1, 2, 3];
+        const validLeaderboards = [1, 2, 3, 4];
         if (req.body && validLeaderboards.includes(req.body.leaderboard)) {
             this.databaseHandler.getLeaderboard(req.body.leaderboard).then((data) => {
                 res.status(200).set({
@@ -201,7 +201,7 @@ export default class WebServer {
     }
 
     private onPostLeaderboardRank(req: express.Request, res: express.Response) {
-        const validLeaderboards = [1, 2, 3];
+        const validLeaderboards = [1, 2, 3, 4];
         if (req.body && req.body.token && validLeaderboards.includes(req.body.leaderboard)) {
             Auth.verifyId(req.body.token).then((data: any) => {
                 this.databaseHandler.getLeaderboardRank(data.id, req.body.leaderboard).then((rank) => {
