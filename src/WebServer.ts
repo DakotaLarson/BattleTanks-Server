@@ -197,6 +197,8 @@ export default class WebServer {
                 console.error(err);
                 res.sendStatus(500);
             });
+        } else {
+            res.sendStatus(403);
         }
     }
 
@@ -210,7 +212,11 @@ export default class WebServer {
                     });
                     res.send("" + rank);
                 });
+            }).catch(() => {
+                res.sendStatus(403);
             });
+        } else {
+            res.sendStatus(403);
         }
     }
 
