@@ -13,7 +13,7 @@ export default class DatabaseHandler {
     private pool: mysql.Pool | undefined;
 
     public start() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.getConnectionData().then((data: any) => {
                 let database = data.database;
                 if (process.argv.includes("dev")) {
@@ -31,7 +31,7 @@ export default class DatabaseHandler {
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYERS_UPDATE, this.onPlayersUpdate);
 
                 resolve();
-            }).catch(reject);
+            });
         });
     }
 
@@ -115,8 +115,6 @@ export default class DatabaseHandler {
                         }
                     });
                 }
-            }).catch((err) => {
-                reject(err);
             });
         });
     }
@@ -139,25 +137,25 @@ export default class DatabaseHandler {
     }
 
     public handlePlayerAuth(data: any) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.hasPlayer(data.id).then((hasPlayer) => {
                 if (!hasPlayer) {
                     this.getPlayerCount().then((count: number) => {
                         // Player name *should* be unique.
                         this.createPlayer(data.id, data.email, data.name, "Player #" + count).then(() => {
                             resolve();
-                        }).catch(reject);
-                    }).catch(reject);
+                        });
+                    });
                 } else {
                     resolve();
                 }
-            }).catch(reject);
+            });
         });
     }
 
-    public getPlayerRank(points: number): Promise<number> {
+    public getPlayerRank(points: number, column: string): Promise<number> {
         return new Promise((resolve, reject) => {
-            const sql = "SELECT COUNT(*) FROM `players` WHERE `points` > ?";
+            const sql = "SELECT COUNT(*) FROM `players` WHERE `" + column + "` > ?";
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
@@ -172,11 +170,42 @@ export default class DatabaseHandler {
         });
     }
 
+    public getLeaderboard(leaderboard: number) {
+        return new Promise((resolve, reject) => {
+            const page = 1;
+            const offset = (page - 1) * 10;
+            const column = "leaderboard_points_" + leaderboard;
+            const sql = "SELECT `username`, `" + column + "` AS 'points' FROM `players` ORDER BY `" + column + "` DESC LIMIT 10 OFFSET ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [offset],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    }
+
+    public getLeaderboardRank(id: string, leaderboard: number) {
+        return new Promise((resolve) => {
+            const column = "leaderboard_points_" + leaderboard;
+            this.getPlayerPoints(id, column).then((points) => {
+                this.getPlayerRank(points, column).then((rank) => {
+                    resolve(rank);
+                });
+            });
+        });
+    }
+
     private onPlayerUpdate(eventData: any) {
         const id = eventData.id;
         const data = eventData.data;
 
-        const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "day_points", "week_points", "month_points"];
+        const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "leaderboard_points_1", "leaderboard_points_2", "leaderboard_points_3"];
 
         this.getPlayerData(id, fields).then((results: any) => {
             if (results.length === 1) {
@@ -197,7 +226,7 @@ export default class DatabaseHandler {
     }
 
     private onPlayersUpdate(matchData: Map<string, any>) {
-        const fields = ["id", "points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "day_points", "week_points", "month_points"];
+        const fields = ["id", "points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "leaderboard_points_1", "leaderboard_points_2", "leaderboard_points_3"];
         const mutableFields = fields.slice(1);
         const ids = [];
         for (const [id] of matchData) {
@@ -217,9 +246,9 @@ export default class DatabaseHandler {
                         for (const field of Object.keys(userMatchStats)) {
                             newUserStats[field] = userMatchStats[field] + result[field];
                         }
-                        newUserStats.day_points = userMatchStats.points + result.day_points;
-                        newUserStats.week_points = userMatchStats.points + result.week_points;
-                        newUserStats.month_points = userMatchStats.points + result.month_points;
+                        newUserStats.leaderboard_points_1 = userMatchStats.points + result.leaderboard_points_1;
+                        newUserStats.leaderboard_points_2 = userMatchStats.points + result.leaderboard_points_2;
+                        newUserStats.leaderboard_points_3 = userMatchStats.points + result.leaderboard_points_3;
 
                         newStats.set(userId, newUserStats);
                     }
@@ -395,6 +424,23 @@ export default class DatabaseHandler {
                     reject(err);
                 } else {
                     resolve();
+                }
+            });
+        });
+    }
+
+    private getPlayerPoints(id: string, column: string): Promise<number> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `" + column + "` FROM `players` WHERE `id` = ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [id],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results[0][column]);
                 }
             });
         });
