@@ -230,6 +230,7 @@ export default class WebServer {
         res.status(200).set({
             "cache-control": "no-cache",
             "content-type": "text/event-stream",
+            "connection": "keep-alive",
             "access-control-allow-origin": "*",
         });
         this.subscribers.push(res);
