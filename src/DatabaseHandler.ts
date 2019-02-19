@@ -530,7 +530,18 @@ export default class DatabaseHandler {
 
     private resetLeaderboard(columnNumber: number) {
         this.getLeaderboard(columnNumber).then((results: any) => {
+            let canUpdateLeaderboard = false;
             if (results.length === DatabaseHandler.LEADERBOARD_LENGTH) {
+                for (const result of results) {
+                    if (result.points === 0) {
+                        break;
+                    }
+                }
+                canUpdateLeaderboard = true;
+            }
+
+            if (canUpdateLeaderboard) {
+
                 const column = "leaderboard_points_" + columnNumber;
                 const sql = "UPDATE `players` SET " + column + " = 0";
                 (this.pool as mysql.Pool).query({
