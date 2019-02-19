@@ -89,7 +89,7 @@ export default class WebServer {
             bots: this.botCount,
             memory: this.getMemoryString(),
         };
-        res.send(JSON.stringify(data));
+        res.send(data);
     }
 
     private onPostPlayerAuth(req: express.Request, res: express.Response) {
@@ -117,7 +117,7 @@ export default class WebServer {
                         res.status(200).set({
                             "content-type": "application/json",
                         });
-                        res.send(JSON.stringify(stats));
+                        res.send(stats);
                     }).catch((err) => {
                         console.error(err);
                         res.sendStatus(500);
@@ -206,11 +206,11 @@ export default class WebServer {
         const validLeaderboards = [1, 2, 3, 4];
         if (req.body && req.body.token && validLeaderboards.includes(req.body.leaderboard)) {
             Auth.verifyId(req.body.token).then((data: any) => {
-                this.databaseHandler.getLeaderboardRank(data.id, req.body.leaderboard).then((rank) => {
+                this.databaseHandler.getLeaderboardRank(data.id, req.body.leaderboard).then((rankData) => {
                     res.status(200).set({
-                        "content-type": "text/plain",
+                        "content-type": "application/json",
                     });
-                    res.send("" + rank);
+                    res.send(rankData);
                 });
             }).catch(() => {
                 res.sendStatus(403);

@@ -8,9 +8,20 @@ export default class DatabaseHandler {
     private static readonly DIRECTORY_NAME = "keys";
     private static readonly FILE_NAME = "database.json";
 
+    private static readonly LEADERBOARD_LENGTH = 10;
     private static readonly TIMEOUT = 5000;
 
     private pool: mysql.Pool | undefined;
+
+    private lastReset: Map<number, number>;
+
+    constructor() {
+        this.lastReset = new Map([
+            [1, 0],
+            [2, 0],
+            [3, 0],
+        ]);
+    }
 
     public start() {
         return new Promise((resolve) => {
@@ -29,6 +40,8 @@ export default class DatabaseHandler {
 
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYER_UPDATE, this.onPlayerUpdate);
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYERS_UPDATE, this.onPlayersUpdate);
+
+                this.scheduleLeaderboardResets();
 
                 resolve();
             });
@@ -170,28 +183,31 @@ export default class DatabaseHandler {
         });
     }
 
-    public getLeaderboard(leaderboard: number) {
+    public getLeaderboard(columnNumber: number) {
         return new Promise((resolve, reject) => {
             const page = 1;
-            const offset = (page - 1) * 10;
+            const offset = (page - 1) * DatabaseHandler.LEADERBOARD_LENGTH;
 
             let column;
-            if (leaderboard === 4) {
+            if (columnNumber === 4) {
                 column = "points";
             } else {
-                column = "leaderboard_points_" + leaderboard;
+                column = "leaderboard_points_" + columnNumber;
             }
 
-            const sql = "SELECT `username`, `" + column + "` AS 'points' FROM `players` ORDER BY `" + column + "` DESC LIMIT 10 OFFSET ?";
+            const sql = "SELECT `username`, `" + column + "` AS 'points' FROM `players` ORDER BY `" + column + "` DESC LIMIT ? OFFSET ?";
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
-                values: [offset],
-            }, (err, results) => {
+                values: [DatabaseHandler.LEADERBOARD_LENGTH, offset],
+            }, (err, leaderboard) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(results);
+                    resolve({
+                        leaderboard,
+                        lastReset: this.lastReset.get(columnNumber),
+                    });
                 }
             });
         });
@@ -208,7 +224,10 @@ export default class DatabaseHandler {
             }
             this.getPlayerPoints(id, column).then((points) => {
                 this.getPlayerRank(points, column).then((rank) => {
-                    resolve(rank);
+                    resolve({
+                        rank,
+                        points,
+                    });
                 });
             });
         });
@@ -472,6 +491,68 @@ export default class DatabaseHandler {
                     resolve(results[0]["COUNT(*)"]);
                 }
             });
+        });
+    }
+
+    private scheduleLeaderboardResets() {
+        this.scheduleLeaderboardReset(1);
+        this.scheduleLeaderboardReset(2);
+        this.scheduleLeaderboardReset(3);
+    }
+
+    private scheduleLeaderboardReset(columnNumber: number) {
+        const now = new Date();
+        let resetDate;
+        if (columnNumber === 1) {
+
+            resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1);
+
+        } else if (columnNumber === 2) {
+
+            const daysUntilReset = 7 - now.getDay();
+            resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilReset + 1);
+
+        } else if (columnNumber === 3) {
+
+            resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+        } else {
+            throw new Error("Unexpected leaderboard column: " + columnNumber);
+        }
+
+        const resetTime = resetDate.getTime() - now.getTime();
+        setTimeout(() => {
+            this.resetLeaderboard(columnNumber);
+            this.scheduleLeaderboardReset(columnNumber);
+        }, resetTime);
+        console.log("Reset scheduled: " + columnNumber + " : " + resetTime);
+    }
+
+    private resetLeaderboard(columnNumber: number) {
+        this.getLeaderboard(columnNumber).then((results: any) => {
+            if (results.length === DatabaseHandler.LEADERBOARD_LENGTH) {
+                const column = "leaderboard_points_" + columnNumber;
+                const sql = "UPDATE `players` SET " + column + " = 0";
+                (this.pool as mysql.Pool).query({
+                    sql,
+                    timeout: DatabaseHandler.TIMEOUT,
+                }, (err) => {
+                    if (err) {
+                        console.error(err);
+                        const lastColumnReset = (this.lastReset.get(columnNumber) as number);
+                        this.lastReset.set(columnNumber, lastColumnReset + 1);
+                    } else {
+                        this.lastReset.set(columnNumber, 0);
+                        console.log("Leaderboard reset: " + columnNumber);
+                    }
+                });
+            } else {
+                const lastColumnReset = (this.lastReset.get(columnNumber) as number);
+                this.lastReset.set(columnNumber, lastColumnReset + 1);
+                console.log("Leaderboard not reset: " + columnNumber);
+            }
+        }).catch((err) => {
+            console.error(err);
         });
     }
 
