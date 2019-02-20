@@ -5,6 +5,7 @@ import http = require("http");
 import Auth from "./Auth";
 import DatabaseHandler from "./DatabaseHandler";
 import EventHandler from "./EventHandler";
+import MetricsHandler from "./MetricsHandler";
 
 const port = process.env.PORT || 8000;
 
@@ -18,6 +19,7 @@ export default class WebServer {
     public server: http.Server;
 
     private databaseHandler: DatabaseHandler;
+    private metricsHandler: MetricsHandler;
 
     private playerCount: number;
     private botCount: number;
@@ -30,11 +32,12 @@ export default class WebServer {
 
     private subscribers: express.Response[];
 
-    constructor(databaseHandler: DatabaseHandler) {
+    constructor(databaseHandler: DatabaseHandler, metricsHandler: MetricsHandler) {
         const app = express();
         this.server = http.createServer(app);
 
         this.databaseHandler = databaseHandler;
+        this.metricsHandler = metricsHandler;
 
         this.playerCount = 0;
         this.botCount = 0;
@@ -48,8 +51,9 @@ export default class WebServer {
         this.subscribers = [];
 
         app.use(cors());
-        // app.use(bodyParser.urlencoded({extended: false}));
         app.use(bodyParser.json());
+        app.use(bodyParser.text());
+        // app.use(bodyParser.urlencoded({extended: false}));
 
         app.get("/serverstats", this.onGetServerStats.bind(this));
         app.post("/playerauth", this.onPostPlayerAuth.bind(this));
@@ -58,6 +62,7 @@ export default class WebServer {
         app.post("/leaderboard", this.onPostLeaderboard.bind(this));
         app.post("/leaderboardrank", this.onPostLeaderboardRank.bind(this));
         app.get("/playercount", this.onGetPlayerCount.bind(this));
+        app.post("/metrics", this.onPostMetrics.bind(this));
     }
 
     public start() {
@@ -235,6 +240,11 @@ export default class WebServer {
         });
         this.subscribers.push(res);
         this.sendPlayerCountData(res, this.playerCount + this.botCount, this.subscribers.length);
+    }
+
+    private onPostMetrics(req: any) {
+        const data = JSON.parse(req.body);
+        this.metricsHandler.receiveMetrics(data);
     }
 
     private onPlayerJoin() {

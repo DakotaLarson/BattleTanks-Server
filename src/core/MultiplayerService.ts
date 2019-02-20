@@ -6,7 +6,7 @@ import Lobby from "./Lobby";
 
 export default class MultiplayerService {
 
-    public start() {
+    public enable() {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
 

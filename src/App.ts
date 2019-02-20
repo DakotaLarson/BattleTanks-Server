@@ -4,13 +4,15 @@ import MultiplayerService from "./core/MultiplayerService";
 import DatabaseHandler from "./DatabaseHandler";
 import BotHandler from "./entity/bot/BotHandler";
 import EventHandler from "./EventHandler";
+import MetricsHandler from "./MetricsHandler";
 import PlayerConnector from "./PlayerConnector";
 import WebSocketServer from "./WebSocketServer";
 
 const multiplayerService = new MultiplayerService();
 const databaseHandler = new DatabaseHandler();
+const metricsHandler = new MetricsHandler(databaseHandler);
 const playerConnector = new PlayerConnector(databaseHandler);
-const wss = new WebSocketServer(databaseHandler);
+const wss = new WebSocketServer(databaseHandler, metricsHandler);
 const botHandler = new BotHandler();
 
 wss.start();
@@ -18,8 +20,9 @@ playerConnector.start();
 
 ArenaLoader.loadArenas().then((message) => {
     console.log(message);
-    databaseHandler.start().then(() => {
-        multiplayerService.start();
+    databaseHandler.enable().then(() => {
+        metricsHandler.enable();
+        multiplayerService.enable();
         botHandler.enable();
     }).catch((err) => {
         console.error(err);

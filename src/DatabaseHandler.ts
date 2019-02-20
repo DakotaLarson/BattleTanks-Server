@@ -23,7 +23,7 @@ export default class DatabaseHandler {
         ]);
     }
 
-    public start() {
+    public enable() {
         return new Promise((resolve) => {
             this.getConnectionData().then((data: any) => {
                 let database = data.database;
@@ -231,6 +231,10 @@ export default class DatabaseHandler {
                 });
             });
         });
+    }
+
+    public insertMetrics(metrics: any[]) {
+        // TODO: INSERT METRICS
     }
 
     private onPlayerUpdate(eventData: any) {
@@ -585,6 +589,8 @@ export default class DatabaseHandler {
 
                 if (data.host && data.port && data.username && data.password && data.database && data["database-dev"]) {
                     resolve(data);
+                } else {
+                    reject("Incorrect data in " + DatabaseHandler.FILE_NAME);
                 }
             });
         });
