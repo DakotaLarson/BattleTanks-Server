@@ -15,11 +15,27 @@ export default class DatabaseHandler {
 
     private lastReset: Map<number, number>;
 
+    private metricFields: Map<string, string>;
+
     constructor() {
         this.lastReset = new Map([
             [1, 0],
             [2, 0],
             [3, 0],
+        ]);
+
+        this.metricFields = new Map([
+            ["browser", "browser"],
+            ["os", "os"],
+            ["device", "device"],
+            ["session_time", "sessionTime"],
+            ["game_time", "gameTime"],
+            ["match_count", "matchCount"],
+            ["audio", "audio"],
+            ["authenticated", "authenticated"],
+            ["controls", "controls"],
+            ["visits", "visits"],
+            ["referrer", "referrer"],
         ]);
     }
 
@@ -234,7 +250,48 @@ export default class DatabaseHandler {
     }
 
     public insertMetrics(metrics: any[]) {
-        // TODO: INSERT METRICS
+        if (metrics.length) {
+            const dbFields = ["browser", "os", "device", "session_time", "game_time", "match_count", "audio", "authenticated", "controls", "visits", "referrer"];
+            const values: any[] = []; // bound parameters
+            const valueStrings: string[] = []; // query string segments
+            let sql = "INSERT INTO `metrics` ( `" + dbFields[0] + "`";
+
+            for (let i = 1; i < dbFields.length; i ++) {
+                sql += ", `" + dbFields[i] + "`";
+            }
+
+            sql += ") VALUES ";
+
+            for (const metric of metrics) {
+
+                let valueString = "(?";
+                for (let i = 1; i < dbFields.length; i ++) {
+                    valueString += ", ?";
+                }
+                valueString += ")";
+                valueStrings.push(valueString);
+
+                for (const dbField of dbFields) {
+                    const dataField = this.metricFields.get(dbField) as string;
+                    values.push(metric[dataField]);
+                }
+            }
+
+            sql += valueStrings[0];
+            for (let i = 1; i < valueStrings.length; i ++) {
+                sql += ", " + valueStrings[i];
+            }
+
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values,
+            }, (err) => {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        }
     }
 
     private onPlayerUpdate(eventData: any) {
@@ -529,7 +586,6 @@ export default class DatabaseHandler {
             this.resetLeaderboard(columnNumber);
             this.scheduleLeaderboardReset(columnNumber);
         }, resetTime);
-        console.log("Reset scheduled: " + columnNumber + " : " + resetTime);
     }
 
     private resetLeaderboard(columnNumber: number) {

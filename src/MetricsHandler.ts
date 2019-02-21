@@ -82,10 +82,18 @@ export default class MetricsHandler {
                     reject("Error parsing content in " + MetricsHandler.FILE_NAME);
                 }
 
-                if (data.secret) {
-                    resolve(data.secret);
+                if (process.argv.includes("dev")) {
+                    if (data["dev-secret"]) {
+                        resolve(data["dev-secret"]);
+                    } else {
+                        reject("Incorrect data in " + MetricsHandler.FILE_NAME);
+                    }
                 } else {
-                    reject("Incorrect data in " + MetricsHandler.FILE_NAME);
+                    if (data["prod-secret"]) {
+                        resolve(data["prod-secret"]);
+                    } else {
+                        reject("Incorrect data in " + MetricsHandler.FILE_NAME);
+                    }
                 }
             });
         });
