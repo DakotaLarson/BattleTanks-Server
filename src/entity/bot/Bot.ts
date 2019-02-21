@@ -1,3 +1,4 @@
+import {performance} from "perf_hooks";
 import Lobby from "../../core/Lobby";
 import EventHandler from "../../EventHandler";
 import Vector3 from "../../vector/Vector3";
@@ -7,14 +8,26 @@ import BotHandler from "./BotHandler";
 
 export default class Bot extends Player {
 
-    private static readonly SHORT_THINK_TIME = 500;
-    private static readonly LONG_THINK_TIME = 2000;
+    private static readonly LOW_LEVEL_CUTOFF = 0.35;
+    private static readonly MED_LEVEL_CUTOFF = 0.85;
 
+    private static readonly LOW_SHOOT_COOLDOWN = 500;
+    private static readonly MED_SHOOT_COOLDOWN = 325;
+    private static readonly HIGH_SHOOT_COOLDOWN = 195;
+
+    private static readonly COOLDOWN_PADDING = 0.35;
+
+    private static readonly SHORT_THINK_TIME = 500;
+    private static readonly LONG_THINK_TIME = 1000;
+
+    private static readonly VISIBLE_ENEMY_RECALCULATION_CHANCE = 0.25;
     private static readonly SPEED = 5;
-    private static readonly SHOOT_CHANCE = 0.15;
 
     private lobby: Lobby;
     private botHandler: BotHandler;
+
+    private shootCooldown: number;
+    private nextShootTime: number;
 
     private path: number[][] | undefined;
     private visibleEnemy: Player | undefined;
@@ -27,6 +40,16 @@ export default class Bot extends Player {
         super("Guest #" + id, id);
         this.lobby = lobby;
         this.botHandler = botHandler;
+
+        const levelValue = Math.random();
+        if (levelValue < Bot.LOW_LEVEL_CUTOFF) {
+            this.shootCooldown = Bot.LOW_SHOOT_COOLDOWN;
+        } else if (levelValue < Bot.MED_LEVEL_CUTOFF) {
+            this.shootCooldown = Bot.MED_SHOOT_COOLDOWN;
+        } else {
+            this.shootCooldown = Bot.HIGH_SHOOT_COOLDOWN;
+        }
+        this.nextShootTime = 0;
 
         this.currentPathIndex = 0;
         this.movingToNextPathIndex = false;
@@ -79,6 +102,7 @@ export default class Bot extends Player {
             if (this.lookAtVisibleEnemy()) {
                 this.attemptToShoot();
             } else {
+                this.nextShootTime = 0;
                 if (this.path) {
                     if (this.movingToNextPathIndex) {
                         const newPosition = this.movePositionAlongPath(this.position, this.bodyRot, delta);
@@ -125,6 +149,17 @@ export default class Bot extends Player {
                 if (this.visibleEnemy) {
                     this.targetEnemy();
                     this.reset(false);
+                }
+            } else {
+                if (Math.random() < Bot.VISIBLE_ENEMY_RECALCULATION_CHANCE) {
+                    const newEnemy = this.getClosestVisibleEnemy();
+                    if (!newEnemy || this.visibleEnemy !== newEnemy) {
+                        this.visibleEnemy = newEnemy;
+                        if (this.visibleEnemy) {
+                            this.targetEnemy();
+                            this.reset(false);
+                        }
+                    }
                 }
             }
         }
@@ -204,7 +239,7 @@ export default class Bot extends Player {
     private targetEnemy() {
         const shootTime = this.getRandomTime();
         const timeout = setTimeout(() => {
-            if (this.visibleEnemy && this.visibleEnemy.isAlive && this.visibleEnemy.position.distance(this.position) < 3) {
+            if (this.visibleEnemy && this.visibleEnemy.isAlive) {
                 this.targetEnemy();
             } else {
                 this.think();
@@ -215,8 +250,13 @@ export default class Bot extends Player {
     }
 
     private attemptToShoot() {
-        if (Math.random() < Bot.SHOOT_CHANCE) {
+        const now = performance.now();
+        if (!this.nextShootTime) {
+            this.nextShootTime = now + this.getShotPadding();
+        } else if (now > this.nextShootTime) {
             this.shoot();
+            const time = this.getShotPadding() + this.shootCooldown;
+            this.nextShootTime = now + time;
         }
     }
 
@@ -294,5 +334,9 @@ export default class Bot extends Player {
             this.completeTimeout(this.pathTimeout);
             this.pathTimeout = undefined;
         }
+    }
+
+    private getShotPadding() {
+        return (Math.random() * Bot.COOLDOWN_PADDING * 2 - Bot.COOLDOWN_PADDING) * this.shootCooldown;
     }
 }
