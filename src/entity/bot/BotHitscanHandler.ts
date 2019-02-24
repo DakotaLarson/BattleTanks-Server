@@ -4,8 +4,8 @@ import Vector3 from "../../vector/Vector3";
 export default class BotHitscanHandler {
 
     // Use half size values to increase accuracy.
-    private static readonly X_OFFSET = 0.25;
-    private static readonly Z_OFFSET = 0.35;
+    private static readonly X_OFFSET = 0.5;
+    private static readonly Z_OFFSET = 0.75;
 
     private blockPositions: Vector3[];
 
@@ -106,7 +106,7 @@ export default class BotHitscanHandler {
         const blockCornerPositions = [];
 
         // Order of corners doesn't matter.
-        blockCornerPositions.push(pos.clone());
+        blockCornerPositions.push(pos.clone().sub(new Vector3(0, 0, 0)));
         blockCornerPositions.push(pos.clone().add(new Vector3(0, 0, 1)));
         blockCornerPositions.push(pos.clone().add(new Vector3(1, 0, 1)));
         blockCornerPositions.push(pos.clone().add(new Vector3(1, 0, 0)));

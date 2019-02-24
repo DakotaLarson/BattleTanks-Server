@@ -31,6 +31,7 @@ export default class Bot extends Player {
 
     private path: number[][] | undefined;
     private visibleEnemy: Player | undefined;
+    private visibleEnemyOffset: Vector3;
     private currentPathIndex: number;
     private movingToNextPathIndex: boolean;
 
@@ -50,6 +51,8 @@ export default class Bot extends Player {
             this.shootCooldown = Bot.HIGH_SHOOT_COOLDOWN;
         }
         this.nextShootTime = 0;
+
+        this.visibleEnemyOffset = new Vector3();
 
         this.currentPathIndex = 0;
         this.movingToNextPathIndex = false;
@@ -152,6 +155,9 @@ export default class Bot extends Player {
                 }
             } else {
                 if (Math.random() < Bot.VISIBLE_ENEMY_RECALCULATION_CHANCE) {
+                    const xOffset = Math.random() - 0.5;
+                    const zOffset = Math.random() * 1.5 - 0.75;
+                    this.visibleEnemyOffset = new Vector3(xOffset, 0, zOffset);
                     const newEnemy = this.getClosestVisibleEnemy();
                     if (!newEnemy || this.visibleEnemy !== newEnemy) {
                         this.visibleEnemy = newEnemy;
@@ -195,8 +201,8 @@ export default class Bot extends Player {
 
     private lookAtVisibleEnemy() {
         if (this.visibleEnemy && this.visibleEnemy.isAlive) {
-            const xDiff = (this.visibleEnemy as Player).position.x - this.position.x;
-            const zDiff = (this.visibleEnemy as Player).position.z - this.position.z;
+            const xDiff = (this.visibleEnemy as Player).position.x - this.position.x + this.visibleEnemyOffset.x;
+            const zDiff = (this.visibleEnemy as Player).position.z - this.position.z + this.visibleEnemyOffset.z;
             const angle = Math.atan2(xDiff, zDiff);
             this.updateHeadRotation(angle);
             return true;

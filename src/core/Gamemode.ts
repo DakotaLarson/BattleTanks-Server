@@ -172,6 +172,8 @@ export default class Gamemode {
                 if ((this.match as Match).onSameTeam(player, target)) {
                     if (this.isPlayerValid(player)) {
                         target.sendAudioRequest(Audio.DEATH_NORESPAWN);
+                        target.sendPlayerSpectating();
+
                         return;
                     }
                 }
