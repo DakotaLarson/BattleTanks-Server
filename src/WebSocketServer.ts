@@ -9,7 +9,7 @@ import WebServer from "./WebServer";
 export default class WebSocketServer {
 
     private static readonly PROTOCOL_PREFIX = "battletanks-";
-    private static readonly SERVER_VERSION = 5;
+    private static readonly SERVER_VERSION = 6;
 
     private static readonly CLIENT_OUTDATED_CODE = 4001;
     private static readonly SERVER_OUTDATED_CODE = 4002;
