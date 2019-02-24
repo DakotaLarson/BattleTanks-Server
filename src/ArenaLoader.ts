@@ -3,6 +3,7 @@ import * as path from "path";
 import Arena from "./Arena";
 
 export default class ArenaLoader {
+    private static arenas: Arena[] = [];
 
     public static loadArenas(): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -80,8 +81,10 @@ export default class ArenaLoader {
             const validArenas = [];
 
             // Get all arenas that can fit players
+            let playerCountDiff = playerCount;
             for (const arena of ArenaLoader.arenas) {
                 if (arena.maximumPlayerCount >= playerCount && arena.minimumPlayerCount <= playerCount) {
+                    playerCountDiff = Math.min(playerCountDiff, arena.maximumPlayerCount - playerCount);
                     validArenas.push(arena);
                 }
             }
@@ -90,27 +93,17 @@ export default class ArenaLoader {
                 throw new Error("No arenas can hold player count: " + playerCount);
             }
 
-            let selectedArena = validArenas[0];
-            let selectedArenaDiff = selectedArena.maximumPlayerCount - playerCount;
-
-            for (let i = 1; i < validArenas.length; i ++) {
-                const arena = validArenas[i];
-                const arenaDiff = arena.maximumPlayerCount - playerCount;
-                if (arenaDiff < selectedArenaDiff) {
-                    selectedArena = arena;
-                    selectedArenaDiff = arenaDiff;
-                } else if (arenaDiff === selectedArenaDiff && Math.random() >= 0.5) {
-                    selectedArena = arena;
+            const bestFitArenas = [];
+            for (const arena of validArenas) {
+                if (arena.maximumPlayerCount - playerCount === playerCountDiff) {
+                    bestFitArenas.push(arena);
                 }
             }
-
-            return selectedArena;
+            return bestFitArenas[Math.floor(Math.random() * bestFitArenas.length)];
         } else {
             throw new Error("No arenas loaded on server");
         }
     }
-
-    private static arenas: Arena[] = [];
 
     private static getArenaData(dirPath: string, fileName: string): Promise<string> {
         return new Promise((resolve, reject) => {
