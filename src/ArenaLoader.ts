@@ -81,7 +81,7 @@ export default class ArenaLoader {
             const validArenas = [];
 
             // Get all arenas that can fit players
-            let playerCountDiff = playerCount;
+            let playerCountDiff = Number.MAX_SAFE_INTEGER;
             for (const arena of ArenaLoader.arenas) {
                 if (arena.maximumPlayerCount >= playerCount && arena.minimumPlayerCount <= playerCount) {
                     playerCountDiff = Math.min(playerCountDiff, arena.maximumPlayerCount - playerCount);

@@ -26,9 +26,11 @@ enum Packet {
     PLAYER_POWERUP_PICKUP,
     PLAYER_RAM,
 
+    CONNECTED_PLAYER_JOIN,
+    CONNECTED_PLAYER_LEAVE,
     CONNECTED_PLAYER_ADD,
-    CONNECTED_PLAYER_MOVE,
     CONNECTED_PLAYER_REMOVE,
+    CONNECTED_PLAYER_MOVE,
     CONNECTED_PLAYER_SHOOT,
     CONNECTED_PLAYER_HEALTH,
     CONNECTED_PLAYER_SHIELD,
@@ -160,9 +162,18 @@ export const sendPlayerRam = (id: number, time: number) => {
 
 // CONNECTED PLAYER
 
+export const sendConnectedPlayerJoin = (id: number, playerData: any) => {
+    const data = constructData(Packet.CONNECTED_PLAYER_JOIN, JSON.stringify(playerData), DataType.STRING);
+    send(id, data);
+};
+
+export const sendConnectedPlayerLeave = (id: number, playerData: any) => {
+    const data = constructData(Packet.CONNECTED_PLAYER_LEAVE, JSON.stringify(playerData), DataType.STRING);
+    send(id, data);
+};
+
 export const sendConnectedPlayerAddition = (id: number, playerData: any) => {
     const data = constructData(Packet.CONNECTED_PLAYER_ADD, JSON.stringify(playerData), DataType.STRING);
-
     send(id, data);
 };
 

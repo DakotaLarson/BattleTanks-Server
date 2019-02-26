@@ -46,20 +46,37 @@ export default class Lobby {
 
         player.sendGameStatus(this.status);
 
+        let sendMessage = false;
         if (this.status === GameStatus.WAITING) {
             this.startMatch();
         } else if (this.status === GameStatus.RUNNING) {
             this.getMatch().addPlayer(player);
+            sendMessage = true;
+        }
+
+        for (const otherPlayer of PlayerHandler.getLobbyPlayers(this)) {
+            if (otherPlayer !== player) {
+                otherPlayer.sendConnectedPlayerJoin(player, sendMessage);
+                player.sendConnectedPlayerJoin(otherPlayer, false);
+            } else {
+                player.sendConnectedPlayerJoin(player, sendMessage);
+            }
         }
     }
 
     public removePlayer(player: Player) {
+        let sendMessage = false;
         if (this.status === GameStatus.RUNNING) {
+            sendMessage = true;
             this.getMatch().removePlayer(player);
 
             if (!this.getMatch().hasEnoughPlayers() || !this.getMatch().hasRealPlayers()) {
                 this.finishMatch();
             }
+        }
+
+        for (const otherPlayer of PlayerHandler.getLobbyPlayers(this)) {
+            otherPlayer.sendConnectedPlayerLeave(player, sendMessage);
         }
     }
 

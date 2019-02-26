@@ -107,6 +107,26 @@ export default class Player {
         }
     }
 
+    public sendConnectedPlayerJoin(player: Player, sendMessage: boolean) {
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerJoin(this.id, {
+                name: player.name,
+                id: player.id,
+                sendMessage,
+            });
+        }
+    }
+
+    public sendConnectedPlayerLeave(player: Player, sendMessage: boolean) {
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerLeave(this.id, {
+                name: player.name,
+                id: player.id,
+                sendMessage,
+            });
+        }
+    }
+
     public sendConnectedPlayerAddition(player: Player) {
         if (!this.isBot()) {
             PacketSender.sendConnectedPlayerAddition(this.id, {
@@ -119,6 +139,12 @@ export default class Player {
         }
     }
 
+    public sendConnectedPlayerRemoval(playerId: number, involvedId?: number, livesRemaining?: number) {
+        if (!this.isBot()) {
+            PacketSender.sendConnectedPlayerRemoval(this.id, playerId, involvedId, livesRemaining);
+        }
+    }
+
     public sendConnectedPlayerShoot(playerId: number) {
         if (!this.isBot()) {
             PacketSender.sendConnectedPlayerShoot(this.id, playerId);
@@ -128,12 +154,6 @@ export default class Player {
     public sendConnectedPlayerMove(player: Player) {
         if (!this.isBot()) {
             PacketSender.sendConnectedPlayerMove(this.id, player.position, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
-        }
-    }
-
-    public sendConnectedPlayerRemoval(playerId: number, involvedId?: number, livesRemaining?: number) {
-        if (!this.isBot()) {
-            PacketSender.sendConnectedPlayerRemoval(this.id, playerId, involvedId, livesRemaining);
         }
     }
 
