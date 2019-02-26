@@ -145,6 +145,7 @@ export default class Gamemode {
                         otherPlayer.sendConnectedPlayerAddition(player);
                         otherPlayer.sendConnectedPlayerHealth(player.id, player.health);
                     }
+                    otherPlayer.sendProtectionStart(player.id);
                 }
 
                 const protectionTimeout = setTimeout(() => {
@@ -152,6 +153,11 @@ export default class Gamemode {
                     if (index > -1) {
                         this.protected.splice(index, 1);
                     }
+
+                    for (const otherPlayer of PlayerHandler.getMatchPlayers(this.match)) {
+                        otherPlayer.sendProtectionEnd(player.id);
+                    }
+
                     if (this.timeouts.includes(protectionTimeout)) {
                         this.timeouts.splice(this.timeouts.indexOf(protectionTimeout), 1);
                     }

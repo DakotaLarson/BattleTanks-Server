@@ -33,6 +33,9 @@ enum Packet {
     CONNECTED_PLAYER_HEALTH,
     CONNECTED_PLAYER_SHIELD,
 
+    PROTECTION_START,
+    PROTECTION_END,
+
     MATCH_STATISTICS,
 
     AUDIO_REQUEST,
@@ -188,6 +191,16 @@ export const sendConnectedPlayerHealth = (id: number, playerId: number, health: 
 
 export const sendConnectedPlayerShield = (id: number, playerId: number, shield: number) => {
     const data = constructData(Packet.CONNECTED_PLAYER_SHIELD, [shield], DataType.NUMBER_ARRAY_HEADER, playerId);
+    send(id, data);
+};
+
+export const sendProtectionStart = (id: number, playerId: number) => {
+    const data = constructData(Packet.PROTECTION_START, playerId, DataType.NUMBER);
+    send(id, data);
+};
+
+export const sendProtectionEnd = (id: number, playerId: number) => {
+    const data = constructData(Packet.PROTECTION_END, playerId, DataType.NUMBER);
     send(id, data);
 };
 

@@ -149,6 +149,18 @@ export default class Player {
         }
     }
 
+    public sendProtectionStart(playerId: number) {
+        if (!this.isBot()) {
+            PacketSender.sendProtectionStart(this.id, playerId);
+        }
+    }
+
+    public sendProtectionEnd(playerId: number) {
+        if (!this.isBot()) {
+            PacketSender.sendProtectionEnd(this.id, playerId);
+        }
+    }
+
     public sendArena(arena: any) {
         if (!this.isBot()) {
             PacketSender.sendArena(this.id, arena);
