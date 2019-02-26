@@ -148,7 +148,7 @@ export default class Match {
         }
 
         for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
-            otherPlayer.sendConnectedPlayerRemoval(player.id, -1);
+            otherPlayer.sendConnectedPlayerRemoval(player.id);
         }
 
         if (this.matchStats) {

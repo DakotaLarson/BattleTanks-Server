@@ -23,7 +23,7 @@ ArenaLoader.loadArenas().then((message) => {
     databaseHandler.enable().then(() => {
         metricsHandler.enable();
         multiplayerService.enable();
-        // botHandler.enable();
+        botHandler.enable();
     }).catch((err) => {
         console.error(err);
     });

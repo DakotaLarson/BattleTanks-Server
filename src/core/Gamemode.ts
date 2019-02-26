@@ -8,7 +8,7 @@ export default class Gamemode {
 
     private static readonly DAMAGE = 0.20;
     private static readonly LIFE_COUNT = 3;
-    private static readonly OOB_ID = -2; // Out of Bounds Id
+    private static readonly OOB_ID = -1; // Out of Bounds Id
     private static readonly RESPAWN_TIME = 5000;
     private static readonly PROTECTED_TIME = 3000;
 
