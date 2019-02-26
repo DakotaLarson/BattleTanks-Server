@@ -7,11 +7,11 @@ import DatabaseHandler from "./DatabaseHandler";
 import EventHandler from "./EventHandler";
 import MetricsHandler from "./MetricsHandler";
 
-const port = process.env.PORT || 8000;
-
 export default class WebServer {
 
     private static SSE_INTERVAL = 1000;
+    private static MAX_SSE_INTERVAL = 30;
+    private static PORT = 8000;
 
     private static readonly MINIMUM_USERNAME_LENGTH = 3;
     private static readonly MAXIMUM_USERNAME_LENGTH = 16;
@@ -66,7 +66,7 @@ export default class WebServer {
     }
 
     public start() {
-        this.server.listen(port);
+        this.server.listen(WebServer.PORT);
 
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
         EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
@@ -242,9 +242,10 @@ export default class WebServer {
         this.sendPlayerCountData(res, this.playerCount + this.botCount, this.subscribers.length);
     }
 
-    private onPostMetrics(req: any) {
+    private onPostMetrics(req: any, res: express.Response) {
         const data = JSON.parse(req.body);
         this.metricsHandler.receiveMetrics(data);
+        res.end();
     }
 
     private onPlayerJoin() {
@@ -271,13 +272,21 @@ export default class WebServer {
 
         let lastPlayerCount = this.playerCount + this.botCount;
         let lastActiveUserCount = this.subscribers.length;
+        let lastSendTime = 0;
         setInterval(() => {
             const currentPlayerCount = this.playerCount + this.botCount;
             const currentActiveUserCount = this.subscribers.length;
-            if (currentActiveUserCount && (currentPlayerCount !== lastPlayerCount || currentActiveUserCount !== lastActiveUserCount)) {
+            if (currentActiveUserCount && (lastSendTime >= WebServer.MAX_SSE_INTERVAL || currentPlayerCount !== lastPlayerCount || currentActiveUserCount !== lastActiveUserCount)) {
                 this.sendDataToSubscribers(currentPlayerCount, currentActiveUserCount);
                 lastPlayerCount = currentPlayerCount;
                 lastActiveUserCount = currentActiveUserCount;
+                lastSendTime = 0;
+            } else {
+                if (currentActiveUserCount) {
+                    lastSendTime ++;
+                } else {
+                    lastSendTime = 0;
+                }
             }
         }, WebServer.SSE_INTERVAL);
     }

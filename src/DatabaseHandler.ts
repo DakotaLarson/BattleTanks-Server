@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import * as fs from "fs";
 import * as mysql from "mysql";
 import * as path from "path";
@@ -211,7 +212,7 @@ export default class DatabaseHandler {
                 column = "leaderboard_points_" + columnNumber;
             }
 
-            const sql = "SELECT `username`, `" + column + "` AS 'points' FROM `players` ORDER BY `" + column + "` DESC LIMIT ? OFFSET ?";
+            const sql = "SELECT `id`, `username`, `" + column + "` AS 'points' FROM `players` WHERE `" + column + "` != 0 ORDER BY `" + column + "` DESC LIMIT ? OFFSET ?";
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
@@ -220,6 +221,13 @@ export default class DatabaseHandler {
                 if (err) {
                     reject(err);
                 } else {
+
+                    for (const entry of leaderboard) {
+                        const hash = crypto.createHash("sha256");
+                        hash.update(entry.id);
+                        entry.id = hash.digest("hex");
+                    }
+
                     resolve({
                         leaderboard,
                         lastReset: this.lastReset.get(columnNumber),
@@ -238,11 +246,17 @@ export default class DatabaseHandler {
             } else {
                 column = "leaderboard_points_" + leaderboard;
             }
-            this.getPlayerPoints(id, column).then((points) => {
-                this.getPlayerRank(points, column).then((rank) => {
+            this.getPlayerPointsAndName(id, column).then((data) => {
+                this.getPlayerRank(data.points, column).then((rank) => {
+
+                    const hash = crypto.createHash("sha256");
+                    hash.update(id);
+
                     resolve({
                         rank,
-                        points,
+                        points: data.points,
+                        username: data.username,
+                        id: hash.digest("hex"),
                     });
                 });
             });
@@ -522,9 +536,9 @@ export default class DatabaseHandler {
         });
     }
 
-    private getPlayerPoints(id: string, column: string): Promise<number> {
+    private getPlayerPointsAndName(id: string, column: string): Promise<any> {
         return new Promise((resolve, reject) => {
-            const sql = "SELECT `" + column + "` FROM `players` WHERE `id` = ?";
+            const sql = "SELECT `" + column + "`, `username` FROM `players` WHERE `id` = ?";
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
@@ -533,7 +547,10 @@ export default class DatabaseHandler {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(results[0][column]);
+                    resolve({
+                        points: results[0][column],
+                        username: results[0].username,
+                    });
                 }
             });
         });
