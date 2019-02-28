@@ -583,7 +583,7 @@ export default class DatabaseHandler {
         let resetDate;
         if (columnNumber === 1) {
 
-            resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1);
+            resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
         } else if (columnNumber === 2) {
 
