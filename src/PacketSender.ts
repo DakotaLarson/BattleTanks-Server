@@ -54,6 +54,8 @@ enum Packet {
     POWERUP_ADDITION,
     POWERUP_REMOVAL,
     POWERUP_APPLICATION,
+
+    PONG,
 }
 
 enum DataType {
@@ -267,6 +269,11 @@ export const sendPowerupRemoval = (id: number, packetData: number[]) => {
 
 export const sendPowerupApplication = (id: number, powerupId: number) => {
     const data = constructData(Packet.POWERUP_APPLICATION, powerupId, DataType.NUMBER);
+    send(id, data);
+};
+
+export const sendPong = (id: number) => {
+    const data = constructData(Packet.PONG, undefined, DataType.HEADER_ONLY);
     send(id, data);
 };
 

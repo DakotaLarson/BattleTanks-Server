@@ -1,5 +1,6 @@
 import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
+import { sendPong } from "./PacketSender";
 import Vector3 from "./vector/Vector3";
 
 const receivePlayerMove = (player: Player, data: number[]) => {
@@ -53,6 +54,10 @@ const receiveRamCollision = (player: Player, targetId: number) => {
     });
 };
 
+const receivePing = (player: Player) => {
+    sendPong(player.id);
+};
+
 const handlers: any = [
     receivePlayerMove,
     receivePlayerShoot,
@@ -62,6 +67,7 @@ const handlers: any = [
     receiveChatMessage,
     receivePowerupPickup,
     receiveRamCollision,
+    receivePing,
 ];
 
 enum DataType {

@@ -21,7 +21,7 @@ export default class Bot extends Player {
     private static readonly LONG_THINK_TIME = 1000;
 
     private static readonly VISIBLE_ENEMY_RECALCULATION_CHANCE = 0.25;
-    private static readonly SPEED = 5;
+    private static readonly SPEED = 4;
 
     private lobby: Lobby;
     private botHandler: BotHandler;
