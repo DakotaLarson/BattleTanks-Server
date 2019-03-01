@@ -58,7 +58,7 @@ export default class DatabaseHandler {
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYER_UPDATE, this.onPlayerUpdate);
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYERS_UPDATE, this.onPlayersUpdate);
 
-                this.scheduleLeaderboardResets();
+                this.scheduleLeaderboardReset();
 
                 resolve();
             });
@@ -572,36 +572,19 @@ export default class DatabaseHandler {
         });
     }
 
-    private scheduleLeaderboardResets() {
-        this.scheduleLeaderboardReset(1);
-        this.scheduleLeaderboardReset(2);
-        this.scheduleLeaderboardReset(3);
-    }
-
-    private scheduleLeaderboardReset(columnNumber: number) {
+    private scheduleLeaderboardReset() {
         const now = new Date();
-        let resetDate;
-        if (columnNumber === 1) {
-
-            resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-
-        } else if (columnNumber === 2) {
-
-            const daysUntilReset = 7 - now.getDay();
-            resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilReset + 1);
-
-        } else if (columnNumber === 3) {
-
-            resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-        } else {
-            throw new Error("Unexpected leaderboard column: " + columnNumber);
-        }
-
+        const resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         const resetTime = resetDate.getTime() - now.getTime();
         setTimeout(() => {
-            this.resetLeaderboard(columnNumber);
-            this.scheduleLeaderboardReset(columnNumber);
+            this.resetLeaderboard(1);
+            if (resetDate.getDay() === 1) {
+                this.resetLeaderboard(2);
+            }
+            if (resetDate.getDate() === 1) {
+                this.resetLeaderboard(3);
+            }
+            this.scheduleLeaderboardReset();
         }, resetTime);
     }
 
