@@ -1,13 +1,5 @@
 export default class Vector3 {
 
-    public static fromAngleAboutY(angle: number): Vector3 {
-        return new Vector3(Math.sin(angle), 0, Math.cos(angle));
-    }
-
-    public static multiplyVectors(a: Vector3, b: Vector3) {
-        return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
-    }
-
     public x: number;
     public y: number;
     public z: number;
@@ -16,6 +8,14 @@ export default class Vector3 {
         this.x = x || 0;
         this.y = y || 0;
         this.z = z || 0;
+    }
+
+    public static fromAngleAboutY(angle: number): Vector3 {
+        return new Vector3(Math.sin(angle), 0, Math.cos(angle));
+    }
+
+    public static multiplyVectors(a: Vector3, b: Vector3) {
+        return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
     }
 
     public dot(vec: Vector3): number {
@@ -79,6 +79,10 @@ export default class Vector3 {
         return this.x * this.x + this.y * this.y + this.z * this.z;
     }
 
+    public length() {
+        return Math.sqrt(this.lengthSq());
+    }
+
     public equals(vec: Vector3): boolean {
         return this.x === vec.x && this.y === vec.y && this.z === vec.z;
     }
@@ -89,6 +93,14 @@ export default class Vector3 {
         const zDiff = vec.z - this.z;
 
         return Math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff);
+    }
+
+    public normalize() {
+        const length = this.length() || 1;
+        this.x /= length;
+        this.y /= length;
+        this.z /= length;
+        return this;
     }
 
 }

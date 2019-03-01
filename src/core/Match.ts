@@ -243,8 +243,10 @@ export default class Match {
         if (this.hasPlayer(data.player)) {
             // collision between players
             console.log("collision");
+            const target = PlayerHandler.getMatchPlayer(this, data.targetId);
+            const vec = target.position.clone().sub(data.player.position).normalize();
+            target.sendRamResponse(vec);
         }
-
     }
 
     private isPlayerInBounds(player: Player, arena: Arena) {

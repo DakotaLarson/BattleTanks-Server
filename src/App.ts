@@ -23,7 +23,9 @@ ArenaLoader.loadArenas().then((message) => {
     databaseHandler.enable().then(() => {
         metricsHandler.enable();
         multiplayerService.enable();
-        botHandler.enable();
+        if (!process.argv.includes("no-bots")) {
+            botHandler.enable();
+        }
     }).catch((err) => {
         console.error(err);
     });

@@ -4,6 +4,9 @@ import Player from "./Player";
 
 export default class PlayerHandler {
 
+    private static players: Map<Lobby, Player[]> = new Map();
+    private static matches: Map<Match, Lobby> = new Map();
+
     public static addLobby(lobby: Lobby) {
         PlayerHandler.players.set(lobby, []);
     }
@@ -135,8 +138,5 @@ export default class PlayerHandler {
             throw new Error("No lobby found for match");
         }
     }
-
-    private static players: Map<Lobby, Player[]> = new Map();
-    private static matches: Map<Match, Lobby> = new Map();
 
 }

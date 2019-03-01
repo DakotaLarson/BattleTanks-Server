@@ -40,6 +40,8 @@ export default class Player {
 
     public ammoCount: number;
 
+    public ramResponse: Vector3 | undefined;
+
     protected movementVelocity: number;
     protected rotationVelocity: number;
 
@@ -153,7 +155,7 @@ export default class Player {
 
     public sendConnectedPlayerMove(player: Player) {
         if (!this.isBot()) {
-            PacketSender.sendConnectedPlayerMove(this.id, player.position, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.id);
+            PacketSender.sendConnectedPlayerMove(this.id, player.position, player.movementVelocity, player.rotationVelocity, player.bodyRot, player.headRot, player.ramResponse, player.id);
         }
     }
 
@@ -251,6 +253,16 @@ export default class Player {
         if (!this.isBot()) {
             PacketSender.sendMatchStatistics(this.id, stats);
         }
+    }
+
+    public sendRamResponse(vec: Vector3) {
+        if (!this.isBot()) {
+            PacketSender.sendPlayerRamResponse(this.id, vec);
+        }
+        this.ramResponse = vec;
+        setTimeout(() => {
+            this.ramResponse = undefined;
+        }, 1000);
     }
 
     public onMove(data: number[]) {

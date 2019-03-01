@@ -25,6 +25,7 @@ enum Packet {
     PLAYER_SPEED_MULTIPLIER,
     PLAYER_POWERUP_PICKUP,
     PLAYER_RAM,
+    PLAYER_RAM_RESPONSE,
 
     CONNECTED_PLAYER_JOIN,
     CONNECTED_PLAYER_LEAVE,
@@ -162,6 +163,11 @@ export const sendPlayerRam = (id: number, time: number) => {
     send(id, data);
 };
 
+export const sendPlayerRamResponse = (id: number, vec: Vector3) => {
+    const data = constructData(Packet.PLAYER_RAM_RESPONSE, [vec.x, vec.y, vec.z], DataType.NUMBER_ARRAY);
+    send(id, data);
+};
+
 // CONNECTED PLAYER
 
 export const sendConnectedPlayerJoin = (id: number, playerData: any) => {
@@ -187,8 +193,12 @@ export const sendConnectedPlayerRemoval = (id: number, playerId: number, involve
     send(id, data);
 };
 
-export const sendConnectedPlayerMove = (id: number, pos: Vector3, movementVelocity: number, rotationVelocity: number, bodyRot: number, headRot: number, playerId: number) => {
-    const data = constructData(Packet.CONNECTED_PLAYER_MOVE, [pos.x, pos.y, pos.z, movementVelocity, rotationVelocity, bodyRot, headRot], DataType.NUMBER_ARRAY_HEADER, playerId);
+export const sendConnectedPlayerMove = (id: number, pos: Vector3, movementVelocity: number, rotationVelocity: number, bodyRot: number, headRot: number, ramResponse: Vector3 | undefined, playerId: number) => {
+    const rawData = [pos.x, pos.y, pos.z, movementVelocity, rotationVelocity, bodyRot, headRot];
+    if (ramResponse) {
+        rawData.push(ramResponse.x, ramResponse.y, ramResponse.z);
+    }
+    const data = constructData(Packet.CONNECTED_PLAYER_MOVE, rawData, DataType.NUMBER_ARRAY_HEADER, playerId);
     send(id, data);
 };
 
