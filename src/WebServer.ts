@@ -11,7 +11,7 @@ export default class WebServer {
 
     private static SSE_INTERVAL = 1000;
     private static MAX_SSE_INTERVAL = 30;
-    private static PORT = 8000;
+    private static PORT = process.env.PORT || 8000;
 
     private static readonly MINIMUM_USERNAME_LENGTH = 3;
     private static readonly MAXIMUM_USERNAME_LENGTH = 16;
