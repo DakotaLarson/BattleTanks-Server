@@ -6,7 +6,8 @@ import Match from "./Match";
 
 export default class Gamemode {
 
-    private static readonly DAMAGE = 0.20;
+    private static readonly PROJECTILE_DAMAGE = 0.2;
+    private static readonly RAM_DAMAGE = 0.4;
     private static readonly LIFE_COUNT = 3;
     private static readonly OOB_ID = -1; // Out of Bounds Id
     private static readonly RESPAWN_TIME = 5000;
@@ -25,8 +26,8 @@ export default class Gamemode {
         this.timeouts = [];
     }
     public enable(): void {
-        EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
-        EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
+        EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onProjectileHit);
+        EventHandler.addListener(this, EventHandler.Event.RAM_COLLISION, this.onRamHit);
 
         for (const player of PlayerHandler.getMatchPlayers(this.match)) {
             this.lives.set(player.id, Gamemode.LIFE_COUNT);
@@ -34,10 +35,12 @@ export default class Gamemode {
     }
 
     public disable(): void {
-        EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_HITSCAN, this.onHit);
-        EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onHit);
+        EventHandler.removeListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onProjectileHit);
+        EventHandler.removeListener(this, EventHandler.Event.RAM_COLLISION, this.onRamHit);
+
         this.lives.clear();
         this.protected = [];
+
         for (const timeout of this.timeouts) {
             clearTimeout(timeout);
         }
@@ -57,13 +60,29 @@ export default class Gamemode {
         this.killPlayer(target, player.id);
     }
 
-    private onHit(data: any) {
+    private onProjectileHit(data: any) {
+        this.onHit(data, Gamemode.PROJECTILE_DAMAGE);
+    }
+
+    private onRamHit(data: any) {
+        if (this.match.hasPlayer(data.player) && !this.protected.includes(data.targetId)) {
+            // collision between players
+            const target = PlayerHandler.getMatchPlayer(this.match, data.targetId);
+            const vec = target.position.clone().sub(data.player.position).normalize();
+            target.sendRamResponse(vec);
+
+            data.match = this.match;
+            data.target = target;
+            this.onHit(data, Gamemode.RAM_DAMAGE);
+        }
+    }
+
+    private onHit(data: any, damage: number) {
         if (data.match === this.match) {
             if (!(this.match as Match).onSameTeam(data.player, data.target)) {
-                const protectedIndex = this.protected.indexOf(data.target.id);
-                if (protectedIndex === -1) {
+                if (!this.protected.includes(data.target.id)) {
                     const previousShield = data.target.shield;
-                    const targetData = data.target.damage(Gamemode.DAMAGE);
+                    const targetData = data.target.damage(damage);
 
                     const targetHealth = targetData[0];
                     const targetShield = targetData[1];
