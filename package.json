@@ -15,7 +15,7 @@
     "ws": "latest"
   },
   "devDependencies": {
-     "@types/cors": "^2.8.4",
+    "@types/cors": "^2.8.4",
     "@types/express": "latest",
     "@types/express-session": "^1.15.11",
     "@types/google-cloud__datastore": "^1.3.3",
@@ -27,7 +27,7 @@
   "scripts": {
     "start-supervisor": "supervisor --inspect ./build/App.js",
     "start-dev": "node --inspect ./build/App.js dev",
-	"start-dev-no-bots": "node --inspect ./build/App.js dev no-bots",
+    "start-dev-no-bots": "node --inspect ./build/App.js dev no-bots",
     "start": "node ./build/App.js"
   },
   "repository": {
