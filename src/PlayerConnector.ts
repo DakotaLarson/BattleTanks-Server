@@ -72,7 +72,7 @@ export default class PlayerConnector {
                     PacketReceiver.handleMessage(message.data, player);
                 });
                 ws.addEventListener("close", (event) => {
-                    console.log("Player disconnected " + event.code);
+                    console.log(player.name + " disconnected " + event.code);
                     PacketSender.removeSocket(id);
                     EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, player);
                 });
@@ -83,11 +83,7 @@ export default class PlayerConnector {
                 PacketSender.addSocket(id, (ws as any));
 
                 EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
-                if (player.sub) {
-                    console.log("Player connected (Auth)");
-                } else {
-                    console.log("Player connected (No Auth)");
-                }
+                console.log(player.name + " conencted!");
                 player.sendPlayerName();
                 resolve(player);
             }).catch(reject);

@@ -590,7 +590,7 @@ export default class DatabaseHandler {
 
     private resetLeaderboard(columnNumber: number) {
         this.getLeaderboard(columnNumber).then((results: any) => {
-            const canUpdateLeaderboard = results.length === DatabaseHandler.LEADERBOARD_LENGTH;
+            const canUpdateLeaderboard = results.leaderboard.length === DatabaseHandler.LEADERBOARD_LENGTH;
 
             if (canUpdateLeaderboard) {
 
