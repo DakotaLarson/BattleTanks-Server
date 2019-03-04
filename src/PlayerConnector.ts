@@ -83,7 +83,7 @@ export default class PlayerConnector {
                 PacketSender.addSocket(id, (ws as any));
 
                 EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
-                console.log(player.name + " conencted!");
+                console.log(player.name + " connected!");
                 player.sendPlayerName();
                 resolve(player);
             }).catch(reject);

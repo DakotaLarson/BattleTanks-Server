@@ -314,6 +314,9 @@ export default class Player {
             this.reloadPercentage = 0;
 
             EventHandler.addListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+            if (!this.isBot()) {
+                PacketSender.sendPlayerReloadStart(this.id);
+            }
             this.reloading = true;
         }
     }
@@ -367,7 +370,7 @@ export default class Player {
 
     public destroy() {
         if (this.reloading) {
-            this.finishReload();
+            this.finishReload(false);
         }
         for (const timeout of this.timeouts) {
             clearTimeout(timeout);
@@ -380,7 +383,7 @@ export default class Player {
 
     public boostAmmo() {
         if (this.reloading) {
-            this.finishReload();
+            this.finishReload(true);
             this.reloadPercentage = 1;
         }
         this.ammoCount = Player.fullAmmoCount + Player.ammoBoost;
@@ -452,16 +455,19 @@ export default class Player {
 
         this.reloadPercentage = Math.min(this.reloadPercentage + reloadIncrease, 1);
         if (this.reloadPercentage === 1) {
-            this.finishReload();
+            this.finishReload(true);
         }
         if (!this.isBot()) {
             PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
         }
     }
 
-    private finishReload() {
+    private finishReload(sendData: boolean) {
         this.ammoCount = Player.fullAmmoCount;
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
+        if (sendData && !this.isBot()) {
+            PacketSender.sendPlayerReloadEnd(this.id);
+        }
         this.reloading = false;
     }
 

@@ -26,6 +26,8 @@ enum Packet {
     PLAYER_POWERUP_PICKUP,
     PLAYER_RAM,
     PLAYER_RAM_RESPONSE,
+    PLAYER_RELOAD_START,
+    PLAYER_RELOAD_END,
 
     CONNECTED_PLAYER_JOIN,
     CONNECTED_PLAYER_LEAVE,
@@ -165,6 +167,16 @@ export const sendPlayerRam = (id: number, time: number) => {
 
 export const sendPlayerRamResponse = (id: number, vec: Vector3) => {
     const data = constructData(Packet.PLAYER_RAM_RESPONSE, [vec.x, vec.y, vec.z], DataType.NUMBER_ARRAY);
+    send(id, data);
+};
+
+export const sendPlayerReloadStart = (id: number) => {
+    const data = constructData(Packet.PLAYER_RELOAD_START, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
+export const sendPlayerReloadEnd = (id: number) => {
+    const data = constructData(Packet.PLAYER_RELOAD_END, undefined, DataType.HEADER_ONLY);
     send(id, data);
 };
 
