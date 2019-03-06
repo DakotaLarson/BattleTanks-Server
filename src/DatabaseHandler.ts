@@ -34,9 +34,10 @@ export default class DatabaseHandler {
             ["match_count", "matchCount"],
             ["audio", "audio"],
             ["authenticated", "authenticated"],
-            ["controls", "controls"],
             ["visits", "visits"],
             ["referrer", "referrer"],
+            ["fps", "fps"],
+            ["latency", "latency"],
         ]);
     }
 
@@ -265,7 +266,7 @@ export default class DatabaseHandler {
 
     public insertMetrics(metrics: any[]) {
         if (metrics.length) {
-            const dbFields = ["browser", "os", "device", "session_time", "game_time", "match_count", "audio", "authenticated", "visits", "referrer"];
+            const dbFields = ["browser", "os", "device", "session_time", "game_time", "match_count", "audio", "authenticated", "visits", "fps", "latency", "referrer"];
             const values: any[] = []; // bound parameters
             const valueStrings: string[] = []; // query string segments
             let sql = "INSERT INTO `metrics` ( `" + dbFields[0] + "`";
