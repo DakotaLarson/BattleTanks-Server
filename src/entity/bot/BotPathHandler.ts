@@ -67,8 +67,8 @@ export default class BotPathHandler {
     }
 
     public hasLineOfSight(from: Vector3, to: Vector3, targetRot: number) {
-        const fromPos = from.clone().add(new Vector3(0.5, 0, 0.5));
-        const toPos = to.clone().add(new Vector3(0.5, 0, 0.5));
+        const fromPos = from.clone();
+        const toPos = to.clone();
         if (this.hasBresenhamsLine(fromPos, toPos)) {
             return this.hitscanHandler.hasLineOfSight(fromPos, toPos, targetRot);
         }

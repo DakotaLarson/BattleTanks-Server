@@ -9,7 +9,14 @@ for (const pos of workerData.blockPositions) {
 const getPath = (from: Vector3, to: Vector3) => {
     const grid = originalGrid.clone();
     const finder = new ThetaStarFinder({});
-    return finder.findPath(Math.round(from.x), Math.round(from.z), Math.round(to.x), Math.round(to.z), grid);
+    const path = finder.findPath(Math.round(from.x), Math.round(from.z), Math.round(to.x), Math.round(to.z), grid);
+    for (const entry of path) {
+        for (let i = 0; i < entry.length; i ++) {
+            entry[i] += 0.5;
+        }
+    }
+    path.unshift([from.x, from.z]);
+    return path;
 };
 
 if (parentPort) {
