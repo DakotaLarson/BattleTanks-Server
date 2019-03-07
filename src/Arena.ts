@@ -60,10 +60,10 @@ export default class Arena {
         this.parseLocationData(data, "teamASpawnPositions", this.teamASpawns, true);
         this.parseLocationData(data, "teamBSpawnPositions", this.teamBSpawns, true);
 
-        this.parseLocationData(data, "shieldPowerupPositions", this.shieldPowerupPositions, false);
-        this.parseLocationData(data, "healthPowerupPositions", this.healthPowerupPositions, false);
-        this.parseLocationData(data, "speedPowerupPositions", this.speedPowerupPositions, false);
-        this.parseLocationData(data, "ammoPowerupPositions", this.ammoPowerupPositions, false);
+        this.parsePowerupLocationData(data, "shieldPowerupPositions", this.shieldPowerupPositions);
+        this.parsePowerupLocationData(data, "healthPowerupPositions", this.healthPowerupPositions);
+        this.parsePowerupLocationData(data, "speedPowerupPositions", this.speedPowerupPositions);
+        this.parsePowerupLocationData(data, "ammoPowerupPositions", this.ammoPowerupPositions);
     }
 
     public getNextTeamASpawn(): Vector4 {
@@ -115,6 +115,14 @@ export default class Arena {
                     }
                 }
             }
+        }
+    }
+
+    private parsePowerupLocationData(data: any, title: string, storage: Vector3[]) {
+        this.parseLocationData(data, title, storage, false);
+        for (const entry of storage) {
+            entry.x += 0.5;
+            entry.z += 0.5;
         }
     }
 }

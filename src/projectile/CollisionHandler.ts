@@ -56,7 +56,7 @@ export default class CollisionHandler {
             }
         }
         for (const player of PlayerHandler.getMatchPlayers(this.match)) {
-            if (player.position.clone().add(new Vector3(0.5, 0, 0.5)).distanceSquared(proj.position) <= distanceCovered + playerRadius) {
+            if (player.position.distanceSquared(proj.position) <= distanceCovered + playerRadius) {
                 if (player.id !== proj.shooterId && player.isAlive) {
                     testPlayers.push(player);
                 }
@@ -73,7 +73,7 @@ export default class CollisionHandler {
             const playerCorrection = new Vector3();
 
             for (const target of testPlayers) {
-                const playerCorners = this.getPlayerCorners(target.position.clone().add(new Vector3(0.5, 0, 0.5)), target.bodyRot, offsetX, offsetZ);
+                const playerCorners = this.getPlayerCorners(target.position.clone(), target.bodyRot, offsetX, offsetZ);
                 const playerAxes = this.getAxes(target.bodyRot);
 
                 const overlaps = this.getOverlaps([projectileParallelAxis, projectilePerpendicularAxis, playerAxes[0], playerAxes[1]], projectileCorners, playerCorners);

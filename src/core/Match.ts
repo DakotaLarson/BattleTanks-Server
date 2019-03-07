@@ -238,8 +238,8 @@ export default class Match {
     }
 
     private isPlayerInBounds(player: Player, arena: Arena) {
-        const xPos = player.position.x + 0.5;
-        const zPos = player.position.z + 0.5;
+        const xPos = player.position.x;
+        const zPos = player.position.z;
 
         const width = arena.width + 2;
         const height = arena.height + 2;
