@@ -28,6 +28,10 @@ export default class PlayerStatistic {
 
         this.points ++;
         this.currency ++;
+
+        return {
+            points: this.points,
+        };
     }
 
     public incrementKills() {
@@ -35,10 +39,19 @@ export default class PlayerStatistic {
 
         this.points += 2;
         this.currency += 2;
+
+        return {
+            kills: this.kills,
+            points: this.points,
+        };
     }
 
     public incrementDeaths() {
         this.deaths ++;
+
+        return {
+            deaths: this.deaths,
+        };
     }
 
     public getStatistics(win: boolean, teamShots: number, teamHits: number, teamKills: number, enemyTeamShots: number, enemyTeamHits: number, enemyTeamKills: number) {

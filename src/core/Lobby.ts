@@ -46,21 +46,24 @@ export default class Lobby {
 
         player.sendGameStatus(this.status);
 
-        let sendMessage = false;
+        let isRunning = false;
         if (this.status === GameStatus.WAITING) {
             this.startMatch();
         } else if (this.status === GameStatus.RUNNING) {
-            this.getMatch().addPlayer(player);
-            sendMessage = true;
+            isRunning = true;
         }
 
         for (const otherPlayer of PlayerHandler.getLobbyPlayers(this)) {
             if (otherPlayer !== player) {
-                otherPlayer.sendConnectedPlayerJoin(player, sendMessage);
+                otherPlayer.sendConnectedPlayerJoin(player, isRunning);
                 player.sendConnectedPlayerJoin(otherPlayer, false);
             } else {
-                player.sendConnectedPlayerJoin(player, sendMessage);
+                player.sendConnectedPlayerJoin(player, isRunning);
             }
+        }
+
+        if (isRunning) {
+            this.getMatch().addPlayer(player);
         }
     }
 

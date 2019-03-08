@@ -41,7 +41,8 @@ enum Packet {
     PROTECTION_START,
     PROTECTION_END,
 
-    MATCH_STATISTICS,
+    MATCH_STATISTICS, // End of Match
+    MATCH_STATISTICS_UPDATE, // Live Updates
 
     AUDIO_REQUEST,
 
@@ -241,6 +242,21 @@ export const sendProtectionEnd = (id: number, playerId: number) => {
 
 export const sendMatchStatistics = (id: number, statistics: number[]) => {
     const data = constructData(Packet.MATCH_STATISTICS, statistics, DataType.NUMBER_ARRAY);
+    send(id, data);
+};
+
+export const sendStatisticsUpdate = (id: number, statistics: any) => {
+    const computedData = [];
+    if (statistics.points) {
+        computedData.push(0, statistics.points);
+    }
+    if (statistics.kills) {
+        computedData.push(1, statistics.kills);
+    }
+    if (statistics.deaths) {
+        computedData.push(2, statistics.deaths);
+    }
+    const data = constructData(Packet.MATCH_STATISTICS_UPDATE, computedData, DataType.NUMBER_ARRAY_HEADER, statistics.id);
     send(id, data);
 };
 

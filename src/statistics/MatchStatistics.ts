@@ -112,48 +112,56 @@ export default class MatchStatistics {
 
                 this.teamBShots ++;
             } else {
-                console.warn("No stats registered for shot");
+                throw new Error("No stats registered for shot");
             }
         }
     }
 
     private onHit(data: any) {
         if (data.match === this.match) {
+            let statUpdate;
             if (this.teamAPlayerStatistics.has(data.player)) {
-                (this.teamAPlayerStatistics.get(data.player) as PlayerStatistic).incrementHits();
+                statUpdate = (this.teamAPlayerStatistics.get(data.player) as PlayerStatistic).incrementHits();
 
                 this.teamAHits ++;
             } else if (this.teamBPlayerStatistics.has(data.player)) {
-                (this.teamBPlayerStatistics.get(data.player) as PlayerStatistic).incrementHits();
+                statUpdate = (this.teamBPlayerStatistics.get(data.player) as PlayerStatistic).incrementHits();
 
                 this.teamBHits ++;
             } else {
-                console.warn("No stats registered for hit");
+                throw new Error("No stats registered for hit");
             }
+            this.sendStatUpdate(statUpdate, data.player);
         }
     }
 
     private onKill(data: any) {
         // shooter is not guaranteed.
         if (data.match === this.match) {
+            let killStatUpdate;
+            let deathStatUpdate;
             if (this.teamAPlayerStatistics.has(data.player)) {
-                (this.teamAPlayerStatistics.get(data.player) as PlayerStatistic).incrementDeaths();
+                deathStatUpdate = (this.teamAPlayerStatistics.get(data.player) as PlayerStatistic).incrementDeaths();
 
                 if (this.teamBPlayerStatistics.has(data.shooter)) {
-                    (this.teamBPlayerStatistics.get(data.shooter) as PlayerStatistic).incrementKills();
+                    killStatUpdate = (this.teamBPlayerStatistics.get(data.shooter) as PlayerStatistic).incrementKills();
 
                     this.teamBKills ++;
                 }
             } else if (this.teamBPlayerStatistics.has(data.player)) {
-                (this.teamBPlayerStatistics.get(data.player) as PlayerStatistic).incrementDeaths();
+                deathStatUpdate = (this.teamBPlayerStatistics.get(data.player) as PlayerStatistic).incrementDeaths();
 
                 if (this.teamAPlayerStatistics.has(data.shooter)) {
-                    (this.teamAPlayerStatistics.get(data.shooter) as PlayerStatistic).incrementKills();
+                    killStatUpdate = (this.teamAPlayerStatistics.get(data.shooter) as PlayerStatistic).incrementKills();
 
                     this.teamAKills ++;
                 }
             } else {
-                console.log("No stats registered for death");
+                throw new Error("No stats registered for death");
+            }
+            this.sendStatUpdate(deathStatUpdate, data.player);
+            if (killStatUpdate) {
+                this.sendStatUpdate(killStatUpdate, data.shooter);
             }
         }
     }
@@ -162,6 +170,14 @@ export default class MatchStatistics {
         const player = PlayerHandler.getMatchPlayer(this.match, id);
         player.sendMatchStatistics(stats);
         return player;
+    }
+
+    private sendStatUpdate(stat: any, playerId: number) {
+        stat.id = playerId;
+        const players = PlayerHandler.getMatchPlayers(this.match);
+        for (const player of players) {
+            player.sendStatisticsUpdate(stat);
+        }
     }
 
     private updateDatabaseStats(player: Player, stats: number[], databaseStats: Map<string, any>) {

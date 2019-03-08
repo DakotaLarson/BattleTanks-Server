@@ -255,6 +255,12 @@ export default class Player {
         }
     }
 
+    public sendStatisticsUpdate(stats: any) {
+        if (!this.isBot()) {
+            PacketSender.sendStatisticsUpdate(this.id, stats);
+        }
+    }
+
     public sendRamResponse(vec: Vector3) {
         if (!this.isBot()) {
             PacketSender.sendPlayerRamResponse(this.id, vec);
