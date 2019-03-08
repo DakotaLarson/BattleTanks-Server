@@ -123,6 +123,7 @@ export default class Match {
         player.sendPlayerSpectating();
         player.sendArena(this.arena.getRawData());
         this.powerupHandler.onPlayerAddition(player);
+        (this.matchStats as MatchStatistics).updateSpectator(player);
 
         for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
             if (player !== otherPlayer && otherPlayer.isAlive) {

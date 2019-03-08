@@ -76,6 +76,19 @@ export default class MatchStatistics {
         }
     }
 
+    public updateSpectator(player: Player) {
+        for (const [id, statistic] of this.teamAPlayerStatistics) {
+            const stat: any = statistic.getStatisticUpdate();
+            stat.id = id;
+            player.sendStatisticsUpdate(stat);
+        }
+        for (const [id, statistic] of this.teamBPlayerStatistics) {
+            const stat: any = statistic.getStatisticUpdate();
+            stat.id = id;
+            player.sendStatisticsUpdate(stat);
+        }
+    }
+
     private onSend(data: any) {
         if (data.match === this.match) {
 

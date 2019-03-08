@@ -63,4 +63,12 @@ export default class PlayerStatistic {
     public getEarlyStatistic() {
         return [this.shots, this.hits, this.kills, this.deaths, this.points, this.currency];
     }
+
+    public getStatisticUpdate() {
+        return {
+            points: this.points,
+            kills: this.kills,
+            deaths: this.deaths,
+        };
+    }
 }
