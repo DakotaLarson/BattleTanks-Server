@@ -63,6 +63,7 @@ export default class WebServer {
         app.post("/leaderboardrank", this.onPostLeaderboardRank.bind(this));
         app.get("/playercount", this.onGetPlayerCount.bind(this));
         app.post("/metrics", this.onPostMetrics.bind(this));
+        app.post("/profile", this.onPostProfile.bind(this));
     }
 
     public start() {
@@ -116,7 +117,7 @@ export default class WebServer {
     private onPostPlayerStats(req: express.Request, res: express.Response) {
         if (req.body && req.body.token) {
             Auth.verifyId(req.body.token).then((data: any) => {
-                this.databaseHandler.getPlayerStats(data.id).then((stats: any) => {
+                this.databaseHandler.getPlayerStats(data.id, false).then((stats: any) => {
                     this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number ) => {
                         stats.rank = rank;
                         res.status(200).set({
@@ -242,10 +243,35 @@ export default class WebServer {
         this.sendPlayerCountData(res, this.playerCount + this.botCount, this.subscribers.length);
     }
 
-    private onPostMetrics(req: any, res: express.Response) {
-        const data = JSON.parse(req.body);
-        this.metricsHandler.receiveMetrics(data);
-        res.end();
+    private onPostMetrics(req: express.Request, res: express.Response) {
+        try {
+            const data = JSON.parse(req.body);
+            this.metricsHandler.receiveMetrics(data);
+            res.end();
+        } catch (ex) {
+            console.log("invalid metrics posted");
+        }
+    }
+
+    private onPostProfile(req: express.Request, res: express.Response) {
+        if (req.body && req.body.username) {
+            const username = req.body.username;
+            this.databaseHandler.getPlayerStats(username, true).then((stats: any) => {
+                this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number ) => {
+                    stats.rank = rank;
+                    res.status(200).set({
+                        "content-type": "application/json",
+                    });
+                    res.send(stats);
+                }).catch((err) => {
+                    console.error(err);
+                    res.sendStatus(500);
+                });
+            }).catch((err) => {
+                console.error(err);
+                res.sendStatus(500);
+            });
+        }
     }
 
     private onPlayerJoin() {

@@ -115,6 +115,7 @@ export default class Player {
                 name: player.name,
                 id: player.id,
                 sendMessage,
+                hasProfile: player.sub !== undefined,
             });
         }
     }

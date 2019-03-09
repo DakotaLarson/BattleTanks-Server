@@ -66,7 +66,7 @@ export default class DatabaseHandler {
         });
     }
 
-    public getPlayerStats(id: string) {
+    public getPlayerStats(selector: string, isUsername: boolean) {
         return new Promise((resolve, reject) => {
             const fields = ["points", "currency", "victories", "defeats", "draws", "shots", "hits", "kills", "deaths"];
             let sql = "SELECT `" + fields[0] + "`";
@@ -75,12 +75,16 @@ export default class DatabaseHandler {
                 sql += ", `" + fields[i] + "`";
             }
 
-            sql += " FROM `players` WHERE `id` = ?";
+            if (isUsername) {
+                sql += " FROM `players` WHERE `username` = ?";
+            } else {
+                sql += " FROM `players` WHERE `id` = ?";
+            }
 
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
-                values: [id],
+                values: [selector],
             }, (err, results) => {
                 if (err) {
                     reject(err);
