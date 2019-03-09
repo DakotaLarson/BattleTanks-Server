@@ -41,6 +41,7 @@ export default class Player {
     public ammoCount: number;
 
     public ramResponse: Vector3 | undefined;
+    public ramAttackerId: number | undefined;
 
     protected movementVelocity: number;
     protected rotationVelocity: number;
@@ -262,13 +263,15 @@ export default class Player {
         }
     }
 
-    public sendRamResponse(vec: Vector3) {
+    public sendRamResponse(vec: Vector3, attackerId: number) {
         if (!this.isBot()) {
             PacketSender.sendPlayerRamResponse(this.id, vec);
         }
         this.ramResponse = vec;
+        this.ramAttackerId = attackerId;
         setTimeout(() => {
             this.ramResponse = undefined;
+            this.ramAttackerId = undefined;
         }, 1000);
     }
 

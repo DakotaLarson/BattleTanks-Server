@@ -165,9 +165,7 @@ export default class Lobby {
                 });
             } else {
                 this.updateStatus(GameStatus.WAITING);
-                if (!this.service.onMatchEnd(this)) {
-                    this.wait("Not enough players to start a match");
-                }
+                this.service.onMatchEnd(this);
             }
             this.startTimeout = undefined;
         }, waitTime);
@@ -184,15 +182,6 @@ export default class Lobby {
             return this.match;
         } else {
             throw new Error("Match is undefined");
-        }
-    }
-
-    private wait(message?: string) {
-        // Status update called previously in both cases.
-        if (message) {
-            for (const player of PlayerHandler.getLobbyPlayers(this)) {
-                player.sendAlert(message);
-            }
         }
     }
 
@@ -220,6 +209,7 @@ export default class Lobby {
         segments.push({
             color: sender.color,
             text: sender.name,
+            profileLink: sender.sub !== undefined,
         },
         {
             color: sender.sub ? 0xffffff : 0xa0a0a0,

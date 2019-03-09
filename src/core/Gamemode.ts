@@ -48,7 +48,7 @@ export default class Gamemode {
     }
 
     public handleOutOfBounds(player: Player) {
-        this.killPlayer(player, Gamemode.OOB_ID);
+        this.killPlayer(player, player.ramAttackerId || Gamemode.OOB_ID);
     }
 
     public isPlayerValid(player: Player) {
@@ -69,7 +69,7 @@ export default class Gamemode {
             // collision between players
             const target = PlayerHandler.getMatchPlayer(this.match, data.targetId);
             const vec = target.position.clone().sub(data.player.position).normalize();
-            target.sendRamResponse(vec);
+            target.sendRamResponse(vec, data.player.id);
 
             data.match = this.match;
             data.target = target;
