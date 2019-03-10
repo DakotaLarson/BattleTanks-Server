@@ -26,18 +26,10 @@ export default class DatabaseHandler {
         ]);
 
         this.metricFields = new Map([
-            ["browser", "browser"],
-            ["os", "os"],
-            ["device", "device"],
+
             ["session_time", "sessionTime"],
             ["game_time", "gameTime"],
             ["match_count", "matchCount"],
-            ["audio", "audio"],
-            ["authenticated", "authenticated"],
-            ["visits", "visits"],
-            ["referrer", "referrer"],
-            ["fps", "fps"],
-            ["latency", "latency"],
         ]);
     }
 
@@ -268,37 +260,60 @@ export default class DatabaseHandler {
         });
     }
 
-    public insertMetrics(metrics: any[]) {
-        if (metrics.length) {
-            const dbFields = ["browser", "os", "device", "session_time", "game_time", "match_count", "audio", "authenticated", "visits", "fps", "latency", "referrer"];
+    public updateMetric(id: string, metric: any): Promise<any> {
+        return new Promise((resolve) => {
+
+            const sql = "SELECT `id`, `session_time`, `game_time`, `match_count`, `fps`, `latency` FROM `metrics` WHERE `id` = ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [id],
+            }, (err, results) => {
+                if (err) {
+                    console.error(err);
+                } else {
+                    for (const result of results) {
+                        metric.sessionTime += result.session_time;
+                        metric.gameTime += result.game_time;
+                        metric.matchCount += result.match_count;
+                        metric.fps = Math.round((metric.fps + result.fps) / 2);
+                        metric.latency = Math.round((metric.latency + result.latency) / 2);
+                    }
+                    resolve(metric);
+                }
+            });
+        });
+    }
+
+    public insertMetric(metric: any) {
+        return new Promise((resolve) => {
+            const dbFields = ["id", "browser", "os", "device", "session_time", "game_time", "match_count", "audio", "authenticated", "visits", "fps", "latency", "referrer"];
             const values: any[] = []; // bound parameters
-            const valueStrings: string[] = []; // query string segments
             let sql = "INSERT INTO `metrics` ( `" + dbFields[0] + "`";
 
             for (let i = 1; i < dbFields.length; i ++) {
                 sql += ", `" + dbFields[i] + "`";
             }
 
-            sql += ") VALUES ";
+            sql += ") VALUES (?";
 
-            for (const metric of metrics) {
+            for (let i = 1; i < dbFields.length; i ++) {
+                sql += ", ?";
+            }
+            sql += ")";
 
-                let valueString = "(?";
-                for (let i = 1; i < dbFields.length; i ++) {
-                    valueString += ", ?";
-                }
-                valueString += ")";
-                valueStrings.push(valueString);
-
-                for (const dbField of dbFields) {
-                    const dataField = this.metricFields.get(dbField) as string;
-                    values.push(metric[dataField]);
-                }
+            for (const dbField of dbFields) {
+                const dataField = this.metricFields.get(dbField) || dbField;
+                values.push(metric[dataField]);
             }
 
-            sql += valueStrings[0];
-            for (let i = 1; i < valueStrings.length; i ++) {
-                sql += ", " + valueStrings[i];
+            sql += " ON DUPLICATE KEY UPDATE";
+
+            for (let i = 0; i < dbFields.length; i ++) {
+                const field = dbFields[i];
+                const seperator = i === dbFields.length - 1 ? "" : ", ";
+
+                sql += " `" + field + "` = VALUES(`" + field + "`)" + seperator;
             }
 
             (this.pool as mysql.Pool).query({
@@ -308,9 +323,33 @@ export default class DatabaseHandler {
             }, (err) => {
                 if (err) {
                     console.error(err);
+                } else {
+                    resolve();
                 }
             });
-        }
+        });
+    }
+
+    public updateMetricSession(oldSession: string, newSession: string) {
+
+        console.log(oldSession);
+        console.log(newSession);
+
+        return new Promise((resolve, reject) => {
+            const sql = "UPDATE `metrics` SET `id` = ? WHERE `id` = ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [newSession, oldSession],
+            }, (err) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
     }
 
     private onPlayerUpdate(eventData: any) {

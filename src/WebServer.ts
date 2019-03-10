@@ -63,6 +63,7 @@ export default class WebServer {
         app.post("/leaderboardrank", this.onPostLeaderboardRank.bind(this));
         app.get("/playercount", this.onGetPlayerCount.bind(this));
         app.post("/metrics", this.onPostMetrics.bind(this));
+        app.post("/metricsession", this.onPostMetricSession.bind(this));
         app.post("/profile", this.onPostProfile.bind(this));
     }
 
@@ -246,10 +247,25 @@ export default class WebServer {
     private onPostMetrics(req: express.Request, res: express.Response) {
         try {
             const data = JSON.parse(req.body);
-            this.metricsHandler.receiveMetrics(data);
+            if (data.session && data.metric) {
+                this.metricsHandler.receiveMetrics(data.session, data.metric);
+            }
             res.end();
         } catch (ex) {
             console.log("invalid metrics posted");
+        }
+    }
+
+    private onPostMetricSession(req: express.Request, res: express.Response) {
+        if (req.body && req.body.token) {
+            this.metricsHandler.createNewMetricSession(req.body).then((session) => {
+                res.status(200).set({
+                    "content-type": "text/plain",
+                });
+                res.send(session);
+            }).catch((code) => {
+                res.sendStatus(code);
+            });
         }
     }
 
