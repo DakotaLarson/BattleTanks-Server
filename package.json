@@ -25,21 +25,19 @@
     "@types/ws": "^6.0.1"
   },
   "scripts": {
-    "start-supervisor": "supervisor --inspect ./build/App.js",
     "start-dev": "node --inspect ./build/App.js dev",
-    "start-dev-no-bots": "node --inspect ./build/App.js dev no-bots",
     "start": "node ./build/App.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DakotaLarson/Tanks-Server.git"
+    "url": "git+https://github.com/DakotaLarson/BattleTanks-Server.git"
   },
   "author": "Dakota Larson",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/DakotaLarson/Tanks-Server/issues"
+    "url": "https://github.com/DakotaLarson/BattleTanks-Server/issues"
   },
-  "homepage": "https://github.com/DakotaLarson/Tanks-Server#readme",
+  "homepage": "https://github.com/DakotaLarson/BattleTanks-Server#readme",
   "engines": {
     "node": "11.7.0"
   }

@@ -91,13 +91,13 @@ export default class PacketReceiver {
                 body = message.toString("utf8", 2);
                 break;
             case DataType.NUMBER_ARRAY:
-                body = new Array();
+                body = [];
                 for (let i = 4; i < message.length; i += 4) {
                     body.push(message.readFloatLE(i));
                 }
                 break;
             case DataType.HEADER_ONLY:
-                body = new Array();
+                body = [];
                 break;
         }
         // subtraction because of the connection header which has a value of 0

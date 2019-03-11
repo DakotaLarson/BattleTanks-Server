@@ -65,6 +65,7 @@ export default class WebServer {
         app.post("/metrics", this.onPostMetrics.bind(this));
         app.post("/metricsession", this.onPostMetricSession.bind(this));
         app.post("/profile", this.onPostProfile.bind(this));
+        app.post("/search", this.onPostSearch.bind(this));
     }
 
     public start() {
@@ -193,7 +194,7 @@ export default class WebServer {
     }
 
     private onPostLeaderboard(req: express.Request, res: express.Response) {
-        const validLeaderboards = [1, 2, 3, 4];
+        const validLeaderboards = [1, 2, 3];
         if (req.body && validLeaderboards.includes(req.body.leaderboard)) {
             this.databaseHandler.getLeaderboard(req.body.leaderboard).then((data) => {
                 res.status(200).set({
@@ -210,7 +211,7 @@ export default class WebServer {
     }
 
     private onPostLeaderboardRank(req: express.Request, res: express.Response) {
-        const validLeaderboards = [1, 2, 3, 4];
+        const validLeaderboards = [1, 2, 3];
         if (req.body && req.body.token && validLeaderboards.includes(req.body.leaderboard)) {
             Auth.verifyId(req.body.token).then((data: any) => {
                 this.databaseHandler.getLeaderboardRank(data.id, req.body.leaderboard).then((rankData) => {
@@ -287,7 +288,37 @@ export default class WebServer {
                 console.error(err);
                 res.sendStatus(500);
             });
+        } else {
+            res.sendStatus(400);
         }
+    }
+
+    private onPostSearch(req: express.Request, res: express.Response) {
+        if (req.body && req.body.query) {
+            if (req.body.token) {
+                Auth.verifyId(req.body.token).then((data: any) => {
+                    this.getSearchResults(req, res, req.body.query, data.id);
+                }).catch(() => {
+                    this.getSearchResults(req, res, req.body.query);
+                });
+            } else {
+                this.getSearchResults(req, res, req.body.query);
+            }
+        } else {
+            res.sendStatus(400);
+        }
+    }
+
+    private getSearchResults(req: express.Request, res: express.Response, query: string, id?: string) {
+        this.databaseHandler.getSearchResults(query, id).then((results: any) => {
+            res.status(200).set({
+                "content-type": "application/json",
+            });
+            res.send(results);
+        }).catch((err) => {
+            console.error(err);
+            res.sendStatus(500);
+        });
     }
 
     private onPlayerJoin() {

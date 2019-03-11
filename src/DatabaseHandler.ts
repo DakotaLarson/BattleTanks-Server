@@ -203,7 +203,7 @@ export default class DatabaseHandler {
             const offset = (page - 1) * DatabaseHandler.LEADERBOARD_LENGTH;
 
             let column;
-            if (columnNumber === 4) {
+            if (columnNumber === 3) {
                 column = "points";
             } else {
                 column = "leaderboard_points_" + columnNumber;
@@ -238,7 +238,7 @@ export default class DatabaseHandler {
         return new Promise((resolve) => {
 
             let column: any;
-            if (leaderboard === 4) {
+            if (leaderboard === 3) {
                 column = "points";
             } else {
                 column = "leaderboard_points_" + leaderboard;
@@ -288,7 +288,7 @@ export default class DatabaseHandler {
     public insertMetric(metric: any) {
         return new Promise((resolve) => {
             const dbFields = ["id", "browser", "os", "device", "session_time", "game_time", "match_count", "audio", "authenticated", "visits", "fps", "latency", "referrer"];
-            const values: any[] = []; // bound parameters
+            const values: any[] = [];
             let sql = "INSERT INTO `metrics` ( `" + dbFields[0] + "`";
 
             for (let i = 1; i < dbFields.length; i ++) {
@@ -331,10 +331,6 @@ export default class DatabaseHandler {
     }
 
     public updateMetricSession(oldSession: string, newSession: string) {
-
-        console.log(oldSession);
-        console.log(newSession);
-
         return new Promise((resolve, reject) => {
             const sql = "UPDATE `metrics` SET `id` = ? WHERE `id` = ?";
             (this.pool as mysql.Pool).query({
@@ -352,11 +348,44 @@ export default class DatabaseHandler {
         });
     }
 
+    public getSearchResults(query: string, id?: string) {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `id`, `username`, `points` FROM `players` WHERE `username` LIKE ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: ["%" + query + "%"],
+            }, (err, results) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    const data = [];
+                    for (const result of results) {
+                        if (id && result.id === id) {
+                            data.push({
+                                username: result.username,
+                                points: result.points,
+                                isPlayer: true,
+                            });
+                        } else {
+                            data.push({
+                                username: result.username,
+                                points: result.points,
+                            });
+                        }
+                    }
+                    resolve(data);
+                }
+            });
+        });
+    }
+
     private onPlayerUpdate(eventData: any) {
         const id = eventData.id;
         const data = eventData.data;
 
-        const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "leaderboard_points_1", "leaderboard_points_2", "leaderboard_points_3"];
+        const fields = ["points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "leaderboard_points_1", "leaderboard_points_2"];
 
         this.getPlayerData(id, fields).then((results: any) => {
             if (results.length === 1) {
@@ -377,7 +406,7 @@ export default class DatabaseHandler {
     }
 
     private onPlayersUpdate(matchData: Map<string, any>) {
-        const fields = ["id", "points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "leaderboard_points_1", "leaderboard_points_2", "leaderboard_points_3"];
+        const fields = ["id", "points", "currency", "victories", "defeats", "shots", "hits", "kills", "deaths", "leaderboard_points_1", "leaderboard_points_2"];
         const mutableFields = fields.slice(1);
         const ids = [];
         for (const [id] of matchData) {
@@ -399,7 +428,6 @@ export default class DatabaseHandler {
                         }
                         newUserStats.leaderboard_points_1 = userMatchStats.points + result.leaderboard_points_1;
                         newUserStats.leaderboard_points_2 = userMatchStats.points + result.leaderboard_points_2;
-                        newUserStats.leaderboard_points_3 = userMatchStats.points + result.leaderboard_points_3;
 
                         newStats.set(userId, newUserStats);
                     }
