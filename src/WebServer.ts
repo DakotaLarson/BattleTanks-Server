@@ -9,9 +9,10 @@ import MetricsHandler from "./MetricsHandler";
 
 export default class WebServer {
 
-    private static SSE_INTERVAL = 1000;
-    private static MAX_SSE_INTERVAL = 30;
-    private static PORT = process.env.PORT || 8000;
+    private static readonly SSE_INTERVAL = 1000;
+    private static readonly MAX_SSE_INTERVAL = 30;
+    private static readonly NOTIFICATION_INTERVAL = 30000;
+    private static readonly PORT = process.env.PORT || 8000;
 
     private static readonly MINIMUM_USERNAME_LENGTH = 3;
     private static readonly MAXIMUM_USERNAME_LENGTH = 16;
@@ -31,6 +32,7 @@ export default class WebServer {
     private lastSecondOutbound: number;
 
     private subscribers: express.Response[];
+    private notificationListeners: Map<string, express.Response>;
 
     constructor(databaseHandler: DatabaseHandler, metricsHandler: MetricsHandler) {
         const app = express();
@@ -49,6 +51,7 @@ export default class WebServer {
         this.lastSecondOutbound = 0;
 
         this.subscribers = [];
+        this.notificationListeners = new Map();
 
         app.use(cors());
         app.use(bodyParser.json());
@@ -59,9 +62,11 @@ export default class WebServer {
         app.post("/playerauth", this.onPostPlayerAuth.bind(this));
         app.post("/playerstats", this.onPostPlayerStats.bind(this));
         app.post("/playerusername", this.onPostPlayerName.bind(this));
+        app.post("/playersocialoptions", this.onPostPlayerSocialOptions.bind(this));
         app.post("/leaderboard", this.onPostLeaderboard.bind(this));
         app.post("/leaderboardrank", this.onPostLeaderboardRank.bind(this));
         app.get("/playercount", this.onGetPlayerCount.bind(this));
+        app.get("/notification", this.onGetNotification.bind(this));
         app.post("/metrics", this.onPostMetrics.bind(this));
         app.post("/metricsession", this.onPostMetricSession.bind(this));
         app.post("/profile", this.onPostProfile.bind(this));
@@ -85,6 +90,7 @@ export default class WebServer {
             this.outboundCount = 0;
         }, 1000);
         this.sendPlayerCount();
+        this.sendNotificationHeartbeat();
     }
 
     private onGetServerStats(req: express.Request, res: express.Response) {
@@ -119,7 +125,7 @@ export default class WebServer {
     private onPostPlayerStats(req: express.Request, res: express.Response) {
         if (req.body && req.body.token) {
             Auth.verifyId(req.body.token).then((data: any) => {
-                this.databaseHandler.getPlayerStats(data.id, false).then((stats: any) => {
+                this.databaseHandler.getPlayerStats(data.id).then((stats: any) => {
                     this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number ) => {
                         stats.rank = rank;
                         res.status(200).set({
@@ -193,6 +199,41 @@ export default class WebServer {
         }
     }
 
+    private onPostPlayerSocialOptions(req: express.Request, res: express.Response) {
+        if (req.body && req.body.token) {
+            Auth.verifyId(req.body.token).then((data: any) => {
+                if (req.body.friends || req.body.conversations) {
+                    this.databaseHandler.updatePlayerSocialOptions(data.id, {
+                        friends: req.body.friends,
+                        conversations: req.body.conversations,
+                    }).then(() => {
+                        res.status(200).set({
+                            "content-type": "application/json",
+                        });
+                        res.end();
+                    }).catch((err: any) => {
+                        console.error(err);
+                        res.sendStatus(500);
+                    });
+                } else {
+                    this.databaseHandler.getPlayerSocialOptions(data.id).then((socialOptions: any) => {
+                        res.status(200).set({
+                            "content-type": "application/json",
+                        });
+                        res.send(socialOptions);
+                    }).catch((err: any) => {
+                        console.error(err);
+                        res.sendStatus(500);
+                    });
+                }
+            }).catch(() => {
+                res.sendStatus(403);
+            });
+        } else {
+            res.sendStatus(403);
+        }
+    }
+
     private onPostLeaderboard(req: express.Request, res: express.Response) {
         const validLeaderboards = [1, 2, 3];
         if (req.body && validLeaderboards.includes(req.body.leaderboard)) {
@@ -245,6 +286,32 @@ export default class WebServer {
         this.sendPlayerCountData(res, this.playerCount + this.botCount, this.subscribers.length);
     }
 
+    private onGetNotification(req: express.Request, res: express.Response) {
+        if (req.query && req.query.token) {
+            Auth.verifyId(req.query.token).then((data: any) => {
+                const id = data.id;
+                req.on("close", () => {
+                    this.notificationListeners.delete(id);
+                    this.databaseHandler.setOnline(id, false);
+                });
+                res.setTimeout(0);
+                res.status(200).set({
+                    "cache-control": "no-cache",
+                    "content-type": "text/event-stream",
+                    "connection": "keep-alive",
+                    "access-control-allow-origin": "*",
+                });
+                this.databaseHandler.setOnline(id, true);
+                this.notificationListeners.set(id, res);
+            }).catch(() => {
+                res.end();
+            });
+        } else {
+            res.end();
+        }
+
+    }
+
     private onPostMetrics(req: express.Request, res: express.Response) {
         try {
             const data = JSON.parse(req.body);
@@ -272,22 +339,46 @@ export default class WebServer {
 
     private onPostProfile(req: express.Request, res: express.Response) {
         if (req.body && req.body.username) {
-            const username = req.body.username;
-            this.databaseHandler.getPlayerStats(username, true).then((stats: any) => {
-                this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number ) => {
-                    stats.rank = rank;
-                    res.status(200).set({
-                        "content-type": "application/json",
+            this.databaseHandler.getPlayerId(req.body.username).then((id: string) => {
+                this.databaseHandler.getPlayerStats(id).then((stats: any) => {
+                    this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number) => {
+                        stats.rank = rank;
+                        if (req.body.token) {
+                            let requestorId: any;
+                            Auth.verifyId(req.body.token).then((requestorData) => {
+                                requestorId = requestorData.id;
+                            }).finally(() => {
+                                if (requestorId) {
+                                    this.databaseHandler.getFriendship(requestorId, id).then((friendship: any) => {
+                                        stats.friendship = friendship;
+                                        res.status(200).set({
+                                            "content-type": "application/json",
+                                        });
+                                        res.send(stats);
+                                    });
+                                } else {
+                                    res.status(200).set({
+                                        "content-type": "application/json",
+                                    });
+                                    res.send(stats);
+                                }
+                            });
+                        } else {
+                            res.status(200).set({
+                                "content-type": "application/json",
+                            });
+                            res.send(stats);
+                        }
+                    }).catch((err) => {
+                        console.error(err);
+                        res.sendStatus(500);
                     });
-                    res.send(stats);
                 }).catch((err) => {
                     console.error(err);
                     res.sendStatus(500);
                 });
-            }).catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
             });
+
         } else {
             res.sendStatus(400);
         }
@@ -372,6 +463,18 @@ export default class WebServer {
 
     private sendPlayerCountData(res: express.Response, playerCount: number, activeUserCount: number) {
         res.write("data: " + playerCount + "," + activeUserCount + "\n\n");
+    }
+
+    private sendNotificationHeartbeat() {
+        setInterval(() => {
+            for (const [, res] of this.notificationListeners) {
+                this.sendNotification(res, "");
+            }
+        }, WebServer.NOTIFICATION_INTERVAL);
+    }
+
+    private sendNotification(res: express.Response, data: string) {
+        res.write("data: " + data + "\n\n");
     }
 
     private getMemoryString() {

@@ -19,6 +19,8 @@ export default class Auth {
                             name: payload.name,
                             email: payload.email,
                         });
+                    } else {
+                        reject("Invalid payload");
                     }
                 }
             }).catch(reject);

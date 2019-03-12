@@ -52,13 +52,14 @@ export default class DatabaseHandler {
                 EventHandler.addListener(this, EventHandler.Event.DB_PLAYERS_UPDATE, this.onPlayersUpdate);
 
                 this.scheduleLeaderboardReset();
+                this.setAllOffline();
 
                 resolve();
             });
         });
     }
 
-    public getPlayerStats(selector: string, isUsername: boolean) {
+    public getPlayerStats(id: string) {
         return new Promise((resolve, reject) => {
             const fields = ["points", "currency", "victories", "defeats", "draws", "shots", "hits", "kills", "deaths"];
             let sql = "SELECT `" + fields[0] + "`";
@@ -67,16 +68,12 @@ export default class DatabaseHandler {
                 sql += ", `" + fields[i] + "`";
             }
 
-            if (isUsername) {
-                sql += " FROM `players` WHERE `username` = ?";
-            } else {
-                sql += " FROM `players` WHERE `id` = ?";
-            }
+            sql += " FROM `players` WHERE `id` = ?";
 
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
-                values: [selector],
+                values: [id],
             }, (err, results) => {
                 if (err) {
                     reject(err);
@@ -123,6 +120,28 @@ export default class DatabaseHandler {
         });
     }
 
+    public getPlayerId(username: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `id` FROM `players` WHERE `username` = ?";
+
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [username],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    if (results.length !== 1) {
+                        resolve("");
+                    } else {
+                        resolve(results[0].id);
+                    }
+                }
+            });
+        });
+    }
+
     public updatePlayerUsername(id: string, username: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this.isUsernameTaken(username).then((isTaken) => {
@@ -158,6 +177,67 @@ export default class DatabaseHandler {
                     reject(err);
                 } else {
                     resolve(results[0]["COUNT(*)"] > 0);
+                }
+            });
+        });
+    }
+
+    public getPlayerSocialOptions(id: string) {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `friends`, `conversations` FROM `players` WHERE `id` = ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [id],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({
+                        friends: results[0].friends ? true : false,
+                        conversations: results[0].conversations ? true : false,
+                    });
+                    resolve(results[0]);
+                }
+            });
+        });
+    }
+
+    public updatePlayerSocialOptions(id: string, options: any) {
+        return new Promise((resolve, reject) => {
+            let sql = "UPDATE `players` SET";
+            const values = [];
+            if (options.friends !== undefined && options.conversations !== undefined) {
+                sql += " `friends` = ?, `conversations` = ?";
+                values.push(options.friends, options.conversations);
+            } else {
+                let canContinue = false;
+                if (options.friends !== undefined) {
+                    sql += " `friends` = ?";
+                    values.push(options.friends);
+                    canContinue = true;
+                }
+                if (options.conversations !== undefined) {
+                    sql += " `conversations = ?";
+                    values.push(options.conversations);
+                    canContinue = true;
+                }
+                if (!canContinue) {
+                    resolve();
+                    return;
+                }
+            }
+            sql += " WHERE `id` = ?";
+            values.push(id);
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values,
+            }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
                 }
             });
         });
@@ -379,6 +459,73 @@ export default class DatabaseHandler {
                 }
             });
         });
+    }
+
+    public setOnline(id: string, online: boolean) {
+        const sql = "UPDATE `players` SET `online` = ?, `last_seen` = CURRENT_TIMESTAMP() WHERE `id` = ?";
+        (this.pool as mysql.Pool).query({
+            sql,
+            timeout: DatabaseHandler.TIMEOUT,
+            values: [online, id],
+        }, (err) => {
+            if (err) {
+                console.error(err);
+            }
+        });
+    }
+
+    // returns -1 0, 1, or 2 for friends; 0, 1 for conversations
+    public getFriendship(requestorId: string, id: string) {
+        return new Promise((resolve, reject) => {
+            const friendsSQL = "SELECT `accepted` FROM `friends` where (`sender` = ? AND `receiver` = ?) OR(`sender` = ? AND `receiver` = ?)";
+            (this.pool as mysql.Pool).query({
+                sql: friendsSQL,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [requestorId, id, id, requestorId],
+            }, (err, friendshipResults) => {
+                if (err || friendshipResults.length > 1) {
+                    console.log("Multiple friendships found. or error");
+                    console.error(err);
+                    reject();
+                } else {
+                    const friendship: any = {};
+                    if (friendshipResults.length === 1 && friendshipResults[0].accepted) {
+                        friendship.friends = 2;
+                        friendship.conversations = 1;
+                        resolve(friendship);
+                    } else {
+                        const receiverSQL = "SELECT `friends`, `conversations` FROM `players` WHERE `id` = ?";
+                        (this.pool as mysql.Pool).query({
+                            sql: receiverSQL,
+                            timeout: DatabaseHandler.TIMEOUT,
+                            values: [id],
+                        }, (receiverErr, receiverResults: any[]) => {
+                            if (receiverErr) {
+                                console.error(receiverErr);
+                                reject();
+                            } else {
+                                if (friendshipResults.length === 1) {
+                                    friendship.friends = 1;
+                                } else {
+                                    if (receiverResults[0].friends) {
+                                        friendship.friends = 0;
+                                    } else {
+                                        friendship.friends = -1;
+                                    }
+                                }
+                                if (receiverResults[0].conversations) {
+                                    friendship.conversations = 1;
+                                } else {
+                                    friendship.conversations = 0;
+                                }
+                                resolve(friendship);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
     }
 
     private onPlayerUpdate(eventData: any) {
@@ -649,12 +796,11 @@ export default class DatabaseHandler {
         const resetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         const resetTime = resetDate.getTime() - now.getTime();
         setTimeout(() => {
-            this.resetLeaderboard(1);
             if (resetDate.getDay() === 1) {
-                this.resetLeaderboard(2);
+                this.resetLeaderboard(1);
             }
             if (resetDate.getDate() === 1) {
-                this.resetLeaderboard(3);
+                this.resetLeaderboard(2);
             }
             this.scheduleLeaderboardReset();
         }, resetTime);
@@ -688,6 +834,18 @@ export default class DatabaseHandler {
             }
         }).catch((err) => {
             console.error(err);
+        });
+    }
+
+    private setAllOffline() {
+        const sql = "UPDATE `players` SET `online` = 0";
+        (this.pool as mysql.Pool).query({
+            sql,
+            timeout: DatabaseHandler.TIMEOUT,
+        }, (err) => {
+            if (err) {
+                console.error(err);
+            }
         });
     }
 
