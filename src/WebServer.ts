@@ -6,6 +6,7 @@ import Auth from "./Auth";
 import DatabaseHandler from "./DatabaseHandler";
 import EventHandler from "./EventHandler";
 import MetricsHandler from "./MetricsHandler";
+import SocialHandler from "./SocialHandler";
 
 export default class WebServer {
 
@@ -20,6 +21,7 @@ export default class WebServer {
     public server: http.Server;
 
     private databaseHandler: DatabaseHandler;
+    private socialHandler: SocialHandler;
     private metricsHandler: MetricsHandler;
 
     private playerCount: number;
@@ -39,6 +41,7 @@ export default class WebServer {
         this.server = http.createServer(app);
 
         this.databaseHandler = databaseHandler;
+        this.socialHandler = new SocialHandler(databaseHandler);
         this.metricsHandler = metricsHandler;
 
         this.playerCount = 0;
@@ -71,6 +74,7 @@ export default class WebServer {
         app.post("/metricsession", this.onPostMetricSession.bind(this));
         app.post("/profile", this.onPostProfile.bind(this));
         app.post("/search", this.onPostSearch.bind(this));
+        app.post("/friend", this.onPostFriend.bind(this));
     }
 
     public start() {
@@ -201,33 +205,17 @@ export default class WebServer {
 
     private onPostPlayerSocialOptions(req: express.Request, res: express.Response) {
         if (req.body && req.body.token) {
-            Auth.verifyId(req.body.token).then((data: any) => {
-                if (req.body.friends || req.body.conversations) {
-                    this.databaseHandler.updatePlayerSocialOptions(data.id, {
-                        friends: req.body.friends,
-                        conversations: req.body.conversations,
-                    }).then(() => {
-                        res.status(200).set({
-                            "content-type": "application/json",
-                        });
-                        res.end();
-                    }).catch((err: any) => {
-                        console.error(err);
-                        res.sendStatus(500);
-                    });
+            this.socialHandler.handlePlayerOptions(req.body).then((options: any) => {
+                res.status(200).set({
+                    "content-type": "application/json",
+                });
+                if (options) {
+                    res.send(options);
                 } else {
-                    this.databaseHandler.getPlayerSocialOptions(data.id).then((socialOptions: any) => {
-                        res.status(200).set({
-                            "content-type": "application/json",
-                        });
-                        res.send(socialOptions);
-                    }).catch((err: any) => {
-                        console.error(err);
-                        res.sendStatus(500);
-                    });
+                    res.end();
                 }
-            }).catch(() => {
-                res.sendStatus(403);
+            }).catch((code: number) => {
+                res.sendStatus(code);
             });
         } else {
             res.sendStatus(403);
@@ -344,25 +332,14 @@ export default class WebServer {
                     this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number) => {
                         stats.rank = rank;
                         if (req.body.token) {
-                            let requestorId: any;
-                            Auth.verifyId(req.body.token).then((requestorData) => {
-                                requestorId = requestorData.id;
-                            }).finally(() => {
-                                if (requestorId) {
-                                    this.databaseHandler.getFriendship(requestorId, id).then((friendship: any) => {
-                                        stats.friendship = friendship;
-                                        res.status(200).set({
-                                            "content-type": "application/json",
-                                        });
-                                        res.send(stats);
-                                    });
-                                } else {
+                                this.socialHandler.getFriendship(req.body.token, id).then((friendship) => {
+                                    stats.friendship = friendship;
+                                }).finally(() => {
                                     res.status(200).set({
                                         "content-type": "application/json",
                                     });
                                     res.send(stats);
-                                }
-                            });
+                                });
                         } else {
                             res.status(200).set({
                                 "content-type": "application/json",
@@ -397,6 +374,16 @@ export default class WebServer {
             }
         } else {
             res.sendStatus(400);
+        }
+    }
+
+    private onPostFriend(req: express.Request, res: express.Response) {
+        if (req.body && "token" in req.body && "username" in req.body && "state" in req.body && "action" in req.body) {
+            this.socialHandler.handleFriendUpdate(req.body.token, req.body.username, req.body.state, req.body.action).then(() => {
+                res.sendStatus(200);
+            }).catch((code: number) => {
+                res.sendStatus(code);
+            });
         }
     }
 
