@@ -182,7 +182,7 @@ export default class DatabaseHandler {
         });
     }
 
-    public getPlayerSocialOptions(id: string) {
+    public getPlayerSocialOptions(id: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `friends`, `conversations` FROM `players` WHERE `id` = ?";
             (this.pool as mysql.Pool).query({
@@ -533,22 +533,26 @@ export default class DatabaseHandler {
 
     public createFriendship(requestorId: string, id: string) {
         return new Promise((resolve, reject) => {
-            this.getFriendshipData(requestorId, id).then((friendshipData) => {
-                if (!friendshipData.length) {
-                    const sql = "INSERT INTO `friends` (`sender`, `receiver`) VALUES (?, ?)";
-                    (this.pool as mysql.Pool).query({
-                        sql,
-                        timeout: DatabaseHandler.TIMEOUT,
-                        values: [requestorId, id],
-                    }, (err) => {
-                        if (err) {
-                            reject(err);
+            this.getPlayerSocialOptions(id).then((socialOptions) => {
+                if (socialOptions.friends) {
+                    this.getFriendshipData(requestorId, id).then((friendshipData) => {
+                        if (!friendshipData.length) {
+                            const sql = "INSERT INTO `friends` (`sender`, `receiver`) VALUES (?, ?)";
+                            (this.pool as mysql.Pool).query({
+                                sql,
+                                timeout: DatabaseHandler.TIMEOUT,
+                                values: [requestorId, id],
+                            }, (err) => {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    resolve();
+                                }
+                            });
                         } else {
-                            resolve();
+                            reject("Invalid frienship quantity");
                         }
                     });
-                } else {
-                    reject("Invalid frienship quantity");
                 }
             });
         });
@@ -595,20 +599,136 @@ export default class DatabaseHandler {
         });
     }
 
-    private getFriendshipData(requestorId: string, id: string): Promise<any[]> {
+    public addMessage(requestorId: string, id: string, message: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            const friendsSQL = "SELECT `accepted`, `sender` FROM `friends` where (`sender` = ? AND `receiver` = ?) OR(`sender` = ? AND `receiver` = ?)";
+            this.getConversation(requestorId, id).then((results) => {
+                if (results.length) {
+                    const toReceiver = results[0].sender === requestorId;
+                    this.createMessage(results[0].id, toReceiver, message).then(() => {
+                        resolve();
+                    }).catch((addErr) => {
+                        reject(addErr);
+                    });
+                } else {
+                    this.createConversation(requestorId, id, message).then(() => {
+                        resolve();
+                    }).catch((insertErr) => {
+                        reject(insertErr);
+                    });
+                }
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    public getMessages(requestorId: string, id: string, limit: number, offset: number): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            this.getConversation(requestorId, id).then((conversationResults) => {
+                if (conversationResults.length) {
+                    this.getConversationMessages(conversationResults [0].id, limit, offset).then((messageResults) => {
+                        resolve(messageResults);
+                    }).catch((messageErr) => {
+                        reject(messageErr);
+                    });
+                } else {
+                    resolve([]);
+                }
+            }).catch((conversationErr) => {
+                reject(conversationErr);
+            });
+        });
+    }
+
+    private createConversation(sender: string, receiver: string, message: string) {
+        return new Promise((resolve, reject) => {
+            const sql = "INSERT INTO `conversations` (`sender`, `receiver`) VALUES (?, ?)";
             (this.pool as mysql.Pool).query({
-                sql: friendsSQL,
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [sender, receiver],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const conversationId = results.insertId;
+                    this.createMessage(conversationId, true, message).then(() => {
+                        resolve();
+                    }).catch((messageErr) => {
+                        reject(messageErr);
+                    });
+                }
+            });
+        });
+    }
+
+    private createMessage(conversation: string, toReceiver: boolean, message: string) {
+        return new Promise((resolve, reject) => {
+            const sql = "INSERT INTO `messages` (`conversation`, `to_receiver`, `body`) VALUES (?, ?, ?)";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [conversation, toReceiver, message],
+            }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    private getConversation(requestorId: string, id: string): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `id`, `sender` FROM `conversations` WHERE (`receiver` = ? AND `sender` = ?) OR (`receiver` = ? AND `sender` = ?)";
+            (this.pool as mysql.Pool).query({
+                sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [requestorId, id, id, requestorId],
-            }, (err, friendshipResults) => {
-                if (err || friendshipResults.length > 1) {
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else if (results.length > 1) {
+                    reject ("Multiple conversations found!");
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    }
+
+    private getConversationMessages(conversation: string, limit: number, offset: number): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `body`, `to_receiver` FROM `messages` WHERE `conversation` = ? ORDER BY `creation_date` DESC LIMIT ? OFFSET ?";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [conversation, limit, offset],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    }
+
+    private getFriendshipData(requestorId: string, id: string): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            const sql = "SELECT `accepted`, `sender` FROM `friends` where (`sender` = ? AND `receiver` = ?) OR(`sender` = ? AND `receiver` = ?)";
+            (this.pool as mysql.Pool).query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [requestorId, id, id, requestorId],
+            }, (err, results) => {
+                if (err || results.length > 1) {
                     console.log("Multiple friendships found. or error");
                     console.error(err);
                     reject();
                 } else {
-                    resolve(friendshipResults);
+                    resolve(results);
                 }
             });
         });

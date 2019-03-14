@@ -5,6 +5,7 @@ import http = require("http");
 import Auth from "./Auth";
 import DatabaseHandler from "./DatabaseHandler";
 import EventHandler from "./EventHandler";
+import MessageHandler from "./MessageHandler";
 import MetricsHandler from "./MetricsHandler";
 import SocialHandler from "./SocialHandler";
 
@@ -22,6 +23,7 @@ export default class WebServer {
 
     private databaseHandler: DatabaseHandler;
     private socialHandler: SocialHandler;
+    private messageHandler: MessageHandler;
     private metricsHandler: MetricsHandler;
 
     private playerCount: number;
@@ -42,6 +44,7 @@ export default class WebServer {
 
         this.databaseHandler = databaseHandler;
         this.socialHandler = new SocialHandler(databaseHandler);
+        this.messageHandler = new MessageHandler(databaseHandler);
         this.metricsHandler = metricsHandler;
 
         this.playerCount = 0;
@@ -75,6 +78,7 @@ export default class WebServer {
         app.post("/profile", this.onPostProfile.bind(this));
         app.post("/search", this.onPostSearch.bind(this));
         app.post("/friend", this.onPostFriend.bind(this));
+        app.post("/messages", this.onPostMessage.bind(this));
     }
 
     public start() {
@@ -384,6 +388,31 @@ export default class WebServer {
             }).catch((code: number) => {
                 res.sendStatus(code);
             });
+        }
+    }
+
+    private onPostMessage(req: express.Request, res: express.Response) {
+        if (req.body && "token" in req.body && "username" in req.body) {
+            if ("message" in req.body) {
+                this.messageHandler.addMessage(req.body.token, req.body.username, req.body.message).then(() => {
+                    res.sendStatus(200);
+                }).catch((code) => {
+                    res.sendStatus(code);
+                });
+            } else {
+                let offset = 0;
+                if ("offset" in req.body) {
+                    offset = req.body.offset;
+                }
+                this.messageHandler.getMessages(req.body.token, req.body.username, offset).then((messages) => {
+                    res.status(200).set({
+                        "content-type": "application/json",
+                    });
+                    res.send(messages);
+                }).catch((code) => {
+                    res.sendStatus(code);
+                });
+            }
         }
     }
 
