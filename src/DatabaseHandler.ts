@@ -626,8 +626,22 @@ export default class DatabaseHandler {
         return new Promise((resolve, reject) => {
             this.getConversation(requestorId, id).then((conversationResults) => {
                 if (conversationResults.length) {
-                    this.getConversationMessages(conversationResults [0].id, limit, offset).then((messageResults) => {
-                        resolve(messageResults);
+                    this.getConversationMessages(conversationResults[0].id, limit, offset).then((messageResults) => {
+                        const parsedResults = [];
+                        for (const result of messageResults) {
+                            let sent;
+                            if (conversationResults[0].sender === requestorId) {
+                                sent = result.to_receiver ? true : false;
+                            } else {
+                                sent = result.to_receiver ? false : true;
+                            }
+
+                            parsedResults.push({
+                                body: result.body,
+                                sent,
+                            });
+                        }
+                        resolve(parsedResults);
                     }).catch((messageErr) => {
                         reject(messageErr);
                     });
