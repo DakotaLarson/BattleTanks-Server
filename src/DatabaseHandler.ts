@@ -421,13 +421,22 @@ export default class DatabaseHandler {
         });
     }
 
-    public getSearchResults(query: string, id?: string) {
+    public getSearchResults(query: string, id?: string, friends?: boolean) {
         return new Promise((resolve, reject) => {
-            const sql = "SELECT `id`, `username`, `points` FROM `players` WHERE `username` LIKE ? LIMIT ?";
+            let sql;
+            const values = [];
+            if (friends) {
+                sql = "SELECT `id`, `username`, `points` FROM `players` INNER JOIN `friends` ON ((`friends`.`sender` = `players`.`id` AND `friends`.`receiver` = ?) OR (`friends`.`receiver` = `players`.`id` AND `friends`.`sender` = ?)) AND `friends`.`accepted` = TRUE WHERE `username` LIKE ? ORDER BY `points` DESC LIMIT 10";
+                values.push(id, id, "%" + query + "%", DatabaseHandler.LEADERBOARD_LENGTH);
+            } else {
+                sql = "SELECT `id`, `username`, `points` FROM `players` WHERE `username` LIKE ? ORDER BY `points` DESC LIMIT ? ";
+                values.push("%" + query + "%", DatabaseHandler.LEADERBOARD_LENGTH);
+            }
+
             (this.pool as mysql.Pool).query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
-                values: ["%" + query + "%", DatabaseHandler.LEADERBOARD_LENGTH],
+                values,
             }, (err, results) => {
                 if (err) {
                     console.error(err);

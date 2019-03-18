@@ -369,12 +369,12 @@ export default class WebServer {
         if (req.body && req.body.query) {
             if (req.body.token) {
                 Auth.verifyId(req.body.token).then((data: any) => {
-                    this.getSearchResults(req, res, req.body.query, data.id);
+                    this.getSearchResults(res, req.body.query, data.id, req.body.friends);
                 }).catch(() => {
-                    this.getSearchResults(req, res, req.body.query);
+                    this.getSearchResults(res, req.body.query);
                 });
             } else {
-                this.getSearchResults(req, res, req.body.query);
+                this.getSearchResults(res, req.body.query);
             }
         } else {
             res.sendStatus(400);
@@ -416,8 +416,8 @@ export default class WebServer {
         }
     }
 
-    private getSearchResults(req: express.Request, res: express.Response, query: string, id?: string) {
-        this.databaseHandler.getSearchResults(query, id).then((results: any) => {
+    private getSearchResults(res: express.Response, query: string, id?: string, friends?: boolean) {
+        this.databaseHandler.getSearchResults(query, id, friends).then((results: any) => {
             res.status(200).set({
                 "content-type": "application/json",
             });
