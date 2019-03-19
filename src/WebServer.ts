@@ -79,6 +79,7 @@ export default class WebServer {
         app.post("/search", this.onPostSearch.bind(this));
         app.post("/friend", this.onPostFriend.bind(this));
         app.post("/messages", this.onPostMessage.bind(this));
+        app.post("/conversations", this.onPostConversations.bind(this));
     }
 
     public start() {
@@ -413,6 +414,19 @@ export default class WebServer {
                     res.sendStatus(code);
                 });
             }
+        }
+    }
+
+    private onPostConversations(req: express.Request, res: express.Response) {
+        if (req.body && "token" in req.body && "offset" in req.body) {
+            this.messageHandler.getConversations(req.body.token, req.body.offset).then((conversations) => {
+                res.status(200).set({
+                    "content-type": "application/json",
+                });
+                res.send(conversations);
+            }).catch((status) => {
+                res.sendStatus(status);
+            });
         }
     }
 

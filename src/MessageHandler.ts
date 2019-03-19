@@ -54,4 +54,23 @@ export default class MessageHandler {
             }
         });
     }
+
+    public getConversations(token: string, offset: number) {
+        return new Promise((resolve, reject) => {
+            if (isNaN(offset) || offset < 0) {
+                reject(400);
+            } else {
+                Auth.verifyId(token).then((data) => {
+                    this.databaseHandler.getConversations(data.id, offset).then((results) => {
+                        resolve(results);
+                    }).catch((err) => {
+                        console.error(err);
+                        reject(500);
+                    });
+                }).catch(() => {
+                    reject(403);
+                });
+            }
+        });
+    }
 }

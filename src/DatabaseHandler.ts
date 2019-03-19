@@ -10,6 +10,7 @@ export default class DatabaseHandler {
     private static readonly FILE_NAME = "database.json";
 
     private static readonly LEADERBOARD_LENGTH = 10;
+    private static readonly CONVERSATIONS_LENGTH = 5;
     private static readonly TIMEOUT = 5000;
 
     private pool: mysql.Pool | undefined;
@@ -70,7 +71,7 @@ export default class DatabaseHandler {
 
             sql += " FROM `players` WHERE `id` = ?";
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -102,7 +103,7 @@ export default class DatabaseHandler {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `username` FROM `players` WHERE `id` = ?";
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -124,7 +125,7 @@ export default class DatabaseHandler {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `id` FROM `players` WHERE `username` = ?";
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [username],
@@ -149,7 +150,7 @@ export default class DatabaseHandler {
                     resolve(false);
                 } else {
                     const sql = "UPDATE `players` SET `username` = ? WHERE `id` = ?";
-                    (this.pool as mysql.Pool).query({
+                    this.pool!.query({
                         sql,
                         timeout: DatabaseHandler.TIMEOUT,
                         values: [username, id],
@@ -168,7 +169,7 @@ export default class DatabaseHandler {
     public isUsernameTaken(username: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT COUNT(*) FROM `players` WHERE `username` = ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [username],
@@ -185,7 +186,7 @@ export default class DatabaseHandler {
     public getPlayerSocialOptions(id: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `friends`, `conversations` FROM `players` WHERE `id` = ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -222,7 +223,7 @@ export default class DatabaseHandler {
             }
             sql += " WHERE `id` = ?";
             values.push(id);
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values,
@@ -256,7 +257,7 @@ export default class DatabaseHandler {
     public getPlayerRank(points: number, column: string): Promise<number> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT COUNT(*) FROM `players` WHERE `" + column + "` > ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [points],
@@ -283,7 +284,7 @@ export default class DatabaseHandler {
             }
 
             const sql = "SELECT `id`, `username`, `" + column + "` AS 'points' FROM `players` WHERE `" + column + "` != 0 ORDER BY `" + column + "` DESC LIMIT ? OFFSET ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [DatabaseHandler.LEADERBOARD_LENGTH, offset],
@@ -337,7 +338,7 @@ export default class DatabaseHandler {
         return new Promise((resolve) => {
 
             const sql = "SELECT `id`, `session_time`, `game_time`, `match_count`, `fps`, `latency` FROM `metrics` WHERE `id` = ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -389,7 +390,7 @@ export default class DatabaseHandler {
                 sql += " `" + field + "` = VALUES(`" + field + "`)" + seperator;
             }
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values,
@@ -406,7 +407,7 @@ export default class DatabaseHandler {
     public updateMetricSession(oldSession: string, newSession: string) {
         return new Promise((resolve, reject) => {
             const sql = "UPDATE `metrics` SET `id` = ? WHERE `id` = ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [newSession, oldSession],
@@ -433,7 +434,7 @@ export default class DatabaseHandler {
                 values.push("%" + query + "%", DatabaseHandler.LEADERBOARD_LENGTH);
             }
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values,
@@ -465,7 +466,7 @@ export default class DatabaseHandler {
 
     public setOnline(id: string, online: boolean) {
         const sql = "UPDATE `players` SET `online` = ?, `last_seen` = CURRENT_TIMESTAMP() WHERE `id` = ?";
-        (this.pool as mysql.Pool).query({
+        this.pool!.query({
             sql,
             timeout: DatabaseHandler.TIMEOUT,
             values: [online, id],
@@ -499,7 +500,7 @@ export default class DatabaseHandler {
                     resolve(friendship);
                 } else {
                     const receiverSQL = "SELECT `friends`, `conversations` FROM `players` WHERE `id` = ?";
-                    (this.pool as mysql.Pool).query({
+                    this.pool!.query({
                         sql: receiverSQL,
                         timeout: DatabaseHandler.TIMEOUT,
                         values: [id],
@@ -547,7 +548,7 @@ export default class DatabaseHandler {
                     this.getFriendshipData(requestorId, id).then((friendshipData) => {
                         if (!friendshipData.length) {
                             const sql = "INSERT INTO `friends` (`sender`, `receiver`) VALUES (?, ?)";
-                            (this.pool as mysql.Pool).query({
+                            this.pool!.query({
                                 sql,
                                 timeout: DatabaseHandler.TIMEOUT,
                                 values: [requestorId, id],
@@ -570,7 +571,7 @@ export default class DatabaseHandler {
     public updateFriendship(requestorId: string, id: string, value: boolean) {
         return new Promise((resolve, reject) => {
             const sql = "UPDATE `friends` SET `accepted` = ? WHERE `sender` = ? AND `receiver` = ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [value, requestorId, id],
@@ -594,7 +595,7 @@ export default class DatabaseHandler {
                 sql = "DELETE FROM `friends` WHERE (`sender` = ? AND `receiver` = ?) OR (`sender` = ? AND `receiver` = ?)";
                 values.push(id, requestorId);
             }
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values,
@@ -663,10 +664,36 @@ export default class DatabaseHandler {
         });
     }
 
+    public getConversations(id: string, offset: number): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const sql = `SELECT A.body, players.username
+            FROM messages A, messages B, players, conversations
+            WHERE
+            players.id != ? AND
+            ((conversations.receiver = players.id AND conversations.sender = ?) OR (conversations.sender = players.id AND conversations.receiver = ?)) AND
+            A.creation_date > B.creation_date AND
+            A.conversation = B.conversation AND
+            A.conversation = conversations.id
+            GROUP BY A.conversation
+            ORDER BY A.creation_date DESC LIMIT ? OFFSET ?`;
+            this.pool!.query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [id, id, id, DatabaseHandler.CONVERSATIONS_LENGTH, offset],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    }
+
     private createConversation(sender: string, receiver: string, message: string) {
         return new Promise((resolve, reject) => {
             const sql = "INSERT INTO `conversations` (`sender`, `receiver`) VALUES (?, ?)";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [sender, receiver],
@@ -688,7 +715,7 @@ export default class DatabaseHandler {
     private createMessage(conversation: string, toReceiver: boolean, message: string) {
         return new Promise((resolve, reject) => {
             const sql = "INSERT INTO `messages` (`conversation`, `to_receiver`, `body`) VALUES (?, ?, ?)";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [conversation, toReceiver, message],
@@ -705,7 +732,7 @@ export default class DatabaseHandler {
     private getConversation(requestorId: string, id: string): Promise<any[]> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `id`, `sender` FROM `conversations` WHERE (`receiver` = ? AND `sender` = ?) OR (`receiver` = ? AND `sender` = ?)";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [requestorId, id, id, requestorId],
@@ -724,7 +751,7 @@ export default class DatabaseHandler {
     private getConversationMessages(conversation: string, limit: number, offset: number): Promise<any[]> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `body`, `to_receiver` FROM `messages` WHERE `conversation` = ? ORDER BY `creation_date` DESC LIMIT ? OFFSET ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [conversation, limit, offset],
@@ -741,7 +768,7 @@ export default class DatabaseHandler {
     private getFriendshipData(requestorId: string, id: string): Promise<any[]> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `accepted`, `sender` FROM `friends` where (`sender` = ? AND `receiver` = ?) OR(`sender` = ? AND `receiver` = ?)";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [requestorId, id, id, requestorId],
@@ -821,7 +848,7 @@ export default class DatabaseHandler {
     private createPlayer(id: string, email: string, name: string, username: string) {
         return new Promise((resolve, reject) => {
             const sql = "INSERT INTO `players` (`id`, `email`, `name`, `username`, `subscribed`) VALUES (?, ?, ?, ?, ?)";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id, email, name, username, false],
@@ -838,7 +865,7 @@ export default class DatabaseHandler {
     private hasPlayer(id: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT COUNT(*) AS count FROM `players` WHERE `id` = ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -865,7 +892,7 @@ export default class DatabaseHandler {
             const idWildcards = ", ?".repeat(ids.length - 1);
             const sql = "SELECT " + fieldString + " FROM `players` WHERE `id` IN (?" + idWildcards + ")";
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: ids,
@@ -887,7 +914,7 @@ export default class DatabaseHandler {
             }
             const sql = "SELECT " + fieldString + " FROM `players` WHERE `id` = ?";
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -936,7 +963,7 @@ export default class DatabaseHandler {
             }
             sql += ")";
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values,
@@ -970,7 +997,7 @@ export default class DatabaseHandler {
             sql += " WHERE `id` = ?";
             values.push(id);
 
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values,
@@ -987,7 +1014,7 @@ export default class DatabaseHandler {
     private getPlayerPointsAndName(id: string, column: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT `" + column + "`, `username` FROM `players` WHERE `id` = ?";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
                 values: [id],
@@ -1007,7 +1034,7 @@ export default class DatabaseHandler {
     private getPlayerCount(): Promise<number> {
         return new Promise((resolve, reject) => {
             const sql = "SELECT COUNT(*) FROM `players`";
-            (this.pool as mysql.Pool).query({
+            this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
             }, (err, results) => {
@@ -1043,7 +1070,7 @@ export default class DatabaseHandler {
 
                 const column = "leaderboard_points_" + columnNumber;
                 const sql = "UPDATE `players` SET " + column + " = 0";
-                (this.pool as mysql.Pool).query({
+                this.pool!.query({
                     sql,
                     timeout: DatabaseHandler.TIMEOUT,
                 }, (err) => {
@@ -1068,7 +1095,7 @@ export default class DatabaseHandler {
 
     private setAllOffline() {
         const sql = "UPDATE `players` SET `online` = 0";
-        (this.pool as mysql.Pool).query({
+        this.pool!.query({
             sql,
             timeout: DatabaseHandler.TIMEOUT,
         }, (err) => {
