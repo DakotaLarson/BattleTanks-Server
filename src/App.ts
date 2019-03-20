@@ -15,7 +15,7 @@ const playerConnector = new PlayerConnector(databaseHandler);
 const wss = new WebSocketServer(databaseHandler, metricsHandler);
 const botHandler = new BotHandler();
 
-wss.start();
+wss.enable();
 playerConnector.start();
 
 ArenaLoader.loadArenas().then((message) => {

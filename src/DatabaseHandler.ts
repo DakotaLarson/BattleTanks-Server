@@ -689,6 +689,77 @@ export default class DatabaseHandler {
         });
     }
 
+    public saveNotification(type: number, sender: string, receiver: string) {
+        return new Promise((resolve, reject) => {
+            const sql = "INSERT INTO notifications (type, sender, receiver) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE creation_date = CURRENT_TIMESTAMP()";
+            this.pool!.query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [type, sender, receiver],
+            }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    public deleteNotification(type: number, sender: string, receiver: string) {
+        return new Promise((resolve, reject) => {
+            const sql = "DELETE FROM notifications WHERE type = ? AND sender = ? AND receiver = ?";
+            this.pool!.query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [type, sender, receiver],
+            }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    public deleteNotifications(receiver: string) {
+        return new Promise((resolve, reject) => {
+            const sql = "DELETE FROM notifications WHERE receiver = ?";
+            this.pool!.query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [receiver],
+            }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    public getNotifications(receiver: string): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            const sql = `SELECT notifications.type, players.username
+            FROM notifications, players
+            WHERE notifications.receiver = ? AND
+            notifications.sender = players.id`;
+            this.pool!.query({
+                sql,
+                timeout: DatabaseHandler.TIMEOUT,
+                values: [receiver],
+            }, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    }
+
     private createConversation(sender: string, receiver: string, message: string) {
         return new Promise((resolve, reject) => {
             const sql = "INSERT INTO `conversations` (`sender`, `receiver`) VALUES (?, ?)";

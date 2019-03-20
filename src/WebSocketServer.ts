@@ -37,8 +37,8 @@ export default class WebSocketServer {
         this.deadSockets = [];
     }
 
-    public start() {
-        this.webServer.start();
+    public enable() {
+        this.webServer.enable();
     }
 
     public stop() {

@@ -7,13 +7,13 @@ import DatabaseHandler from "./DatabaseHandler";
 import EventHandler from "./EventHandler";
 import MessageHandler from "./MessageHandler";
 import MetricsHandler from "./MetricsHandler";
+import NotificationHandler from "./NotificationHandler";
 import SocialHandler from "./SocialHandler";
 
 export default class WebServer {
 
     private static readonly SSE_INTERVAL = 1000;
     private static readonly MAX_SSE_INTERVAL = 30;
-    private static readonly NOTIFICATION_INTERVAL = 30000;
     private static readonly PORT = process.env.PORT || 8000;
 
     private static readonly MINIMUM_USERNAME_LENGTH = 3;
@@ -25,6 +25,7 @@ export default class WebServer {
     private socialHandler: SocialHandler;
     private messageHandler: MessageHandler;
     private metricsHandler: MetricsHandler;
+    private notificationHandler: NotificationHandler;
 
     private playerCount: number;
     private botCount: number;
@@ -36,7 +37,6 @@ export default class WebServer {
     private lastSecondOutbound: number;
 
     private subscribers: express.Response[];
-    private notificationListeners: Map<string, express.Response>;
 
     constructor(databaseHandler: DatabaseHandler, metricsHandler: MetricsHandler) {
         const app = express();
@@ -46,6 +46,7 @@ export default class WebServer {
         this.socialHandler = new SocialHandler(databaseHandler);
         this.messageHandler = new MessageHandler(databaseHandler);
         this.metricsHandler = metricsHandler;
+        this.notificationHandler = new NotificationHandler(databaseHandler);
 
         this.playerCount = 0;
         this.botCount = 0;
@@ -57,7 +58,6 @@ export default class WebServer {
         this.lastSecondOutbound = 0;
 
         this.subscribers = [];
-        this.notificationListeners = new Map();
 
         app.use(cors());
         app.use(bodyParser.json());
@@ -82,7 +82,7 @@ export default class WebServer {
         app.post("/conversations", this.onPostConversations.bind(this));
     }
 
-    public start() {
+    public enable() {
         this.server.listen(WebServer.PORT);
 
         EventHandler.addListener(this, EventHandler.Event.PLAYER_JOIN, this.onPlayerJoin);
@@ -99,7 +99,7 @@ export default class WebServer {
             this.outboundCount = 0;
         }, 1000);
         this.sendPlayerCount();
-        this.sendNotificationHeartbeat();
+        this.notificationHandler.enable();
     }
 
     private onGetServerStats(req: express.Request, res: express.Response) {
@@ -284,8 +284,7 @@ export default class WebServer {
             Auth.verifyId(req.query.token).then((data: any) => {
                 const id = data.id;
                 req.on("close", () => {
-                    this.notificationListeners.delete(id);
-                    this.databaseHandler.setOnline(id, false);
+                    this.notificationHandler.removePlayer(id);
                 });
                 res.setTimeout(0);
                 res.status(200).set({
@@ -294,13 +293,12 @@ export default class WebServer {
                     "connection": "keep-alive",
                     "access-control-allow-origin": "*",
                 });
-                this.databaseHandler.setOnline(id, true);
-                this.notificationListeners.set(id, res);
+                this.notificationHandler.addPlayer(id, res);
             }).catch(() => {
-                res.end();
+                res.sendStatus(403);
             });
         } else {
-            res.end();
+            res.sendStatus(400);
         }
 
     }
@@ -493,18 +491,6 @@ export default class WebServer {
 
     private sendPlayerCountData(res: express.Response, playerCount: number, activeUserCount: number) {
         res.write("data: " + playerCount + "," + activeUserCount + "\n\n");
-    }
-
-    private sendNotificationHeartbeat() {
-        setInterval(() => {
-            for (const [, res] of this.notificationListeners) {
-                this.sendNotification(res, "");
-            }
-        }, WebServer.NOTIFICATION_INTERVAL);
-    }
-
-    private sendNotification(res: express.Response, data: string) {
-        res.write("data: " + data + "\n\n");
     }
 
     private getMemoryString() {

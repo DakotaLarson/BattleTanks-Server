@@ -1,5 +1,6 @@
 import Auth from "./Auth";
 import DatabaseHandler from "./DatabaseHandler";
+import EventHandler from "./EventHandler";
 
 export default class MessageHandler {
 
@@ -22,6 +23,7 @@ export default class MessageHandler {
                     const requestorId = data.id;
                     this.databaseHandler.getPlayerId(username).then((id) => {
                         this.databaseHandler.addMessage(requestorId, id, message).then(() => {
+                            this.sendNotification(requestorId, id, message);
                             resolve();
                         }).catch((err) => {
                             console.error(err);
@@ -71,6 +73,23 @@ export default class MessageHandler {
                     reject(403);
                 });
             }
+        });
+    }
+
+    private sendNotification(sender: string, receiver: string, message: string) {
+        this.databaseHandler.getPlayerUsername(sender).then((username) => {
+            const body = JSON.stringify({
+                player: username,
+                message,
+            });
+            EventHandler.callEvent(EventHandler.Event.NOTIFICATION_SEND, {
+                type: "message",
+                sender,
+                receiver,
+                body,
+            });
+        }).catch((err) => {
+            console.error(err);
         });
     }
 }
