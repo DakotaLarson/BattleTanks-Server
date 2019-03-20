@@ -666,20 +666,19 @@ export default class DatabaseHandler {
 
     public getConversations(id: string, offset: number): Promise<any> {
         return new Promise((resolve, reject) => {
-            const sql = `SELECT A.body, players.username
-            FROM messages A, messages B, players, conversations
+            const sql = `SELECT messages.body, players.username
+            FROM messages, players, conversations
             WHERE
-            players.id != ? AND
-            ((conversations.receiver = players.id AND conversations.sender = ?) OR (conversations.sender = players.id AND conversations.receiver = ?)) AND
-            A.creation_date > B.creation_date AND
-            A.conversation = B.conversation AND
-            A.conversation = conversations.id
-            GROUP BY A.conversation
-            ORDER BY A.creation_date DESC LIMIT ? OFFSET ?`;
+            (
+                (conversations.sender = ? AND conversations.receiver = players.id) OR (conversations.receiver = ? AND conversations.sender = players.id)
+            ) AND
+            messages.creation_date = (SELECT MAX(M.creation_date) FROM messages M WHERE M.conversation = messages.conversation) AND
+            messages.conversation = conversations.id
+            ORDER BY messages.creation_date DESC LIMIT ? OFFSET ?`;
             this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,
-                values: [id, id, id, DatabaseHandler.CONVERSATIONS_LENGTH, offset],
+                values: [id, id, DatabaseHandler.CONVERSATIONS_LENGTH, offset],
             }, (err, results) => {
                 if (err) {
                     reject(err);
