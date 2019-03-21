@@ -128,7 +128,7 @@ export default class SocialHandler {
                 message = "accepted your friend request!";
             }
             const body = JSON.stringify({
-                player: username,
+                username,
                 message,
             });
             EventHandler.callEvent(EventHandler.Event.NOTIFICATION_SEND, {

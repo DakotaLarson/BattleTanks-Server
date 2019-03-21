@@ -79,7 +79,7 @@ export default class MessageHandler {
     private sendNotification(sender: string, receiver: string, message: string) {
         this.databaseHandler.getPlayerUsername(sender).then((username) => {
             const body = JSON.stringify({
-                player: username,
+                username,
                 message,
             });
             EventHandler.callEvent(EventHandler.Event.NOTIFICATION_SEND, {
