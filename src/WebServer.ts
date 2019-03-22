@@ -78,7 +78,7 @@ export default class WebServer {
         app.post("/profile", this.onPostProfile.bind(this));
         app.post("/search", this.onPostSearch.bind(this));
         app.post("/friend", this.onPostFriend.bind(this));
-        app.post("/messages", this.onPostMessage.bind(this));
+        app.post("/messages", this.onPostMessages.bind(this));
         app.post("/conversations", this.onPostConversations.bind(this));
     }
 
@@ -390,7 +390,7 @@ export default class WebServer {
         }
     }
 
-    private onPostMessage(req: express.Request, res: express.Response) {
+    private onPostMessages(req: express.Request, res: express.Response) {
         if (req.body && "token" in req.body && "username" in req.body) {
             if ("message" in req.body) {
                 this.messageHandler.addMessage(req.body.token, req.body.username, req.body.message).then(() => {

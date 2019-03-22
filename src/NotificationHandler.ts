@@ -27,7 +27,7 @@ export default class NotificationHandler {
         this.sendNotificationHeartbeat();
         EventHandler.addListener(this, EventHandler.Event.NOTIFICATION_SEND, this.onNotificationSend);
         EventHandler.addListener(this, EventHandler.Event.NOTIFICATION_DELETE, this.onNotificationDelete);
-
+        EventHandler.addListener(this, EventHandler.Event.NOTIFICATION_DELETE_MULTIPLE, this.onNotificationDeleteMultiple);
     }
 
     public addPlayer(id: string, res: express.Response) {
@@ -67,7 +67,22 @@ export default class NotificationHandler {
         }
     }
 
-    // Internal when player joins; delete after successful send
+    private onNotificationDeleteMultiple(data: any[]) {
+        const parsedNotifications = [];
+        for (const notification of data) {
+            const type = NotificationHandler.NOTIFICATION_TYPES.indexOf(notification.type);
+            if (type > -1) {
+                parsedNotifications.push({
+                    type,
+                    sender: notification.sender,
+                    receiver: notification.receiver,
+                });
+            }
+        }
+        this.databaseHandler.deleteNotifications(parsedNotifications);
+    }
+
+    // Internal when player joins
     private sendNotifications(receiver: string, res: express.Response) {
         return this.databaseHandler.getNotifications(receiver).then((results) => {
             try {

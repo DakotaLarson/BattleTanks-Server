@@ -723,7 +723,34 @@ export default class DatabaseHandler {
         });
     }
 
-    public deleteNotifications(receiver: string) {
+    public deleteNotifications(notifications: any[]) {
+        return new Promise((resolve, reject) => {
+            if (notifications.length) {
+
+                let sql = "DELETE FROM notifications WHERE (type = ? AND sender = ? AND receiver = ?)";
+                const values = [notifications[0].type, notifications[0].sender, notifications[0].receiver];
+
+                for (let i = 1; i < notifications.length; i ++) {
+                    sql += " OR (type = ? AND sender = ? AND receiver = ?)";
+                    values.push(notifications[i].type, notifications[i].sender, notifications[i].receiver);
+                }
+
+                this.pool!.query({
+                    sql,
+                    timeout: DatabaseHandler.TIMEOUT,
+                    values,
+                }, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            }
+        });
+    }
+
+    public deleteAllNotifications(receiver: string) {
         return new Promise((resolve, reject) => {
             const sql = "DELETE FROM notifications WHERE receiver = ?";
             this.pool!.query({
@@ -745,7 +772,7 @@ export default class DatabaseHandler {
             const sql = `SELECT notifications.type, players.username
             FROM notifications, players
             WHERE notifications.receiver = ? AND
-            notifications.sender = players.id`;
+            notifications.sender = players.id ORDER BY creation_date DESC LIMIT 100`;
             this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,

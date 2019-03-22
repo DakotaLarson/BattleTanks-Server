@@ -43,11 +43,17 @@ export default class MessageHandler {
                 Auth.verifyId(token).then((data) => {
                     const requestorId = data.id;
                     this.databaseHandler.getPlayerId(username).then((id) => {
+
                         this.databaseHandler.getMessages(requestorId, id, MessageHandler.MESSAGE_LIMIT, offset).then((results) => {
                             resolve(results);
                         }).catch((err) => {
                             console.error(err);
                             reject(500);
+                        });
+                        EventHandler.callEvent(EventHandler.Event.NOTIFICATION_DELETE, {
+                            type: "message",
+                            sender: id,
+                            receiver: requestorId,
                         });
                     });
                 }).catch(() => {

@@ -84,6 +84,20 @@ export default class SocialHandler {
             Auth.verifyId(token).then((requestorData) => {
                 if (requestorData.id !== id) {
                     this.databaseHandler.getFriendship(requestorData.id, id).then((friendship) => {
+                        if (friendship) {
+                            EventHandler.callEvent(EventHandler.Event.NOTIFICATION_DELETE_MULTIPLE, [
+                                {
+                                    type: "friend_request",
+                                    sender: id,
+                                    receiver: requestorData.id,
+                                },
+                                {
+                                    type: "friend_accept",
+                                    sender: id,
+                                    receiver: requestorData.id,
+                                },
+                            ]);
+                        }
                         resolve(friendship);
                     }).catch((err) => {
                         console.error(err);
