@@ -341,6 +341,7 @@ export default class Player {
         this.position.x = pos.x;
         this.position.y = pos.y;
         this.position.z = pos.z;
+
         this.bodyRot = pos.w;
         this.headRot = pos.w;
 

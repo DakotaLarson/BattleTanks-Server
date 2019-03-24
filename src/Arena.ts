@@ -107,7 +107,7 @@ export default class Arena {
                     const y = data[title][i + 1];
                     const z = data[title][i + 2];
                     if (isVec4) {
-                        const w = -data[title][i + 3] + Math.PI / 2;
+                        const w = data[title][i + 3];
                         (storage as Vector4[]).push(new Vector4(x, y, z, w));
                     } else {
                         (storage as Vector3[]).push(new Vector3(x, y, z));

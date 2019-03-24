@@ -14,7 +14,6 @@ enum Packet {
 
     PLAYER_NAME,
     PLAYER_ADD,
-    PLAYER_MOVE,
     PLAYER_REMOVE,
     PLAYER_SHOOT_INVALID,
     PLAYER_SHOOT,
@@ -107,17 +106,6 @@ export const sendPlayerRemoval = (id: number, involvedId?: number, livesRemainin
     livesRemaining = livesRemaining || 0;
     const rawData = [id, involvedId, livesRemaining];
     const data = constructData(Packet.PLAYER_REMOVE, rawData, DataType.NUMBER_ARRAY);
-    send(id, data);
-};
-
-export const sendPlayerMove = (id: number, pos: Vector3, headRot: number, bodyRot: number) => {
-    const dataObj = {
-        id,
-        pos: [pos.x, pos.y, pos.z],
-        headRot,
-        bodyRot,
-    };
-    const data = constructData(Packet.PLAYER_MOVE, JSON.stringify(dataObj), DataType.STRING);
     send(id, data);
 };
 
