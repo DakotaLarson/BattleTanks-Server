@@ -217,6 +217,6 @@ export default class Gamemode {
             playerId: target.id,
         });
         const lobby = PlayerHandler.getMatchLobby(this.match);
-        lobby.finishMatch();
+        lobby.finishMatch(false);
     }
 }

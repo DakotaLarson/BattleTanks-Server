@@ -74,7 +74,7 @@ export default class Lobby {
             this.getMatch().removePlayer(player);
 
             if (!this.getMatch().hasEnoughPlayers() || !this.getMatch().hasRealPlayers()) {
-                this.finishMatch();
+                this.finishMatch(true);
             }
         }
 
@@ -91,7 +91,7 @@ export default class Lobby {
             }
 
             if (!this.getMatch().hasEnoughPlayers() || !this.getMatch().hasRealPlayers()) {
-                this.finishMatch();
+                this.finishMatch(true);
             }
         }
         return players;
@@ -121,7 +121,12 @@ export default class Lobby {
         return PlayerHandler.getLobbyPlayerCount(this) < Arena.maximumPlayerCount;
     }
 
-    public finishMatch() {
+    public finishMatch(sendStats: boolean) {
+        if (sendStats) {
+            EventHandler.callEvent(EventHandler.Event.STATS_SEND, {
+                match: this.match,
+            });
+        }
         this.getMatch().finish();
 
         PlayerHandler.removeMatch(this.getMatch());
@@ -173,7 +178,7 @@ export default class Lobby {
 
     private onMatchTimerComplete(match: Match) {
         if (this.match && match === this.match) {
-            this.finishMatch();
+            this.finishMatch(true);
         }
     }
 

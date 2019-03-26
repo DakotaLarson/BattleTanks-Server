@@ -25,7 +25,8 @@
     "@types/ws": "^6.0.1"
   },
   "scripts": {
-    "start-dev": "node --inspect ./build/App.js dev",
+    "debug": "node --inspect ./build/App.js dev",
+    "watch": "tsc -w",
     "start": "node ./build/App.js"
   },
   "repository": {

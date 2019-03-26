@@ -93,21 +93,22 @@ export default class MatchStatistics {
         if (data.match === this.match) {
 
             // The playerId is the id of the last player killed.
+            const successfulCompletion = data.playerId !== undefined;
             const teamALost = this.teamAPlayerStatistics.has(data.playerId);
             const teamBLost = this.teamBPlayerStatistics.has(data.playerId);
 
             const databaseStats: Map<string, any> = new Map();
 
             this.teamAPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
-                const stats = stat.getStatistics(!teamALost, this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills);
+                const stats = stat.getStatistics(!teamALost, this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills, successfulCompletion);
                 const player = this.sendStatsToPlayer(id, stats);
-                this.updateDatabaseStats(player, stats, databaseStats);
+                this.updateDatabaseStats(player, stats, databaseStats, successfulCompletion);
             });
 
             this.teamBPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
-                const stats = stat.getStatistics(!teamBLost, this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills);
+                const stats = stat.getStatistics(!teamBLost, this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills, successfulCompletion);
                 const player = this.sendStatsToPlayer(id, stats);
-                this.updateDatabaseStats(player, stats, databaseStats);
+                this.updateDatabaseStats(player, stats, databaseStats, successfulCompletion);
             });
 
             EventHandler.callEvent(EventHandler.Event.DB_PLAYERS_UPDATE, databaseStats);
@@ -193,17 +194,28 @@ export default class MatchStatistics {
         }
     }
 
-    private updateDatabaseStats(player: Player, stats: number[], databaseStats: Map<string, any>) {
+    private updateDatabaseStats(player: Player, stats: number[], databaseStats: Map<string, any>, successfulCompletion: boolean) {
         if (player.sub) {
+
+            let victories;
+            let defeats;
+            if (successfulCompletion) {
+                victories = stats[12] ? 1 : 0;
+                defeats = stats[12] ? 0 : 1;
+            } else {
+                victories = 0;
+                defeats = 0;
+            }
+
             const data = {
-                victories: stats[0] ? 1 : 0,
-                defeats: stats[0] ? 0 : 1,
-                shots: stats[7],
-                hits: stats[8],
-                kills: stats[9],
-                deaths: stats[10],
-                points: stats[11],
-                currency: stats[12],
+                victories,
+                defeats,
+                shots: stats[6],
+                hits: stats[7],
+                kills: stats[8],
+                deaths: stats[9],
+                points: stats[10],
+                currency: stats[11],
             };
             databaseStats.set(player.sub, data);
         }

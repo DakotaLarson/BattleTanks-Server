@@ -54,10 +54,16 @@ export default class PlayerStatistic {
         };
     }
 
-    public getStatistics(win: boolean, teamShots: number, teamHits: number, teamKills: number, enemyTeamShots: number, enemyTeamHits: number, enemyTeamKills: number) {
-        const winData = win ? 1 : 0;
+    public getStatistics(win: boolean, teamShots: number, teamHits: number, teamKills: number, enemyTeamShots: number, enemyTeamHits: number, enemyTeamKills: number, successfulCompletion: boolean) {
 
-        return [winData, teamShots, teamHits, teamKills, enemyTeamShots, enemyTeamHits, enemyTeamKills, this.shots, this.hits, this.kills, this.deaths, this.points, this.currency];
+        const winData = win ? 1 : 0;
+        const stats = [teamShots, teamHits, teamKills, enemyTeamShots, enemyTeamHits, enemyTeamKills, this.shots, this.hits, this.kills, this.deaths, this.points, this.currency];
+
+        if (successfulCompletion) {
+            stats.push(winData);
+        }
+
+        return stats;
     }
 
     public getEarlyStatistic() {

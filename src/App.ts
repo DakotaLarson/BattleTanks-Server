@@ -41,3 +41,31 @@ setInterval(() => {
     EventHandler.callEvent(EventHandler.Event.GAME_TICK, delta);
     // delta ~ 0.05
 }, 50);
+// let lastPts = 0;
+// let lastDiff = 0;
+// const ranks = [
+//     "Recruit",
+//     "Private",
+//     "Corporal",
+//     "Sergeant",
+//     "Officer",
+//     "Lieutenant",
+//     "Commander",
+//     "Captain",
+//     "Major",
+//     "Colonel",
+//     "General",
+// ];
+// for (let i = 0; i <= 100; i ++) {
+//     // const pts = Math.round(i * Math.log(i) * 10);
+//     const pts = Math.round(Math.pow(i, Math.E));
+//     const diff = pts - lastPts;
+//     const diffOfDiff = diff - lastDiff;
+//     lastPts = pts;
+//     lastDiff = diff;
+//     console.log(pts, diff, diffOfDiff);
+//     if (i % 10 === 0) {
+//         const rank = ranks[i / 10];
+//         console.log(rank, pts);
+//     }
+// }
