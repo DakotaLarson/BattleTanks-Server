@@ -479,24 +479,53 @@ export default class DatabaseHandler {
 
     /*
     friends:
-    -1: no requests accepted
-    0: no request in progress
-    1: request sent, can cancel
-    2: request received, can accept or delete
-    3: request accepted
+    0: Unblock - enabled
+    1: Add Friend - disabled
+    2: Add Friend - enabled
+    3: Request Sent - disabled
+    4: Accept Request - enabled
+    5: Friends! - disabled (with addl class)
 
     conversations:
-    0: cannot start conversation
-    1: can start (or continue) conversation
+    0: send message disabled,
+    1: send message enabled
+
+    negative:
+    0: hidden
+    1: Block,
+    2; Cancel Request,
+    3: Delete Request,
+    4: Unfriend,
     */
-    public getFriendship(requestorId: string, id: string) {
+    public getFriendship(requestorId: string, id: string): Promise<any> {
         return new Promise((resolve, reject) => {
             this.getFriendshipData(requestorId, id).then((friendshipResults) => {
-                const friendship: any = {};
+                const friendship = {
+                    friends: 0,
+                    conversations: 0,
+                    negative: 0,
+                };
                 // Are they friends?
-                if (friendshipResults.length === 1 && friendshipResults[0].accepted) {
-                    friendship.friends = 3;
-                    friendship.conversations = 1;
+                if (friendshipResults.length === 1 && (friendshipResults[0].accepted || friendshipResults[0].blocked)) {
+
+                    if (friendshipResults[0].blocked) {
+                        // Blocked; no access to conversation or negative elt
+                        friendship.conversations = 0;
+                        friendship.negative = 0;
+                        if (friendshipResults[0].sender === requestorId) {
+                            // player has option to unblock
+                            friendship.friends = 0;
+                        } else {
+                            // player has no option to unblock
+                            friendship.friends = 1;
+                        }
+                    } else {
+                        // players are friends
+                        friendship.friends = 5;
+                        friendship.conversations = 1;
+                        friendship.negative = 4;
+                    }
+
                     resolve(friendship);
                 } else {
                     const receiverSQL = "SELECT `friends`, `conversations` FROM `players` WHERE `id` = ?";
@@ -506,37 +535,46 @@ export default class DatabaseHandler {
                         values: [id],
                     }, (receiverErr, receiverResults: any[]) => {
                         if (receiverErr) {
-                            console.error(receiverErr);
-                            reject();
+                            reject(receiverErr);
                         } else {
-                            // Is request in progress?
+                            // compute friends
                             if (friendshipResults.length === 1) {
-                                // Is requestor initiator of request?
+                                // request in progress
                                 if (friendshipResults[0].sender === requestorId) {
-                                    friendship.friends = 1;
+                                    // Requestor is initiator of request
+                                    friendship.friends = 3;
+                                    friendship.negative = 2;
                                 } else {
-                                    friendship.friends = 2;
+                                    // Requestor is receiver of request
+                                    friendship.friends = 4;
+                                    friendship.negative = 3;
                                 }
                             } else {
-                                // Does receiver accept requests
+                                // request not in progress
                                 if (receiverResults[0].friends) {
-                                    friendship.friends = 0;
+                                    // Receiver accepts requests
+                                    friendship.friends = 2;
+                                    friendship.negative = 1;
                                 } else {
-                                    friendship.friends = -1;
+                                    // Receiver doesn't accept requests
+                                    friendship.friends = 1;
+                                    friendship.negative = 1;
                                 }
                             }
-                            // Does receiver accept conversations from everyone?
+                            // compute conversations
                             if (receiverResults[0].conversations) {
+                                // receiver accepts conversations from everyone
                                 friendship.conversations = 1;
                             } else {
+                                // receiver does not accept conversations from everyone
                                 friendship.conversations = 0;
                             }
                             resolve(friendship);
                         }
                     });
                 }
-            }).catch(() => {
-                reject();
+            }).catch((err) => {
+                reject(err);
             });
         });
     }
@@ -605,6 +643,27 @@ export default class DatabaseHandler {
                 } else {
                     resolve();
                 }
+            });
+        });
+    }
+
+    public blockFriendship(requestorId: string, id: string) {
+        return new Promise((resolve, reject) => {
+            this.deleteFriendship(id, requestorId, true).then(() => {
+                const sql = "INSERT INTO friends (sender, receiver, accepted, blocked) VALUES (?, ?, FALSE, TRUE) ON DUPLICATE KEY UPDATE accepted = FALSE, blocked = TRUE";
+                this.pool!.query({
+                    sql,
+                    timeout: DatabaseHandler.TIMEOUT,
+                    values: [requestorId, id],
+                }, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            }).catch(() => {
+                reject();
             });
         });
     }
@@ -864,7 +923,7 @@ export default class DatabaseHandler {
 
     private getFriendshipData(requestorId: string, id: string): Promise<any[]> {
         return new Promise((resolve, reject) => {
-            const sql = "SELECT `accepted`, `sender` FROM `friends` where (`sender` = ? AND `receiver` = ?) OR(`sender` = ? AND `receiver` = ?)";
+            const sql = "SELECT accepted, sender, blocked FROM friends where (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)";
             this.pool!.query({
                 sql,
                 timeout: DatabaseHandler.TIMEOUT,

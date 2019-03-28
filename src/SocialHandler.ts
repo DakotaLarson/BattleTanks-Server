@@ -10,73 +10,49 @@ export default class SocialHandler {
         this.databaseHandler = databaseHandler;
     }
 
-    public handleFriendUpdate(token: string, username: string, state: number, action: boolean) {
-        return new Promise((resolve, reject) => {
-            Auth.verifyId(token).then((data: any) => {
-                const requestorId = data.id;
+    public async handleFriendUpdate(token: string, username: string, action: boolean) {
+        const data = await Auth.verifyId(token);
+        const requestorId = data.id;
+        const id = await this.databaseHandler.getPlayerId(username);
+        const friendship = await this.databaseHandler.getFriendship(requestorId, id);
 
-                if (state === 0 || state === 1 || state === 2 || state === 3) {
-                    this.databaseHandler.getPlayerId(username).then((id) => {
-                        if (state === 0) {
-                            // send request
-                            this.databaseHandler.createFriendship(requestorId, id).then(() => {
-                                this.sendNotification(true, requestorId, id);
-                                resolve();
-                            }).catch((err) => {
-                                console.error(err);
-                                reject(500);
-                            });
-                        } else if (state === 1) {
-                            // cancel request
-                            this.databaseHandler.deleteFriendship(requestorId, id, true).then(() => {
-                                this.deleteNotification(requestorId, id);
-                                resolve();
-                            }).catch((err) => {
-                                console.error(err);
-                                reject(500);
-                            });
-                        } else if (state === 2) {
-                            if (action) {
-                                // accept request
-                                this.databaseHandler.updateFriendship(id, requestorId, true).then(() => {
-                                    this.sendNotification(false, requestorId, id);
-                                    resolve();
-                                }).catch((err) => {
-                                    console.error(err);
-                                    reject(500);
-                                });
-                            } else {
-                                // delete request
-                                this.databaseHandler.deleteFriendship(id, requestorId, true).then(() => {
-                                    // not deleting notifications
-                                    resolve();
-                                }).catch((err) => {
-                                    console.error(err);
-                                    reject(500);
-                                });
-                            }
-                        } else if (state === 3 && !action) {
-                            // unfriend after request acceptance
-                            this.databaseHandler.deleteFriendship(id, requestorId, false).then(() => {
-                                resolve();
-                            }).catch((err) => {
-                                console.error(err);
-                                reject(500);
-                            });
-                        } else {
-                            reject(400);
-                        }
-                    }).catch((err) => {
-                        console.error(err);
-                        reject(500);
-                    });
-                } else {
-                    reject(400);
-                }
-            }).catch(() => {
-                reject(403);
-            });
-        });
+        if (action) {
+            if (friendship.friends === 0) {
+                // unblock friendship
+                await this.databaseHandler.deleteFriendship(requestorId, id, true);
+            } else if (friendship.friends === 2) {
+                // create friendship
+                await this.databaseHandler.createFriendship(requestorId, id);
+                await this.sendNotification(true, requestorId, id);
+            } else if (friendship.friends === 4) {
+                // accept friendship (update)
+                await this.databaseHandler.updateFriendship(id, requestorId, true);
+                await this.sendNotification(false, requestorId, id);
+            } else {
+                throw new Error("400");
+            }
+        } else {
+            if (friendship.negative === 1) {
+                // block friendship
+                await this.databaseHandler.blockFriendship(requestorId, id);
+            } else if (friendship.negative === 2) {
+                // cancel request (delete)
+                await Promise.all([
+                    this.databaseHandler.deleteFriendship(requestorId, id, true),
+                    this.deleteNotification(requestorId, id),
+                ]);
+
+            } else if (friendship.negative === 3) {
+                // delete request
+                await this.databaseHandler.deleteFriendship(id, requestorId, true);
+            } else if (friendship.negative === 4) {
+                // unfriend (delete request)
+                await this.databaseHandler.deleteFriendship(requestorId, id, false);
+            } else {
+                throw new Error("400");
+            }
+        }
+        return await this.databaseHandler.getFriendship(requestorId, id);
     }
 
     public getFriendship(token: string, id: string) {

@@ -381,9 +381,9 @@ export default class WebServer {
     }
 
     private onPostFriend(req: express.Request, res: express.Response) {
-        if (req.body && "token" in req.body && "username" in req.body && "state" in req.body && "action" in req.body) {
-            this.socialHandler.handleFriendUpdate(req.body.token, req.body.username, req.body.state, req.body.action).then(() => {
-                res.sendStatus(200);
+        if (req.body && "token" in req.body && "username" in req.body && "action" in req.body) {
+            this.socialHandler.handleFriendUpdate(req.body.token, req.body.username, req.body.action).then((friendship) => {
+                res.status(200).send(friendship);
             }).catch((code: number) => {
                 res.sendStatus(code);
             });
