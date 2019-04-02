@@ -48,7 +48,6 @@ enum Packet {
     COOLDOWN_TIME,
 
     PROJECTILE_LAUNCH,
-    PROJECTILE_MOVE,
     PROJECTILE_REMOVAL,
     PROJECTILE_CLEAR,
 
@@ -260,11 +259,6 @@ export const sendCooldownTime = (id: number, time: number) => {
 
 export const sendProjectileLaunch = (id: number, packetData: number[]) => {
     const data = constructData(Packet.PROJECTILE_LAUNCH, packetData, DataType.NUMBER_ARRAY);
-    send(id, data);
-};
-
-export const sendProjectileMove = (id: number, packetData: number[]) => {
-    const data = constructData(Packet.PROJECTILE_MOVE, packetData, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 

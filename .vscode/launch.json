@@ -7,13 +7,24 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Server With Bots",
             "preLaunchTask": "tsc: build - tsconfig.json",
             "program": "${workspaceFolder}/src/App.ts",
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ],
             "args": ["dev"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Server Sans Bots",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "program": "${workspaceFolder}/src/App.ts",
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.js"
+            ],
+            "args": ["dev", "no-bots"]
         }
     ]
 }
