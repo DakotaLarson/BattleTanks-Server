@@ -37,8 +37,9 @@ export default class PlayerHandler {
     public static removePlayer(lobby: Lobby, player: Player) {
         const players = PlayerHandler.players.get(lobby);
         if (players !== undefined) {
-            if (players.includes(player)) {
-                players.splice(players.indexOf(player), 1);
+            const index = players.indexOf(player);
+            if (index > -1) {
+                players.splice(index, 1);
             }
         } else {
             throw new Error("lobby doesn't have players");

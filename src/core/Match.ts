@@ -156,12 +156,10 @@ export default class Match {
     }
 
     public getSpawn(player: Player): Vector4 {
-        let index = this.teamAPlayers.indexOf(player);
-        if (index > -1) {
+        if (this.teamAPlayers.includes(player)) {
             return this.arena.getNextTeamASpawn();
         } else {
-            index = this.teamBPlayers.indexOf(player);
-            if (index > -1) {
+            if (this.teamBPlayers.includes(player)) {
                 return this.arena.getNextTeamBSpawn();
             } else {
                 throw new Error("Player is not part of a team and cannot be spawned in.");
@@ -170,19 +168,19 @@ export default class Match {
     }
 
     public onSameTeam(player: Player, otherPlayer: Player) {
-        return this.teamAPlayers.indexOf(player) > -1 && this.teamAPlayers.indexOf(otherPlayer) > -1 || this.teamBPlayers.indexOf(player) > -1 && this.teamBPlayers.indexOf(otherPlayer) > -1;
+        return this.teamAPlayers.includes(player) && this.teamAPlayers.includes(otherPlayer) || this.teamBPlayers.includes(player) && this.teamBPlayers.includes(otherPlayer);
     }
 
     public hasEnoughPlayers() {
         let teamAValid = false;
         let teamBValid = false;
         for (const player of PlayerHandler.getMatchPlayers(this)) {
-            if (!teamAValid && this.teamAPlayers.indexOf(player) > -1) {
+            if (!teamAValid && this.teamAPlayers.includes(player)) {
                 if (this.gamemode.isPlayerValid(player)) {
                     teamAValid = true;
                     continue;
                 }
-            } else if (!teamBValid && this.teamBPlayers.indexOf(player) > -1) {
+            } else if (!teamBValid && this.teamBPlayers.includes(player)) {
                 if (this.gamemode.isPlayerValid(player)) {
                     teamBValid = true;
                     continue;

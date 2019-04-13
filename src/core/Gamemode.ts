@@ -177,14 +177,16 @@ export default class Gamemode {
                         otherPlayer.sendProtectionEnd(player.id);
                     }
 
-                    if (this.timeouts.includes(protectionTimeout)) {
-                        this.timeouts.splice(this.timeouts.indexOf(protectionTimeout), 1);
+                    const timeoutIndex = this.timeouts.indexOf(protectionTimeout);
+                    if (timeoutIndex > -1) {
+                        this.timeouts.splice(timeoutIndex, 1);
                     }
                 }, Gamemode.PROTECTED_TIME);
                 this.timeouts.push(protectionTimeout);
             }
-            if (this.timeouts.includes(timeout)) {
-                this.timeouts.splice(this.timeouts.indexOf(timeout), 1);
+            const timeoutIndex = this.timeouts.indexOf(timeout);
+            if (timeoutIndex > -1) {
+                this.timeouts.splice(timeoutIndex, 1);
             }
         }, Gamemode.RESPAWN_TIME);
         this.timeouts.push(timeout);

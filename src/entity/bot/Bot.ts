@@ -267,8 +267,9 @@ export default class Bot extends Player {
     }
 
     private completeTimeout(timeout: NodeJS.Timeout) {
-        if (this.timeouts.includes(timeout)) {
-            this.timeouts.splice(this.timeouts.indexOf(timeout), 1);
+        const index = this.timeouts.indexOf(timeout);
+        if (index > -1) {
+            this.timeouts.splice(index, 1);
         }
     }
 

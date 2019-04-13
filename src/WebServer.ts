@@ -264,8 +264,9 @@ export default class WebServer {
 
     private onGetPlayerCount(req: express.Request, res: express.Response) {
         req.on("close", () => {
-            if (this.subscribers.includes(res)) {
-                this.subscribers.splice(this.subscribers.indexOf(res), 1);
+            const index = this.subscribers.indexOf(res);
+            if (index > -1) {
+                this.subscribers.splice(index, 1);
             }
         });
         res.setTimeout(0);
