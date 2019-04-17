@@ -47,7 +47,7 @@ export default class ProjectileHandler {
         if (this.match.hasPlayer(shooter)) {
 
             const position = shooter.position.clone().add(new Vector3(0, 0.8125, 0));
-            const rotation = shooter.headRot;
+            const rotation = shooter.headRot + Math.PI;
             const id = ++ this.projectileId;
             const data = [position.x, position.y, position.z, rotation, id];
 
