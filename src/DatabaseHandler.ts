@@ -60,9 +60,13 @@ export default class DatabaseHandler {
         });
     }
 
-    public getPlayerStats(id: string) {
+    public getPlayerStats(id: string, additionalColumns?: boolean) {
         return new Promise((resolve, reject) => {
             const fields = ["points", "currency", "victories", "defeats", "draws", "shots", "hits", "kills", "deaths"];
+
+            if (additionalColumns) {
+                fields.push("first_seen", "last_seen", "online", "play_time");
+            }
             let sql = "SELECT `" + fields[0] + "`";
 
             for (let i = 1; i < fields.length; i ++) {
@@ -82,7 +86,7 @@ export default class DatabaseHandler {
                     if (results.length !== 1) {
                         resolve({});
                     } else {
-                        resolve({
+                        const parsedData: any = {
                             points: results[0].points,
                             currency: results[0].currency,
                             victories: results[0].victories,
@@ -92,7 +96,14 @@ export default class DatabaseHandler {
                             hits: results[0].hits,
                             kills: results[0].kills,
                             deaths: results[0].deaths,
-                        });
+                        };
+                        if (additionalColumns) {
+                            parsedData.first_seen = results[0].first_seen;
+                            parsedData.last_seen = results[0].last_seen;
+                            parsedData.online = results[0].online;
+                            parsedData.play_time = results[0].play_time;
+                        }
+                        resolve(parsedData);
                     }
                 }
             });

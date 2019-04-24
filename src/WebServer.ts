@@ -332,7 +332,7 @@ export default class WebServer {
     private onPostProfile(req: express.Request, res: express.Response) {
         if (req.body && req.body.username) {
             this.databaseHandler.getPlayerId(req.body.username).then((id: string) => {
-                this.databaseHandler.getPlayerStats(id).then((stats: any) => {
+                this.databaseHandler.getPlayerStats(id, true).then((stats: any) => {
                     this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number) => {
                         stats.rank = rank;
                         if (req.body.token) {
@@ -359,7 +359,6 @@ export default class WebServer {
                     res.sendStatus(500);
                 });
             });
-
         } else {
             res.sendStatus(400);
         }
