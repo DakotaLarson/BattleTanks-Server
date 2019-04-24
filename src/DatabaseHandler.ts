@@ -488,6 +488,31 @@ export default class DatabaseHandler {
         });
     }
 
+    public addPlayTime(id: string, time: number) {
+        let sql = "SELECT play_time FROM players WHERE id = ?";
+        this.pool!.query({
+            sql,
+            timeout: DatabaseHandler.TIMEOUT,
+            values: [id],
+        }, (err, results) => {
+            if (err) {
+                console.error(err);
+            } else {
+                const playTime = results[0].play_time + time;
+                sql = "UPDATE players SET play_time = ? WHERE id = ?";
+                this.pool!.query({
+                    sql,
+                    timeout: DatabaseHandler.TIMEOUT,
+                    values: [playTime, id],
+                }, (insertErr) => {
+                    if (insertErr) {
+                        console.error(insertErr);
+                    }
+                });
+            }
+        });
+    }
+
     /*
     friends:
     0: Unblock - enabled

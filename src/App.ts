@@ -6,6 +6,7 @@ import BotHandler from "./entity/bot/BotHandler";
 import EventHandler from "./EventHandler";
 import MetricsHandler from "./MetricsHandler";
 import PlayerConnector from "./PlayerConnector";
+import PlayerTimer from "./PlayerTimer";
 import WebSocketServer from "./WebSocketServer";
 
 const multiplayerService = new MultiplayerService();
@@ -14,15 +15,17 @@ const metricsHandler = new MetricsHandler(databaseHandler);
 const playerConnector = new PlayerConnector(databaseHandler);
 const wss = new WebSocketServer(databaseHandler, metricsHandler);
 const botHandler = new BotHandler();
+const playerTimer = new PlayerTimer(databaseHandler);
 
 wss.enable();
-playerConnector.start();
+playerConnector.enable();
 
 ArenaLoader.loadArenas().then((message) => {
     console.log(message);
     databaseHandler.enable().then(() => {
         metricsHandler.enable();
         multiplayerService.enable();
+        playerTimer.enable();
         if (!process.argv.includes("no-bots")) {
             botHandler.enable();
         }

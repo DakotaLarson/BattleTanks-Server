@@ -24,13 +24,13 @@ export default class PlayerConnector {
         return PlayerConnector.playerId ++;
     }
 
-    public start() {
+    public enable() {
         EventHandler.addListener(this, EventHandler.Event.WS_CONNECTION_OPENED, this.onConnection);
     }
 
-    public stop() {
-        EventHandler.removeListener(this, EventHandler.Event.WS_CONNECTION_OPENED, this.onConnection);
-    }
+    // public disable() {
+    //     EventHandler.removeListener(this, EventHandler.Event.WS_CONNECTION_OPENED, this.onConnection);
+    // }
 
     private onConnection(ws: WebSocket) {
         DomEventHandler.addListener(this, ws, "message", this.checkMessage);
