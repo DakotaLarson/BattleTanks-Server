@@ -30,7 +30,6 @@ export default class PlayerTimer {
                 this.joinTimes.delete(player.sub);
 
                 const timePlayed = Math.round((Date.now() - joinTime) / 1000);
-                console.log(timePlayed);
                 this.databaseHandler.addPlayTime(player.sub, timePlayed);
             }
         }
