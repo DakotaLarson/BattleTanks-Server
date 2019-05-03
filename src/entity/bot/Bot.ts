@@ -137,7 +137,6 @@ export default class Bot extends Player {
                             this.timeouts.push(this.pathTimeout);
                         }
                     }
-                    EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, this);
                 } else {
                     this.updateHeadRotation(this.bodyRot);
                 }
@@ -173,8 +172,8 @@ export default class Bot extends Player {
 
     private movePositionAlongPath(position: Vector3, bodyRot: number, delta: number) {
         const newPosition = position.clone();
-        newPosition.x += delta * Bot.SPEED * Math.sin(bodyRot),
-        newPosition.z += delta * Bot.SPEED * Math.cos(bodyRot);
+        newPosition.x += delta * this.movementVelocity * Math.sin(bodyRot),
+        newPosition.z += delta * this.movementVelocity * Math.cos(bodyRot);
         return newPosition;
     }
 
@@ -194,15 +193,15 @@ export default class Bot extends Player {
     }
 
     private getAngleToPosition(from: Vector3, to: Vector3) {
-        const xDiff = to.x - from.x;
-        const zDiff = to.z - from.z;
+        const xDiff = from.x - to.x;
+        const zDiff = from.z - to.z;
         return Math.atan2(xDiff, zDiff);
     }
 
     private lookAtVisibleEnemy() {
         if (this.visibleEnemy && this.visibleEnemy.isAlive) {
-            const xDiff = (this.visibleEnemy as Player).position.x - this.position.x + this.visibleEnemyOffset.x;
-            const zDiff = (this.visibleEnemy as Player).position.z - this.position.z + this.visibleEnemyOffset.z;
+            const xDiff = this.position.x + this.visibleEnemyOffset.x - (this.visibleEnemy as Player).position.x;
+            const zDiff = this.position.z + this.visibleEnemyOffset.z - (this.visibleEnemy as Player).position.z;
             const angle = Math.atan2(xDiff, zDiff);
             this.updateHeadRotation(angle);
             return true;
@@ -212,7 +211,7 @@ export default class Bot extends Player {
 
     private getNextTargetPosition() {
         if (this.path && this.currentPathIndex < this.path.length - 2) {
-            const position  = this.getPathPosition(this.path, this.currentPathIndex);
+            const position = this.getPathPosition(this.path, this.currentPathIndex);
             const targetPosition = this.getNextPathPosition(this.path, this.currentPathIndex);
 
             const angle = this.getAngleToPosition(position, targetPosition);
@@ -280,7 +279,7 @@ export default class Bot extends Player {
         this.bodyRot = rot;
         this.headRot = rot;
         this.position = position;
-        this.movementVelocity = Bot.SPEED;
+        this.movementVelocity = -Bot.SPEED;
 
         EventHandler.callEvent(EventHandler.Event.PLAYER_MOVE, this);
     }
