@@ -115,51 +115,45 @@ export default class WebServer {
         res.send(data);
     }
 
-    private onPostPlayerAuth(req: express.Request, res: express.Response) {
-        if (req.body && req.body.token) {
-            Auth.verifyId(req.body.token).then((data: any) => {
-
-                this.databaseHandler.handlePlayerAuth(data).then(() => {
-                    res.sendStatus(200);
-                }).catch((err) => {
-                    console.error(err);
-                    res.sendStatus(500);
-                });
-            }).catch(() => {
+    private async onPostPlayerAuth(req: express.Request, res: express.Response) {
+        try {
+            const data = await this.verifyToken(req);
+            if (data) {
+                await this.databaseHandler.handlePlayerAuth(data);
+                res.sendStatus(200);
+            } else {
                 res.sendStatus(403);
-            });
+            }
+        } catch (ex) {
+            console.log(ex);
+            res.sendStatus(500);
         }
     }
 
-    private onPostPlayerStats(req: express.Request, res: express.Response) {
-        if (req.body && req.body.token) {
-            Auth.verifyId(req.body.token).then((data: any) => {
-                this.databaseHandler.getPlayerStats(data.id).then((stats: any) => {
-                    this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number ) => {
-                        stats.rank = rank;
-                        res.status(200).set({
-                            "content-type": "application/json",
-                        });
-                        res.send(stats);
-                    }).catch((err) => {
-                        console.error(err);
-                        res.sendStatus(500);
-                    });
-                }).catch((err) => {
-                    console.error(err);
-                    res.sendStatus(500);
+    private async onPostPlayerStats(req: express.Request, res: express.Response) {
+        try {
+            const data = await this.verifyToken(req);
+            if (data) {
+                const stats = await this.databaseHandler.getPlayerStats(data.id);
+                const rank = await this.databaseHandler.getPlayerRank(stats.points, "points");
+                stats.rank = rank;
+                res.status(200).set({
+                    "content-type": "application/json",
                 });
-            }).catch(() => {
+                res.send(stats);
+            } else {
                 res.sendStatus(403);
-            });
-        } else {
-            res.sendStatus(403);
+            }
+        } catch (ex) {
+            console.error(ex);
+            res.sendStatus(500);
         }
     }
 
-    private onPostPlayerName(req: express.Request, res: express.Response) {
-        if (req.body && req.body.token) {
-            Auth.verifyId(req.body.token).then((data: any) => {
+    private async onPostPlayerName(req: express.Request, res: express.Response) {
+        const data = await this.verifyToken(req);
+        if (data) {
+            try {
                 let newUsername = req.body.username;
                 const isUpdate = req.body.isUpdate;
                 if (newUsername) {
@@ -168,41 +162,30 @@ export default class WebServer {
                         res.sendStatus(403);
                     } else {
                         if (isUpdate) {
-                            this.databaseHandler.updatePlayerUsername(data.id, newUsername).then((status) => {
-                                res.status(200).set({
-                                    "content-type": "text/plain",
-                                });
-                                res.send(status);
-                            }).catch((err: any) => {
-                                console.error(err);
-                                res.sendStatus(500);
+                            const status = await this.databaseHandler.updatePlayerUsername(data.id, newUsername);
+                            res.status(200).set({
+                                "content-type": "text/plain",
                             });
+                            res.send(status);
                         } else {
-                            this.databaseHandler.isUsernameTaken(newUsername).then((status) => {
-                                res.status(200).set({
-                                    "content-type": "text/plain",
-                                });
-                                res.send(status);
-                            }).catch((err: any) => {
-                                console.error(err);
-                                res.sendStatus(500);
+                            const status = await this.databaseHandler.isUsernameTaken(newUsername);
+                            res.status(200).set({
+                                "content-type": "text/plain",
                             });
+                            res.send(status);
                         }
                     }
                 } else {
-                    this.databaseHandler.getPlayerUsername(data.id).then((name: string) => {
-                        res.status(200).set({
-                            "content-type": "text/plain",
-                        });
-                        res.send(name);
-                    }).catch((err: any) => {
-                        console.error(err);
-                        res.sendStatus(500);
+                    const name = await this.databaseHandler.getPlayerUsername(data.id);
+                    res.status(200).set({
+                        "content-type": "text/plain",
                     });
+                    res.send(name);
                 }
-            }).catch(() => {
-                res.sendStatus(403);
-            });
+            } catch (ex) {
+                console.error(ex);
+                res.sendStatus(500);
+            }
         } else {
             res.sendStatus(403);
         }
@@ -227,36 +210,42 @@ export default class WebServer {
         }
     }
 
-    private onPostLeaderboard(req: express.Request, res: express.Response) {
+    private async onPostLeaderboard(req: express.Request, res: express.Response) {
         const validLeaderboards = [1, 2, 3];
         if (req.body && validLeaderboards.includes(req.body.leaderboard)) {
-            this.databaseHandler.getLeaderboard(req.body.leaderboard).then((data) => {
+            try {
+                const data = await this.databaseHandler.getLeaderboard(req.body.leaderboard);
                 res.status(200).set({
                     "content-type": "application/json",
                 });
                 res.send(data);
-            }).catch((err: any) => {
-                console.error(err);
+            } catch (ex) {
+                console.error(ex);
                 res.sendStatus(500);
-            });
+            }
         } else {
             res.sendStatus(403);
         }
     }
 
-    private onPostLeaderboardRank(req: express.Request, res: express.Response) {
+    private async onPostLeaderboardRank(req: express.Request, res: express.Response) {
         const validLeaderboards = [1, 2, 3];
-        if (req.body && req.body.token && validLeaderboards.includes(req.body.leaderboard)) {
-            Auth.verifyId(req.body.token).then((data: any) => {
-                this.databaseHandler.getLeaderboardRank(data.id, req.body.leaderboard).then((rankData) => {
+        if (validLeaderboards.includes(req.body.leaderboard)) {
+            const data = await this.verifyToken(req);
+            if (data) {
+                try {
+                    const rankData = await this.databaseHandler.getLeaderboardRank(data.id, req.body.leaderboard);
                     res.status(200).set({
                         "content-type": "application/json",
                     });
                     res.send(rankData);
-                });
-            }).catch(() => {
+                } catch (ex) {
+                    console.error(ex);
+                    res.sendStatus(500);
+                }
+            } else {
                 res.sendStatus(403);
-            });
+            }
         } else {
             res.sendStatus(403);
         }
@@ -329,36 +318,35 @@ export default class WebServer {
         }
     }
 
-    private onPostProfile(req: express.Request, res: express.Response) {
+    private async onPostProfile(req: express.Request, res: express.Response) {
         if (req.body && req.body.username) {
-            this.databaseHandler.getPlayerId(req.body.username).then((id: string) => {
-                this.databaseHandler.getPlayerStats(id, true).then((stats: any) => {
-                    this.databaseHandler.getPlayerRank(stats.points, "points").then((rank: number) => {
-                        stats.rank = rank;
-                        if (req.body.token) {
-                                this.socialHandler.getFriendship(req.body.token, id).then((friendship) => {
-                                    stats.friendship = friendship;
-                                }).finally(() => {
-                                    res.status(200).set({
-                                        "content-type": "application/json",
-                                    });
-                                    res.send(stats);
-                                });
-                        } else {
-                            res.status(200).set({
-                                "content-type": "application/json",
-                            });
-                            res.send(stats);
-                        }
-                    }).catch((err) => {
-                        console.error(err);
-                        res.sendStatus(500);
+            try {
+                const id = await this.databaseHandler.getPlayerId(req.body.username);
+                const stats = await this.databaseHandler.getPlayerStats(id, true);
+
+                const rank = await this.databaseHandler.getPlayerRank(stats.points, "points");
+                stats.rank = rank;
+
+                if (req.body.token) {
+                    try {
+                        const friendship = await this.socialHandler.getFriendship(req.body.token, id);
+                        stats.friendship = friendship;
+                    } finally {
+                        res.status(200).set({
+                            "content-type": "application/json",
+                        });
+                        res.send(stats);
+                    }
+                } else {
+                    res.status(200).set({
+                        "content-type": "application/json",
                     });
-                }).catch((err) => {
-                    console.error(err);
-                    res.sendStatus(500);
-                });
-            });
+                    res.send(stats);
+                }
+            } catch (ex) {
+                console.error(ex);
+                res.sendStatus(500);
+            }
         } else {
             res.sendStatus(400);
         }
@@ -503,5 +491,17 @@ export default class WebServer {
 
     private isNameInvalid(name: string) {
         return name.length < WebServer.MINIMUM_USERNAME_LENGTH || name.length > WebServer.MAXIMUM_USERNAME_LENGTH || name.toLowerCase().startsWith("guest") || name.toLowerCase().startsWith("player");
+    }
+
+    private async verifyToken(req: express.Request) {
+        if (req.body && req.body.token) {
+            try {
+                return await Auth.verifyId(req.body.token);
+            } catch (ex) {
+                return undefined;
+            }
+        } else {
+            return undefined;
+        }
     }
 }
