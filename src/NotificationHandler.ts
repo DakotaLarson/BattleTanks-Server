@@ -10,6 +10,14 @@ export default class NotificationHandler {
         "message",
         "friend_request",
         "friend_accept",
+        "level_up",
+        "rank_up",
+    ];
+
+    private static readonly SAVABLE_NOTIFICATION_TYPES = [
+        "message",
+        "friend_request",
+        "friend_accept",
     ];
 
     private databaseHandler: DatabaseHandler;
@@ -26,6 +34,7 @@ export default class NotificationHandler {
     public enable() {
         this.sendNotificationHeartbeat();
         EventHandler.addListener(this, EventHandler.Event.NOTIFICATION_SEND, this.onNotificationSend);
+        EventHandler.addListener(this, EventHandler.Event.NOTIFICATION_GLOBAL_SEND, this.onGlobalSend);
         EventHandler.addListener(this, EventHandler.Event.NOTIFICATION_DELETE, this.onNotificationDelete);
         EventHandler.addListener(this, EventHandler.Event.NOTIFICATION_DELETE_MULTIPLE, this.onNotificationDeleteMultiple);
     }
@@ -51,11 +60,21 @@ export default class NotificationHandler {
                     type,
                     body: data.body,
                 }]);
-            } else {
+            } else if (NotificationHandler.SAVABLE_NOTIFICATION_TYPES.indexOf(data.type) > -1) {
                 this.databaseHandler.saveNotification(type, data.sender, data.receiver).catch((err) => {
                     console.error(err);
                 });
             }
+        }
+    }
+
+    private onGlobalSend(data: any) {
+        const type = NotificationHandler.NOTIFICATION_TYPES.indexOf(data.type);
+        for (const [, res] of this.notificationListeners) {
+            this.sendNotification(res, [{
+                type,
+                body: data.body,
+            }]);
         }
     }
 
@@ -83,14 +102,13 @@ export default class NotificationHandler {
     }
 
     // Internal when player joins
-    private sendNotifications(receiver: string, res: express.Response) {
-        return this.databaseHandler.getNotifications(receiver).then((results) => {
-            try {
-                this.sendNotification(res, results);
-            } catch (ex) {
-                return;
-            }
-        });
+    private async sendNotifications(receiver: string, res: express.Response) {
+        try {
+            const results = await this.databaseHandler.getNotifications(receiver);
+            this.sendNotification(res, results);
+        } catch (ex) {
+            return;
+        }
     }
 
     // Send raw data

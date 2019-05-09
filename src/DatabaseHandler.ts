@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as mysql from "mysql";
 import * as path from "path";
 import EventHandler from "./EventHandler";
+import RankCalculator from "./RankCalculator";
 
 export default class DatabaseHandler {
 
@@ -593,9 +594,14 @@ export default class DatabaseHandler {
                 if (data[field]) {
                     newData.set(field, results[0][field] + data[field]);
                 } else {
+                    // set leaderboard fields
                     newData.set(field, results[0][field] + data.points);
                 }
             }
+
+            // TODO: Handle this in a separate process when implementation complexity is reduced.
+            RankCalculator.handlePointChange(id, results[0].username, results[0].points, data.points);
+
             this.updatePlayerData(id, newData);
         } else {
             throw new Error("Unexpected number of results on update: " + results.length);
@@ -627,6 +633,9 @@ export default class DatabaseHandler {
                     newUserStats.leaderboard_points_2 = userMatchStats.points + result.leaderboard_points_2;
 
                     newStats.set(userId, newUserStats);
+
+                    // TODO: Handle this in a separate process when implementation complexity is reduced.
+                    RankCalculator.handlePointChange(userId, result.username, result.points, userMatchStats.points);
                 }
             }
             this.updatePlayersData(newStats, mutableFields);
@@ -650,9 +659,9 @@ export default class DatabaseHandler {
     }
 
     private async getPlayersData(ids: string[], fields: string[]) {
-        let fieldString = "`" + fields[0] + "`";
-        for (let i = 1; i < fields.length; i ++) {
-            fieldString += ", `" + fields[i] + "`";
+        let fieldString = "`username`";
+        for (const field of fields) {
+            fieldString += ", `" + field + "`";
         }
         const idWildcards = ", ?".repeat(ids.length - 1);
         const sql = "SELECT " + fieldString + " FROM `players` WHERE `id` IN (?" + idWildcards + ")";
@@ -661,9 +670,9 @@ export default class DatabaseHandler {
     }
 
     private async getPlayerData(id: string, fields: string[]) {
-        let fieldString = "`" + fields[0] + "`";
-        for (let i = 1; i < fields.length; i ++) {
-            fieldString += ", `" + fields[i] + "`";
+        let fieldString = "`username`";
+        for (const field of fields) {
+            fieldString += ", `" + field + "`";
         }
         const sql = "SELECT " + fieldString + " FROM `players` WHERE `id` = ?";
 
