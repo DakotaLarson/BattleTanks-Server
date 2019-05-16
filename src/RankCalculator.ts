@@ -12,7 +12,7 @@ export default class RankCalculator {
         "Officer",
         "Lieutenant",
         "Commander",
-        "Captain",
+        "Captain", 
         "Major",
         "Colonel",
         "General",
