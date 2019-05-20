@@ -1,6 +1,6 @@
 import WebSocket = require("ws");
 import Auth from "./Auth";
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseHandler from "./database/DatabaseHandler";
 import DomEventHandler from "./DomEventHandler";
 import Player from "./entity/Player";
 import EventHandler from "./EventHandler";

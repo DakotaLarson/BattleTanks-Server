@@ -1,5 +1,5 @@
 import express = require("express");
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseHandler from "./database/DatabaseHandler";
 import EventHandler from "./EventHandler";
 
 export default class NotificationHandler {

@@ -2,7 +2,7 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import * as request from "request";
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseHandler from "./database/DatabaseHandler";
 
 export default class MetricsHandler {
 

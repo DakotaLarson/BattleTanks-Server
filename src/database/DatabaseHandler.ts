@@ -2,17 +2,18 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as mysql from "mysql";
 import * as path from "path";
-import EventHandler from "./EventHandler";
-import RankCalculator from "./RankCalculator";
+import EventHandler from "../EventHandler";
+import RankCalculator from "../RankCalculator";
 
 export default class DatabaseHandler {
+
+    public static readonly TIMEOUT = 5000;
 
     private static readonly DIRECTORY_NAME = "keys";
     private static readonly FILE_NAME = "database.json";
 
     private static readonly LEADERBOARD_LENGTH = 10;
     private static readonly CONVERSATIONS_LENGTH = 5;
-    private static readonly TIMEOUT = 5000;
 
     private pool: mysql.Pool | undefined;
 
@@ -48,6 +49,7 @@ export default class DatabaseHandler {
             password: data.password,
             database,
         });
+        EventHandler.callEvent(EventHandler.Event.DB_POOL_UPDATE, this.pool);
 
         EventHandler.addListener(this, EventHandler.Event.DB_PLAYER_UPDATE, this.onPlayerUpdate);
         EventHandler.addListener(this, EventHandler.Event.DB_PLAYERS_UPDATE, this.onPlayersUpdate);
@@ -174,6 +176,7 @@ export default class DatabaseHandler {
             // Player name *should* be unique.
             await this.createPlayer(data.id, data.email, data.name, "Player #" + count);
         }
+        return !hasPlayer;
     }
 
     public async getPlayerRank(points: number, column: string): Promise<number> {

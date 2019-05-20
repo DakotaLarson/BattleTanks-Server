@@ -3,12 +3,14 @@ import cors = require("cors");
 import express = require("express");
 import http = require("http");
 import Auth from "./Auth";
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseHandler from "./database/DatabaseHandler";
+import StoreDatabaseHandler from "./database/StoreDatabaseHandler";
 import EventHandler from "./EventHandler";
 import MessageHandler from "./MessageHandler";
 import MetricsHandler from "./MetricsHandler";
 import NotificationHandler from "./NotificationHandler";
 import SocialHandler from "./SocialHandler";
+import StoreHandler from "./StoreHandler";
 
 export default class WebServer {
 
@@ -22,10 +24,13 @@ export default class WebServer {
     public server: http.Server;
 
     private databaseHandler: DatabaseHandler;
+    private storeDatabaseHandler: StoreDatabaseHandler;
+
     private socialHandler: SocialHandler;
     private messageHandler: MessageHandler;
     private metricsHandler: MetricsHandler;
     private notificationHandler: NotificationHandler;
+    private storeHandler: StoreHandler;
 
     private playerCount: number;
     private botCount: number;
@@ -43,10 +48,13 @@ export default class WebServer {
         this.server = http.createServer(app);
 
         this.databaseHandler = databaseHandler;
+        this.storeDatabaseHandler = new StoreDatabaseHandler();
+
         this.socialHandler = new SocialHandler(databaseHandler);
         this.messageHandler = new MessageHandler(databaseHandler);
         this.metricsHandler = metricsHandler;
         this.notificationHandler = new NotificationHandler(databaseHandler);
+        this.storeHandler = new StoreHandler(this.storeDatabaseHandler);
 
         this.playerCount = 0;
         this.botCount = 0;
@@ -80,6 +88,7 @@ export default class WebServer {
         app.post("/friend", this.onPostFriend.bind(this));
         app.post("/messages", this.onPostMessages.bind(this));
         app.post("/conversations", this.onPostConversations.bind(this));
+        app.post("/store", this.onPostStore.bind(this));
     }
 
     public enable() {
@@ -119,7 +128,10 @@ export default class WebServer {
         try {
             const data = await this.verifyToken(req);
             if (data) {
-                await this.databaseHandler.handlePlayerAuth(data);
+                const isNew = await this.databaseHandler.handlePlayerAuth(data);
+                if (isNew) {
+                    await this.storeDatabaseHandler.initPlayer(data.id);
+                }
                 res.sendStatus(200);
             } else {
                 res.sendStatus(403);
@@ -413,6 +425,22 @@ export default class WebServer {
             }).catch((status) => {
                 res.sendStatus(status);
             });
+        }
+    }
+
+    private async onPostStore(req: express.Request, res: express.Response) {
+        if (req.body && "token" in req.body) {
+            try {
+                const data = await Auth.verifyId(req.body.token);
+                const store = await this.storeHandler.getStore(data.id);
+                res.status(200).set({
+                    "content-type": "application/json",
+                });
+                res.send(store);
+            } catch (ex) {
+                console.error(ex);
+                res.sendStatus(500);
+            }
         }
     }
 

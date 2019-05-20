@@ -1,5 +1,5 @@
 import Auth from "./Auth";
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseHandler from "./database/DatabaseHandler";
 import EventHandler from "./EventHandler";
 
 export default class MessageHandler {

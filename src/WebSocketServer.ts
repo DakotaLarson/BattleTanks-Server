@@ -1,6 +1,6 @@
 import WebSocket = require("ws");
 
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseHandler from "./database/DatabaseHandler";
 import DomEventHandler from "./DomEventHandler";
 import EventHandler from "./EventHandler";
 import MetricsHandler from "./MetricsHandler";
@@ -9,7 +9,7 @@ import WebServer from "./WebServer";
 export default class WebSocketServer {
 
     private static readonly PROTOCOL_PREFIX = "battletanks-";
-    private static readonly SERVER_VERSION = 9;
+    private static readonly SERVER_VERSION = 10;
 
     private static readonly CLIENT_OUTDATED_CODE = 4001;
     private static readonly SERVER_OUTDATED_CODE = 4002;

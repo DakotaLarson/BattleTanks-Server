@@ -1,4 +1,4 @@
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseHandler from "./database/DatabaseHandler";
 import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
 
