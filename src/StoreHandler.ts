@@ -12,6 +12,16 @@ export default class StoreHandler {
         this.databaseHandler = databaseHandler;
     }
 
+    public async handleRequest(id: any, body: any) {
+        if (body.purchase) {
+
+        } else if (body.select) {
+
+        } else {
+            return this.getStore(id);
+        }
+    }
+
     public async getStore(id: string) {
         const products = await this.databaseHandler.getProducts();
         const purchases = await this.databaseHandler.getPurchases(id);

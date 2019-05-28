@@ -25,15 +25,14 @@ export default class StoreDatabaseHandler {
         return await this.query(sql, [id]);
     }
 
-    public async purchase(playerId: string, parentTitle: string, childTitles: string[], isFree: boolean, isSelect: boolean, type?: number) {
+    public async purchase(playerId: string, parentTitle: string, childTitles: string[], isFree: boolean, isSelect: boolean, type: number) {
 
         const connection = await this.startTransaction();
         try {
 
             // Get products
             let productSql =  "SELECT id, price, title FROM products WHERE title IN (?";
-            const productValues = [];
-            productValues.push(parentTitle);
+            const productValues = [parentTitle];
 
             for (const title of childTitles) {
                 productSql += ", ?";
