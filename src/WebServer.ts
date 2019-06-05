@@ -130,7 +130,7 @@ export default class WebServer {
             if (data) {
                 const isNew = await this.databaseHandler.handlePlayerAuth(data);
                 if (isNew) {
-                    await this.storeDatabaseHandler.initPlayer(data.id);
+                    await this.storeHandler.initPlayer(data.id);
                 }
                 res.sendStatus(200);
             } else {
@@ -418,10 +418,12 @@ export default class WebServer {
     private onPostConversations(req: express.Request, res: express.Response) {
         if (req.body && "token" in req.body && "offset" in req.body) {
             this.messageHandler.getConversations(req.body.token, req.body.offset).then((conversations) => {
+
                 res.status(200).set({
                     "content-type": "application/json",
                 });
                 res.send(conversations);
+
             }).catch((status) => {
                 res.sendStatus(status);
             });
@@ -432,11 +434,18 @@ export default class WebServer {
         if (req.body && "token" in req.body) {
             try {
                 const data = await Auth.verifyId(req.body.token);
-                const store = await this.storeHandler.getStore(data.id);
-                res.status(200).set({
-                    "content-type": "application/json",
-                });
-                res.send(store);
+                const result: any = await this.storeHandler.handleRequest(data.id, req.body);
+
+                if (result.data) {
+
+                    res.status(result.status).set({
+                        "content-type": "application/json",
+                    });
+                    res.send(result.data);
+
+                } else {
+                    res.sendStatus(result.status);
+                }
             } catch (ex) {
                 console.error(ex);
                 res.sendStatus(500);
@@ -446,10 +455,12 @@ export default class WebServer {
 
     private getSearchResults(res: express.Response, query: string, id?: string, friends?: boolean) {
         this.databaseHandler.getSearchResults(query, id, friends).then((results: any) => {
+
             res.status(200).set({
                 "content-type": "application/json",
             });
             res.send(results);
+
         }).catch((err) => {
             console.error(err);
             res.sendStatus(500);
@@ -481,20 +492,27 @@ export default class WebServer {
         let lastPlayerCount = this.playerCount + this.botCount;
         let lastActiveUserCount = this.subscribers.length;
         let lastSendTime = 0;
+
         setInterval(() => {
             const currentPlayerCount = this.playerCount + this.botCount;
             const currentActiveUserCount = this.subscribers.length;
+
             if (currentActiveUserCount && (lastSendTime >= WebServer.MAX_SSE_INTERVAL || currentPlayerCount !== lastPlayerCount || currentActiveUserCount !== lastActiveUserCount)) {
+
                 this.sendDataToSubscribers(currentPlayerCount, currentActiveUserCount);
+
                 lastPlayerCount = currentPlayerCount;
                 lastActiveUserCount = currentActiveUserCount;
                 lastSendTime = 0;
+
             } else {
+
                 if (currentActiveUserCount) {
                     lastSendTime ++;
                 } else {
                     lastSendTime = 0;
                 }
+
             }
         }, WebServer.SSE_INTERVAL);
     }

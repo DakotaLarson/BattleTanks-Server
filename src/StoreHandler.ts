@@ -4,7 +4,40 @@ enum ProductType {
     TANK,
     COLOR,
 }
+
+enum PurchaseType {
+    INITIALIZATION,
+    STANDARD,
+}
 export default class StoreHandler {
+
+    private static readonly INITIALIZATION_PURCHASE_TITLE = "Little Timmy";
+
+    private static readonly TANK_DEFAULT_COLORS = new Map([
+        ["Little Timmy", [
+            "Bisque",
+            "Tan",
+            "Green",
+            "Dark Green",
+        ]],
+        ["The Big Mama", [
+            "Silver",
+            "Light Gray",
+            "Charcoal",
+            "Gold",
+        ]],
+    ]);
+
+    private static readonly TANK_COLORS = [
+        "Bisque",
+        "Tan",
+        "Green",
+        "Dark Green",
+        "Silver",
+        "Light Gray",
+        "Charcoal",
+        "Gold",
+    ];
 
     private databaseHandler: StoreDatabaseHandler;
 
@@ -13,13 +46,20 @@ export default class StoreHandler {
     }
 
     public async handleRequest(id: any, body: any) {
+        let responseData;
         if (body.purchase) {
-
-        } else if (body.select) {
-
+            responseData = await this.handlePurchase(id, body);
+        } else if (body.selection) {
+            responseData = this.handleSelection(id, body);
         } else {
-            return this.getStore(id);
+            const data = await this.getStore(id);
+            responseData = {
+                status: 200,
+                data,
+            };
         }
+
+        return responseData;
     }
 
     public async getStore(id: string) {
@@ -27,48 +67,139 @@ export default class StoreHandler {
         const purchases = await this.databaseHandler.getPurchases(id);
         const selections = await this.databaseHandler.getSelections(id);
 
-        const tanks: any = [];
-        const colors: any = [];
+        const tanks: any = {};
+        const colors: any = {};
+        // all: title, price, level
+        // tank: imageurl, purchased, selected
+        // color
 
         for (const product of products) {
-            let purchased = false;
-            let selectionIndex = -1;
 
-            for (const purchase of purchases) {
-                if (purchase.product === product.id) {
-                    purchased = true;
-                    break;
-                }
-            }
-
-            for (const selection of selections) {
-                if (selection.product === product.id) {
-                    selectionIndex = selection.position;
-                    break;
-                }
-            }
-
-            const productData = {
-                title: product.title,
+            let productData: any = {
                 price: product.price,
-                detail: product.detail,
-                parent_required: product.parent_required ? true : false,
-                level_required: product.level_required,
-                image_url: product.image_url,
-                purchased,
-                selectionIndex,
+                level: product.level,
             };
 
             if (product.type === ProductType.TANK) {
-                tanks.push(productData);
+
+                productData.image_url = product.image_url;
+
+                productData.purchased = this.isPurchased(product.title, purchases);
+                productData.selected = this.isSelected(product.title, selections);
+
+                productData = Object.assign(productData, this.getTankColorData(product, purchases, selections));
+
+                tanks[product.title] = productData;
             } else if (product.type === ProductType.COLOR) {
-                colors.push(productData);
+
+                productData.detail = product.detail;
+                colors[product.title] = productData;
             }
+
         }
 
         return {
             tanks,
             colors,
         };
+    }
+
+    public async initPlayer(playerId: string) {
+        this.databaseHandler.initPlayer(playerId, StoreHandler.INITIALIZATION_PURCHASE_TITLE, PurchaseType.INITIALIZATION);
+    }
+
+    private async handlePurchase(id: string, body: any) {
+        let status = 400;
+        if (StoreHandler.TANK_DEFAULT_COLORS.has(body.purchase)) {
+            const isValidTransaction = await this.databaseHandler.purchase(id, body.purchase, false, PurchaseType.STANDARD);
+            if (isValidTransaction) {
+               status = 200;
+            } else {
+                status = 500;
+            }
+        }
+
+        return {
+            status,
+        };
+    }
+
+    private async handleSelection(id: string, body: any) {
+        let status = 400;
+        if (body.parent && body.position) {
+            // Selection is for color
+            if (this.validateColorSelectionRequest(body)) {
+                const isValidTransaction = this.databaseHandler.select(id, body.selection, body.position, body.parent);
+                if (isValidTransaction) {
+                    status = 200;
+                } else {
+                    status = 500;
+                }
+            }
+        } else if (StoreHandler.TANK_DEFAULT_COLORS.has(body.selection)) {
+            // selection is for tank
+            const isValidTransaction = await this.databaseHandler.select(id, body.selection);
+            if (isValidTransaction) {
+                status = 200;
+            } else {
+                status = 500;
+            }
+        }
+
+        return {
+            status,
+        };
+    }
+
+    private isPurchased(title: string, purchases: any[]) {
+        for (const purchase of purchases) {
+            if (purchase.title === title) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private isSelected(title: string, selections: any[]) {
+        for (const selection of selections) {
+            if (selection.title === title) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private getTankColorData(product: any, purchases: any[], selections: any[]) {
+        const purchasedColors = StoreHandler.TANK_DEFAULT_COLORS.get(product.title)!.slice();
+        const selectedColors = purchasedColors.slice();
+
+        for (const purchase of purchases) {
+            if (purchase.parent === product.id) {
+                purchasedColors.push(purchase.title);
+            }
+        }
+
+        for (const selection of selections) {
+            selectedColors[selection.position] = selection.title;
+        }
+
+        return {
+            purchasedColors,
+            selectedColors,
+        };
+    }
+
+    private validateColorSelectionRequest(body: any) {
+        if (StoreHandler.TANK_COLORS.includes(body.selection)) {
+
+            const defaultColors = StoreHandler.TANK_DEFAULT_COLORS.get(body.parent);
+            if (defaultColors) {
+
+                if (!isNaN(body.position) && body.position >= 0 && body.position < defaultColors.length) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
