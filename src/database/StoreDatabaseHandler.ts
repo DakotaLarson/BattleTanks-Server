@@ -20,16 +20,14 @@ export default class StoreDatabaseHandler {
             const productResults = await this.queryFromConnection(connection, productSql, [productTitle]);
 
             if (productResults.length !== 1) {
-                this.endTransaction(connection);
-                return false;
+                throw new Error("Invalid quantity of products");
             }
 
             // Deduct currency
             if (!isFree) {
                 const isDeducted = await this.deductCurrency(connection, playerId, productResults[0].price);
                 if (!isDeducted) {
-                    await this.endTransaction(connection);
-                    return false;
+                    throw new Error("Currency not deducted");
                 }
             }
 
@@ -37,6 +35,8 @@ export default class StoreDatabaseHandler {
             const purchaseSql = "INSERT INTO purchases (player, product, type, price) VALUES (?, ?, ?, ?)";
             const purchaseValues = [playerId, productResults[0].id, type, productResults[0].price];
             await this.queryFromConnection(connection, purchaseSql, purchaseValues);
+
+            this.endTransaction(connection);
 
             return true;
 
@@ -50,14 +50,15 @@ export default class StoreDatabaseHandler {
     public async select(playerId: string, productTitle: string, position?: number, parent?: number) {
         try {
 
-            const productSql = "SELECT id FROM products WHERE title = ?";
+            // const productSql = "SELECT id FROM products WHERE title = ?";
+            const productSql = "SELECT purchases.product FROM purchases, products WHERE products.title = ? AND products.id = purchases.product";
             const products = await this.query(productSql, [productTitle]);
             let productId;
-            if (products.length !== 1 || !products[0].id) {
+            if (products.length !== 1 || !products[0].product) {
                 console.error("Unexpected product quantity: " + products.length + " title: " + productTitle);
                 return false;
             } else {
-                productId = products[0].id;
+                productId = products[0].product;
             }
 
             let sql;

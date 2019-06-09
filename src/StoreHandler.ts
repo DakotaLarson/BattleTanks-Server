@@ -77,7 +77,7 @@ export default class StoreHandler {
 
             let productData: any = {
                 price: product.price,
-                level: product.level,
+                level_required: product.level_required,
             };
 
             if (product.type === ProductType.TANK) {
