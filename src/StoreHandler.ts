@@ -8,6 +8,7 @@ enum ProductType {
 enum PurchaseType {
     INITIALIZATION,
     STANDARD,
+    BUNDLED,
 }
 export default class StoreHandler {
 
@@ -63,9 +64,9 @@ export default class StoreHandler {
     }
 
     public async getStore(id: string) {
-        const products = await this.databaseHandler.getProducts();
-        const purchases = await this.databaseHandler.getPurchases(id);
-        const selections = await this.databaseHandler.getSelections(id);
+        const products = await this.databaseHandler.getPlayerProducts();
+        const purchases = await this.databaseHandler.getPlayerPurchases(id);
+        const selections = await this.databaseHandler.getPlayerSelections(id);
 
         const tanks: any = {};
         const colors: any = {};
@@ -105,13 +106,17 @@ export default class StoreHandler {
     }
 
     public async initPlayer(playerId: string) {
-        this.databaseHandler.initPlayer(playerId, StoreHandler.INITIALIZATION_PURCHASE_TITLE, PurchaseType.INITIALIZATION);
+        this.databaseHandler.initPlayer(playerId, StoreHandler.INITIALIZATION_PURCHASE_TITLE, StoreHandler.TANK_DEFAULT_COLORS.get(StoreHandler.INITIALIZATION_PURCHASE_TITLE)!, PurchaseType.INITIALIZATION);
     }
 
     private async handlePurchase(id: string, body: any) {
         let status = 400;
-        if (StoreHandler.TANK_DEFAULT_COLORS.has(body.purchase)) {
-            const isValidTransaction = await this.databaseHandler.purchase(id, body.purchase, false, PurchaseType.STANDARD);
+        const defaultColors = StoreHandler.TANK_DEFAULT_COLORS.get(body.parent);
+
+        if ((body.parent && defaultColors && !defaultColors.includes(body.purchase)) || (!body.parent && StoreHandler.TANK_DEFAULT_COLORS.has(body.purchase))) {
+
+            const isValidTransaction = await this.databaseHandler.purchase(id, body.purchase, false, PurchaseType.STANDARD, body.parent, StoreHandler.TANK_DEFAULT_COLORS.get(body.purchase), PurchaseType.BUNDLED);
+
             if (isValidTransaction) {
                status = 200;
             } else {
@@ -124,12 +129,14 @@ export default class StoreHandler {
         };
     }
 
-    private async handleSelection(id: string, body: any) {
+    private async handleSelection(playerId: string, body: any) {
         let status = 400;
-        if (body.parent && body.position) {
+        if (body.parent && "position" in body) {
             // Selection is for color
             if (this.validateColorSelectionRequest(body)) {
-                const isValidTransaction = this.databaseHandler.select(id, body.selection, body.position, body.parent);
+
+                const isValidTransaction = this.databaseHandler.select(playerId, body.selection, body.position, body.parent);
+
                 if (isValidTransaction) {
                     status = 200;
                 } else {
@@ -138,7 +145,7 @@ export default class StoreHandler {
             }
         } else if (StoreHandler.TANK_DEFAULT_COLORS.has(body.selection)) {
             // selection is for tank
-            const isValidTransaction = await this.databaseHandler.select(id, body.selection);
+            const isValidTransaction = await this.databaseHandler.select(playerId, body.selection);
             if (isValidTransaction) {
                 status = 200;
             } else {
@@ -170,8 +177,8 @@ export default class StoreHandler {
     }
 
     private getTankColorData(product: any, purchases: any[], selections: any[]) {
-        const purchasedColors = StoreHandler.TANK_DEFAULT_COLORS.get(product.title)!.slice();
-        const selectedColors = purchasedColors.slice();
+        const purchasedColors = [];
+        const selectedColors = [];
 
         for (const purchase of purchases) {
             if (purchase.parent === product.id) {
@@ -180,7 +187,9 @@ export default class StoreHandler {
         }
 
         for (const selection of selections) {
-            selectedColors[selection.position] = selection.title;
+            if (selection.parent === product.id) {
+                selectedColors[selection.position] = selection.title;
+            }
         }
 
         return {
