@@ -158,14 +158,19 @@ export default class StoreDatabaseHandler {
         return await this.query(sql);
     }
 
-    public async getPlayerPurchases(id: string) {
+    public async getPlayerPurchases(playerID: string) {
         const sql = "SELECT products.title, purchases.parent FROM purchases, products WHERE purchases.player = ? AND products.id = purchases.product";
-        return await this.query(sql, [id]);
+        return await this.query(sql, [playerID]);
     }
 
-    public async getPlayerSelections(id: string) {
-        const sql = "SELECT products.title, selections.position, selections.parent FROM selections, products WHERE player = ? AND products.id = selections.product";
-        return await this.query(sql, [id]);
+    public async getPlayerSelections(playerId: string) {
+        const sql = "SELECT products.title, selections.position, selections.parent FROM selections, products WHERE selections.player = ? AND products.id = selections.product";
+        return await this.query(sql, [playerId]);
+    }
+
+    public async getPlayerCurrentSelection(playerId: string): Promise<any[]> {
+        const sql = "SELECT products.detail, products.type, selections.position FROM products, selections WHERE selections.player = ? AND products.id = selections.product AND (selections.parent = -1 OR selections.parent = (SELECT product FROM selections WHERE player = ? AND parent = -1))";
+        return await this.query(sql, [playerId, playerId]);
     }
 
     private onPoolUpdate(pool: mysql.Pool) {

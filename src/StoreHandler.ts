@@ -10,6 +10,11 @@ enum PurchaseType {
     STANDARD,
     BUNDLED,
 }
+
+enum SelectionType {
+    TANK,
+    COLOR,
+}
 export default class StoreHandler {
 
     private static readonly INITIALIZATION_PURCHASE_TITLE = "Little Timmy";
@@ -79,6 +84,7 @@ export default class StoreHandler {
             let productData: any = {
                 price: product.price,
                 level_required: product.level_required,
+                detail: product.detail,
             };
 
             if (product.type === ProductType.TANK) {
@@ -93,7 +99,6 @@ export default class StoreHandler {
                 tanks[product.title] = productData;
             } else if (product.type === ProductType.COLOR) {
 
-                productData.detail = product.detail;
                 colors[product.title] = productData;
             }
 
@@ -107,6 +112,24 @@ export default class StoreHandler {
 
     public async initPlayer(playerId: string) {
         this.databaseHandler.initPlayer(playerId, StoreHandler.INITIALIZATION_PURCHASE_TITLE, StoreHandler.TANK_DEFAULT_COLORS.get(StoreHandler.INITIALIZATION_PURCHASE_TITLE)!, PurchaseType.INITIALIZATION);
+    }
+
+    public async getPlayerCurrentSelection(playerId: string) {
+        const selections = await this.databaseHandler.getPlayerCurrentSelection(playerId);
+        const colors = [];
+        let tank;
+        for (const selection of selections) {
+            if (selection.type === SelectionType.TANK) {
+                tank = selection.detail;
+            } else if (selection.type === SelectionType.COLOR) {
+                colors[selection.position] = selection.detail;
+            }
+        }
+
+        return {
+            tank,
+            colors,
+        };
     }
 
     private async handlePurchase(id: string, body: any) {

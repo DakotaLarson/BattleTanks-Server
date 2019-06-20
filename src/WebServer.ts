@@ -89,6 +89,7 @@ export default class WebServer {
         app.post("/messages", this.onPostMessages.bind(this));
         app.post("/conversations", this.onPostConversations.bind(this));
         app.post("/store", this.onPostStore.bind(this));
+        app.post("/selection", this.onPostSelection.bind(this));
     }
 
     public enable() {
@@ -387,6 +388,8 @@ export default class WebServer {
             }).catch((code: number) => {
                 res.sendStatus(code);
             });
+        } else {
+            res.sendStatus(400);
         }
     }
 
@@ -412,6 +415,8 @@ export default class WebServer {
                     res.sendStatus(code);
                 });
             }
+        } else {
+            res.sendStatus(400);
         }
     }
 
@@ -427,6 +432,8 @@ export default class WebServer {
             }).catch((status) => {
                 res.sendStatus(status);
             });
+        } else {
+            res.sendStatus(400);
         }
     }
 
@@ -450,6 +457,23 @@ export default class WebServer {
                 console.error(ex);
                 res.sendStatus(500);
             }
+        } else {
+            res.sendStatus(400);
+        }
+    }
+
+    private async onPostSelection(req: express.Request, res: express.Response) {
+        if (req.body && "token" in req.body) {
+            try {
+                const data = await Auth.verifyId(req.body.token);
+                const result = await this.storeHandler.getPlayerCurrentSelection(data.id);
+                res.status(200).send(result);
+            } catch (ex) {
+                console.error(ex);
+                res.sendStatus(500);
+            }
+        } else {
+            res.sendStatus(400);
         }
     }
 
