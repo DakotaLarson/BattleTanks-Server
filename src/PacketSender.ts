@@ -90,9 +90,11 @@ export const sendPlayerName = (id: number, name: string) => {
     send(id, data);
 };
 
-export const sendPlayerAddition = (id: number, pos: Vector4, color: number) => {
+export const sendPlayerAddition = (id: number, pos: Vector4, color: number, modelId: string, modelColors: string[]) => {
     const dataObj = {
         id,
+        modelId,
+        modelColors,
         pos: [pos.x, pos.y, pos.z, pos.w],
         color,
     };

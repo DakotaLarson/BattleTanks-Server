@@ -2,18 +2,21 @@ import {performance} from "perf_hooks";
 import ArenaLoader from "./ArenaLoader";
 import MultiplayerService from "./core/MultiplayerService";
 import DatabaseHandler from "./database/DatabaseHandler";
+import StoreDatabaseHandler from "./database/StoreDatabaseHandler";
 import BotHandler from "./entity/bot/BotHandler";
 import EventHandler from "./EventHandler";
 import MetricsHandler from "./MetricsHandler";
 import PlayerConnector from "./PlayerConnector";
 import PlayerTimer from "./PlayerTimer";
+import StoreHandler from "./StoreHandler";
 import WebSocketServer from "./WebSocketServer";
 
 const multiplayerService = new MultiplayerService();
 const databaseHandler = new DatabaseHandler();
+const storeHandler = new StoreHandler(new StoreDatabaseHandler());
 const metricsHandler = new MetricsHandler(databaseHandler);
-const playerConnector = new PlayerConnector(databaseHandler);
-const wss = new WebSocketServer(databaseHandler, metricsHandler);
+const playerConnector = new PlayerConnector(databaseHandler, storeHandler);
+const wss = new WebSocketServer(databaseHandler, metricsHandler, storeHandler);
 const botHandler = new BotHandler();
 const playerTimer = new PlayerTimer(databaseHandler);
 

@@ -8,6 +8,14 @@ import Vector4 from "../vector/Vector4";
 
 export default class Player {
 
+    public static readonly DEFAULT_TANK = "0";
+    public static readonly DEFAULT_COLORS = [
+        "bfac86",
+        "635944",
+        "3f5434",
+        "283621",
+    ];
+
     public static fullAmmoCount = 10;
 
     public static ammoBoost = 5;
@@ -24,6 +32,9 @@ export default class Player {
     public name: string;
     public id: number;
     public sub: string | undefined;
+
+    public modelId: string;
+    public modelColors: string[];
 
     public position: Vector3;
 
@@ -58,10 +69,22 @@ export default class Player {
 
     private ramTime: number;
 
-    constructor(name: string, id: number, sub?: string) {
+    constructor(name: string, id: number, modelId?: string, modelColors?: string[], sub?: string) {
         this.name = name;
         this.id = id;
         this.sub = sub;
+
+        if (modelId) {
+            this.modelId = modelId;
+        } else {
+            this.modelId = Player.DEFAULT_TANK;
+        }
+
+        if (modelColors) {
+            this.modelColors = modelColors;
+        } else {
+            this.modelColors = Player.DEFAULT_COLORS;
+        }
 
         this.position = new Vector3();
 
@@ -136,6 +159,8 @@ export default class Player {
             PacketSender.sendConnectedPlayerAddition(this.id, {
                 id: player.id,
                 name: player.name,
+                modelId: player.modelId,
+                modelColors: player.modelColors,
                 pos: [player.position.x, player.position.y, player.position.z, player.bodyRot],
                 headRot: player.headRot,
                 color: player.color,
@@ -346,7 +371,7 @@ export default class Player {
         this.headRot = pos.w;
 
         if (!this.isBot()) {
-            PacketSender.sendPlayerAddition(this.id, pos, this.color);
+            PacketSender.sendPlayerAddition(this.id, pos, this.color, this.modelId, this.modelColors);
 
             PacketSender.sendPlayerHealth(this.id, this.health);
             PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);

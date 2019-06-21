@@ -6,18 +6,21 @@ import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
 import PacketReceiver from "./PacketReceiver";
 import * as PacketSender from "./PacketSender";
+import StoreHandler from "./StoreHandler";
 
 export default class PlayerConnector {
-
-    private static playerId = 1;
 
     private static readonly CONNECTION_HEADER_CODE = 0x00;
     private static readonly MAX_PACKET_LENGTH = 2048;
 
-    private databaseHandler: DatabaseHandler;
+    private static playerId = 1;
 
-    constructor(databaseHandler: DatabaseHandler) {
+    private databaseHandler: DatabaseHandler;
+    private storeHandler: StoreHandler;
+
+    constructor(databaseHandler: DatabaseHandler, storeHandler: StoreHandler) {
         this.databaseHandler = databaseHandler;
+        this.storeHandler = storeHandler;
     }
 
     public static getNextId() {
@@ -61,43 +64,56 @@ export default class PlayerConnector {
         }
     }
 
-    private createPlayer(ws: WebSocket, sub?: string): Promise<Player> {
-        return new Promise((resolve, reject) => {
-            const id = PlayerConnector.getNextId();
-            this.getName(id, sub).then((name) => {
-                const player = new Player(name, id, sub);
-                DomEventHandler.removeListener(this, ws, "message", this.checkMessage);
+    private async createPlayer(ws: WebSocket, sub?: string): Promise<Player> {
+        const id = PlayerConnector.getNextId();
+        const name = await this.getName(id, sub);
+        const modelData = await this.getModelDetails(sub);
+        const player = new Player(name, id, modelData.tank, modelData.colors, sub);
+        DomEventHandler.removeListener(this, ws, "message", this.checkMessage);
 
-                ws.addEventListener("message", (message) => {
-                    PacketReceiver.handleMessage(message.data, player);
-                });
-                ws.addEventListener("close", (event) => {
-                    console.log(player.name + " disconnected " + event.code);
-                    PacketSender.removeSocket(id);
-                    EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, player);
-                });
-                ws.addEventListener("error", (error) => {
-                    console.log(error);
-                });
-
-                PacketSender.addSocket(id, (ws as any));
-
-                EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
-                console.log(player.name + " connected!");
-                player.sendPlayerName();
-                resolve(player);
-            }).catch(reject);
+        ws.addEventListener("message", (message) => {
+            PacketReceiver.handleMessage(message.data, player);
+        });
+        ws.addEventListener("close", (event) => {
+            console.log(player.name + " disconnected " + event.code);
+            PacketSender.removeSocket(id);
+            EventHandler.callEvent(EventHandler.Event.PLAYER_LEAVE, player);
+        });
+        ws.addEventListener("error", (error) => {
+            console.log(error);
         });
 
+        PacketSender.addSocket(id, (ws as any));
+
+        EventHandler.callEvent(EventHandler.Event.PLAYER_JOIN, player);
+        console.log(player.name + " connected!");
+        player.sendPlayerName();
+
+        return player;
     }
 
-    private getName(id: number, sub?: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            if (sub) {
-                this.databaseHandler.getPlayerUsername(sub).then(resolve).catch(reject);
-            } else {
-                resolve("Guest #" + id);
-            }
-        });
+    private async getName(id: number, sub?: string): Promise<string> {
+        let name;
+        if (sub) {
+            name = await this.databaseHandler.getPlayerUsername(sub);
+        } else {
+            name = "Guest #" + id;
+        }
+
+        return name;
+    }
+
+    private async getModelDetails(sub?: string) {
+        let modelData;
+        if (sub) {
+            modelData = await this.storeHandler.getPlayerCurrentSelection(sub);
+        } else {
+            modelData = {
+                tank: Player.DEFAULT_TANK,
+                colors: Player.DEFAULT_COLORS,
+            };
+        }
+
+        return modelData;
     }
 }

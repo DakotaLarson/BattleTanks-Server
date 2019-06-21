@@ -4,6 +4,7 @@ import DatabaseHandler from "./database/DatabaseHandler";
 import DomEventHandler from "./DomEventHandler";
 import EventHandler from "./EventHandler";
 import MetricsHandler from "./MetricsHandler";
+import StoreHandler from "./StoreHandler";
 import WebServer from "./WebServer";
 
 export default class WebSocketServer {
@@ -21,10 +22,10 @@ export default class WebSocketServer {
 
     private deadSockets: WebSocket[];
 
-    constructor(databaseHandler: DatabaseHandler, metricsHandler: MetricsHandler) {
+    constructor(databaseHandler: DatabaseHandler, metricsHandler: MetricsHandler, storeHandler: StoreHandler) {
         this.connectionCheckerId = setInterval(this.checkConnections.bind(this), 30000, 30000);
 
-        this.webServer = new WebServer(databaseHandler, metricsHandler);
+        this.webServer = new WebServer(databaseHandler, metricsHandler, storeHandler);
         this.wss = new WebSocket.Server({
             server: this.webServer.server,
             verifyClient: this.verifyClient.bind(this),
