@@ -435,28 +435,32 @@ export default class WebServer {
     }
 
     private async onPostStore(req: express.Request, res: express.Response) {
-        if (req.body && "token" in req.body) {
-            try {
+        try {
+
+            let result: any;
+            if (req.body && "token" in req.body) {
                 const data = await Auth.verifyId(req.body.token);
-                const result: any = await this.storeHandler.handleRequest(data.id, req.body);
-
-                if (result.data) {
-
-                    res.status(result.status).set({
-                        "content-type": "application/json",
-                    });
-                    res.send(result.data);
-
-                } else {
-                    res.sendStatus(result.status);
-                }
-            } catch (ex) {
-                console.error(ex);
-                res.sendStatus(500);
+                result = await this.storeHandler.handleRequest(req.body, data.id);
+            } else {
+                result = await this.storeHandler.handleRequest(req.body);
             }
-        } else {
-            res.sendStatus(400);
+
+            if (result.data) {
+
+                res.status(result.status).set({
+                    "content-type": "application/json",
+                });
+                res.send(result.data);
+
+            } else {
+                res.sendStatus(result.status);
+            }
+
+        } catch (ex) {
+            console.error(ex);
+            res.sendStatus(500);
         }
+
     }
 
     private async onPostSelection(req: express.Request, res: express.Response) {

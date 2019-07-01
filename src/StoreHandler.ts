@@ -51,14 +51,22 @@ export default class StoreHandler {
         this.databaseHandler = databaseHandler;
     }
 
-    public async handleRequest(id: any, body: any) {
+    public async handleRequest(body: any, id?: string) {
         let responseData;
-        if (body.purchase) {
-            responseData = await this.handlePurchase(id, body);
-        } else if (body.selection) {
-            responseData = this.handleSelection(id, body);
+        if (id) {
+            if (body.purchase) {
+                responseData = await this.handlePurchase(id, body);
+            } else if (body.selection) {
+                responseData = this.handleSelection(id, body);
+            } else {
+                const data = await this.getStore(id);
+                responseData = {
+                    status: 200,
+                    data,
+                };
+            }
         } else {
-            const data = await this.getStore(id);
+            const data = await this.getStore();
             responseData = {
                 status: 200,
                 data,
@@ -68,10 +76,14 @@ export default class StoreHandler {
         return responseData;
     }
 
-    public async getStore(id: string) {
+    public async getStore(id?: string) {
         const products = await this.databaseHandler.getPlayerProducts();
-        const purchases = await this.databaseHandler.getPlayerPurchases(id);
-        const selections = await this.databaseHandler.getPlayerSelections(id);
+        let purchases = [];
+        let selections = [];
+        if (id) {
+            purchases = await this.databaseHandler.getPlayerPurchases(id);
+            selections = await this.databaseHandler.getPlayerSelections(id);
+        }
 
         const tanks: any = {};
         const colors: any = {};
