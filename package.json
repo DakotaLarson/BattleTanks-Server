@@ -2,6 +2,7 @@
   "name": "tanks-server",
   "version": "1.0.0",
   "description": "Authoritative server responsible for Battle Tanks multiplayer gameplay",
+  "private": true,
   "main": "./build/App.js",
   "dependencies": {
     "body-parser": "^1.18.3",
