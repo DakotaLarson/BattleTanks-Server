@@ -11,6 +11,7 @@ export default class Gamemode {
     private static readonly LIFE_COUNT = 3;
     private static readonly OOB_ID = -1; // Out of Bounds Id
     private static readonly RESPAWN_TIME = 7500;
+    private static readonly DEV_RESPAWN_TIME = 2500;
     private static readonly PROTECTED_TIME = 3000;
 
     private match: Match;
@@ -18,12 +19,19 @@ export default class Gamemode {
     private lives: Map<number, number>;
     private protected: number[];
 
+    private respawnTime: number;
+
     private timeouts: NodeJS.Timeout[];
     constructor(match: Match) {
         this.match = match;
         this.lives = new Map();
         this.protected = [];
         this.timeouts = [];
+
+        this.respawnTime = Gamemode.RESPAWN_TIME;
+        if (process.argv.includes("dev")) {
+            this.respawnTime = Gamemode.DEV_RESPAWN_TIME;
+        }
     }
     public enable(): void {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_DAMAGE_PROJECTILE, this.onProjectileHit);
@@ -188,7 +196,7 @@ export default class Gamemode {
             if (timeoutIndex > -1) {
                 this.timeouts.splice(timeoutIndex, 1);
             }
-        }, Gamemode.RESPAWN_TIME);
+        }, this.respawnTime);
         this.timeouts.push(timeout);
     }
 

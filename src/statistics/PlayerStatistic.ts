@@ -1,5 +1,7 @@
 export default class PlayerStatistic {
 
+    private static readonly CURRENCY_DIVISOR = 10;
+
     private shots: number;
     private hits: number;
     private kills: number;
@@ -27,7 +29,7 @@ export default class PlayerStatistic {
         this.hits ++;
 
         this.points ++;
-        this.currency ++;
+        this.currency = this.calcuateCurrency(this.points); ;
 
         return {
             points: this.points,
@@ -38,7 +40,7 @@ export default class PlayerStatistic {
         this.kills ++;
 
         this.points += 2;
-        this.currency += 2;
+        this.currency = this.calcuateCurrency(this.points);
 
         return {
             kills: this.kills,
@@ -76,5 +78,9 @@ export default class PlayerStatistic {
             kills: this.kills,
             deaths: this.deaths,
         };
+    }
+
+    private calcuateCurrency(points: number) {
+        return Math.floor(points / PlayerStatistic.CURRENCY_DIVISOR);
     }
 }
