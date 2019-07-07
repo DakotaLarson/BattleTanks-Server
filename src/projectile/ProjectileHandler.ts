@@ -8,6 +8,11 @@ import Projectile from "./Projectile";
 
 export default class ProjectileHandler {
 
+    private static readonly PROJECTILE_HEIGHTS: Map<string, number> = new Map([
+        ["0", 0.575],
+        ["1", 0.85],
+    ]);
+
     private match: Match;
 
     private collisionHandler: CollisionHandler;
@@ -46,7 +51,8 @@ export default class ProjectileHandler {
     private onShoot(shooter: Player) {
         if (this.match.hasPlayer(shooter)) {
 
-            const position = shooter.position.clone().add(new Vector3(0, 0.575, 0));
+            const height = ProjectileHandler.PROJECTILE_HEIGHTS.get(shooter.modelId)!;
+            const position = shooter.position.clone().add(new Vector3(0, height, 0));
             const rotation = shooter.headRot + Math.PI;
             const id = ++ this.projectileId;
             const data = [position.x, position.y, position.z, rotation, id];
