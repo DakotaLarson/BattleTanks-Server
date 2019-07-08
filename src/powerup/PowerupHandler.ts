@@ -95,7 +95,7 @@ export default class PowerupHandler {
         } else if (type === 2) {
             return !player.hasSpeedBoost;
         } else if (type === 3) {
-            return player.ammoCount < Player.fullAmmoCount + Player.ammoBoost;
+            return player.ammoCount < Player.FULL_AMMO_COUNT + Player.AMMO_BOOST;
         } else {
             throw new Error("Unknown type: " + type);
         }

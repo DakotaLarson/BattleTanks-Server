@@ -16,18 +16,23 @@ export default class Player {
         "283621",
     ];
 
-    public static fullAmmoCount = 10;
+    public static FULL_AMMO_COUNT = 10;
+    public static readonly AMMO_BOOST = 5;
 
-    public static ammoBoost = 5;
-    public static healthBoost = 0.4;
-    public static speedBoost = 1.4;
-    public static speedBoostTime = 7.5;
-    public static shieldBoost = 0.4;
+    private static readonly HEAD_OFFSETS_BY_MODEL: Map<string, number> = new Map([
+        ["0", 0.0921],
+        ["1", 0.3567],
+    ]);
 
-    private static shotCooldown = 75;
+    private static readonly HEALTH_BOOST = 0.4;
+    private static readonly SPEED_BOOST = 1.4;
+    private static readonly SPEED_BOOST_TIME = 7.5;
+    private static readonly SHIELD_BOOST = 0.4;
 
-    private static ramCooldown = 7500;
-    private static ramUsageTime = 500;
+    private static readonly SHOT_COOLDOW = 75;
+
+    private static readonly RAM_COOLDOWN = 7500;
+    private static readonly RAM_USAGE_TIME = 500;
 
     public name: string;
     public id: number;
@@ -69,6 +74,8 @@ export default class Player {
 
     private ramTime: number;
 
+    private headOffset: number;
+
     constructor(name: string, id: number, modelId?: string, modelColors?: string[], sub?: string) {
         this.name = name;
         this.id = id;
@@ -86,6 +93,8 @@ export default class Player {
             this.modelColors = Player.DEFAULT_COLORS;
         }
 
+        this.headOffset = Player.HEAD_OFFSETS_BY_MODEL.get(this.modelId)!;
+
         this.position = new Vector3();
 
         this.bodyRot = 0;
@@ -100,7 +109,7 @@ export default class Player {
 
         this.hasSpeedBoost = false;
 
-        this.ammoCount = Player.fullAmmoCount;
+        this.ammoCount = Player.FULL_AMMO_COUNT;
         this.reloadPercentage = 1;
         this.reloading = false;
 
@@ -164,6 +173,7 @@ export default class Player {
                 pos: [player.position.x, player.position.y, player.position.z, player.bodyRot],
                 headRot: player.headRot,
                 color: player.color,
+                headOffset: player.headOffset,
             });
         }
     }
@@ -327,10 +337,10 @@ export default class Player {
 
     public ram() {
         const currentTime = Date.now();
-        if (currentTime - this.ramTime > Player.ramCooldown) {
+        if (currentTime - this.ramTime > Player.RAM_COOLDOWN) {
             this.ramTime = currentTime;
             if (!this.isBot()) {
-                PacketSender.sendPlayerRam(this.id, Player.ramUsageTime);
+                PacketSender.sendPlayerRam(this.id, Player.RAM_USAGE_TIME);
             }
         }
     }
@@ -371,7 +381,7 @@ export default class Player {
         this.headRot = pos.w;
 
         if (!this.isBot()) {
-            PacketSender.sendPlayerAddition(this.id, pos, this.color, this.modelId, this.modelColors);
+            PacketSender.sendPlayerAddition(this.id, pos, this.color, this.modelId, this.modelColors, this.headOffset);
 
             PacketSender.sendPlayerHealth(this.id, this.health);
             PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
@@ -422,31 +432,31 @@ export default class Player {
             this.finishReload(true);
             this.reloadPercentage = 1;
         }
-        this.ammoCount = Player.fullAmmoCount + Player.ammoBoost;
+        this.ammoCount = Player.FULL_AMMO_COUNT + Player.AMMO_BOOST;
         if (!this.isBot()) {
             PacketSender.sendPlayerAmmoStatus(this.id, this.ammoCount, this.reloadPercentage);
         }
     }
 
     public boostHealth() {
-        this.alterHealth(Player.healthBoost);
+        this.alterHealth(Player.HEALTH_BOOST);
     }
 
     public boostSpeed() {
         this.hasSpeedBoost = true;
         if (!this.isBot()) {
-            PacketSender.sendPlayerSpeedMultiplier(this.id, Player.speedBoost);
+            PacketSender.sendPlayerSpeedMultiplier(this.id, Player.SPEED_BOOST);
         }
         const timeout = setTimeout(() => {
             this.resetSpeed();
             this.removeTimeout(timeout);
-        }, Player.speedBoostTime * 1000);
+        }, Player.SPEED_BOOST_TIME * 1000);
         this.timeouts.push(timeout);
-        setTimeout(this.resetSpeed.bind(this), Player.speedBoostTime * 1000);
+        setTimeout(this.resetSpeed.bind(this), Player.SPEED_BOOST_TIME * 1000);
     }
 
     public boostShield() {
-        this.alterShield(Player.shieldBoost);
+        this.alterShield(Player.SHIELD_BOOST);
     }
 
     public isBot() {
@@ -499,7 +509,7 @@ export default class Player {
     }
 
     private finishReload(sendData: boolean) {
-        this.ammoCount = Player.fullAmmoCount;
+        this.ammoCount = Player.FULL_AMMO_COUNT;
         EventHandler.removeListener(this, EventHandler.Event.GAME_TICK, this.onTick);
         if (sendData && !this.isBot()) {
             PacketSender.sendPlayerReloadEnd(this.id);
@@ -510,12 +520,12 @@ export default class Player {
     private validateShot(callback: () => void) {
         const currentTime = performance.now();
         const timeDiff = currentTime - this.lastShotTime;
-        if (timeDiff >= Player.shotCooldown) {
+        if (timeDiff >= Player.SHOT_COOLDOW) {
             callback();
             this.lastShotTime = currentTime;
         } else {
             if (!this.nextShotScheduled) {
-                const timeRemaining = Player.shotCooldown - timeDiff;
+                const timeRemaining = Player.SHOT_COOLDOW - timeDiff;
                 this.nextShotScheduled = true;
                 const timeout = setTimeout(() => {
                     callback();

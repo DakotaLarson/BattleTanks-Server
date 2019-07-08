@@ -212,8 +212,8 @@ export default class StoreHandler {
     }
 
     private getTankColorData(product: any, purchases: any[], selections: any[]) {
-        const purchasedColors = [];
-        const selectedColors = [];
+        let purchasedColors = [];
+        let selectedColors = [];
 
         for (const purchase of purchases) {
             if (purchase.parent === product.id) {
@@ -225,6 +225,13 @@ export default class StoreHandler {
             if (selection.parent === product.id) {
                 selectedColors[selection.position] = selection.title;
             }
+        }
+
+        if (!purchasedColors.length) {
+            purchasedColors = StoreHandler.TANK_DEFAULT_COLORS.get(product.title)!;
+        }
+        if (!selectedColors.length) {
+            selectedColors = StoreHandler.TANK_DEFAULT_COLORS.get(product.title)!;
         }
 
         return {
