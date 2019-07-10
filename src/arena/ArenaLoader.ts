@@ -1,14 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
+import Globals from "../Globals";
 import Arena from "./Arena";
 
 export default class ArenaLoader {
-    private static arenas: Arena[] = [];
 
     public static loadArenas(): Promise<string> {
         return new Promise((resolve, reject) => {
 
-            ArenaLoader.arenas = [];
+            const arenas: Arena[] = [];
 
             Arena.maximumPlayerCount = 0;
             Arena.minimumPlayerCount = Number.MAX_SAFE_INTEGER;
@@ -33,17 +33,22 @@ export default class ArenaLoader {
                                 for (const arena of arenaFiles) {
 
                                     ArenaLoader.getArenaData(dirPath, arena).then((arenaData: string) => {
-                                        this.arenas.push(new Arena(arenaData));
+                                        arenas.push(new Arena(arenaData));
                                         if (++ loadedArenaCount === expectedArenaCount) {
                                             console.log("Maximum Limit: " + Arena.maximumPlayerCount);
                                             console.log("Minimum Limit: " + Arena.minimumPlayerCount);
 
+                                            Globals.setGlobal(Globals.Global.ARENAS, arenas);
                                             resolve(loadedArenaCount + " arena(s) loaded");
+
                                         }
                                     }).catch((message: string) => {
                                         console.error(message);
                                         if (-- expectedArenaCount === loadedArenaCount) {
+
+                                            Globals.setGlobal(Globals.Global.ARENAS, arenas);
                                             resolve(loadedArenaCount + " arena(s) loaded");
+
                                         }
                                     });
                                 }
@@ -66,44 +71,34 @@ export default class ArenaLoader {
         });
     }
 
-    public static getRandomArena(): Arena {
-        const arenaCount = ArenaLoader.arenas.length;
-        if (arenaCount) {
-            const index = Math.floor(Math.random() * arenaCount);
-            return ArenaLoader.arenas[index];
-        } else {
-            throw new Error("No arenas loaded on server");
-        }
-    }
+    // public static getArena(playerCount: number): Arena {
+    //     if (ArenaLoader.arenas.length) {
+    //         const validArenas = [];
 
-    public static getArena(playerCount: number): Arena {
-        if (ArenaLoader.arenas.length) {
-            const validArenas = [];
+    //         // Get all arenas that can fit players
+    //         let playerCountDiff = Number.MAX_SAFE_INTEGER;
+    //         for (const arena of ArenaLoader.arenas) {
+    //             if (arena.maximumPlayerCount >= playerCount && arena.minimumPlayerCount <= playerCount) {
+    //                 playerCountDiff = Math.min(playerCountDiff, arena.maximumPlayerCount - playerCount);
+    //                 validArenas.push(arena);
+    //             }
+    //         }
 
-            // Get all arenas that can fit players
-            let playerCountDiff = Number.MAX_SAFE_INTEGER;
-            for (const arena of ArenaLoader.arenas) {
-                if (arena.maximumPlayerCount >= playerCount && arena.minimumPlayerCount <= playerCount) {
-                    playerCountDiff = Math.min(playerCountDiff, arena.maximumPlayerCount - playerCount);
-                    validArenas.push(arena);
-                }
-            }
+    //         if (!validArenas.length) {
+    //             throw new Error("No arenas can hold player count: " + playerCount);
+    //         }
 
-            if (!validArenas.length) {
-                throw new Error("No arenas can hold player count: " + playerCount);
-            }
-
-            const bestFitArenas = [];
-            for (const arena of validArenas) {
-                if (arena.maximumPlayerCount - playerCount === playerCountDiff) {
-                    bestFitArenas.push(arena);
-                }
-            }
-            return bestFitArenas[Math.floor(Math.random() * bestFitArenas.length)];
-        } else {
-            throw new Error("No arenas loaded on server");
-        }
-    }
+    //         const bestFitArenas = [];
+    //         for (const arena of validArenas) {
+    //             if (arena.maximumPlayerCount - playerCount === playerCountDiff) {
+    //                 bestFitArenas.push(arena);
+    //             }
+    //         }
+    //         return bestFitArenas[Math.floor(Math.random() * bestFitArenas.length)];
+    //     } else {
+    //         throw new Error("No arenas loaded on server");
+    //     }
+    // }
 
     private static getArenaData(dirPath: string, fileName: string): Promise<string> {
         return new Promise((resolve, reject) => {

@@ -1,5 +1,4 @@
-import Arena from "../Arena";
-import ArenaLoader from "../ArenaLoader";
+import Arena from "../arena/Arena";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
@@ -7,10 +6,11 @@ import GameStatus from "../GameStatus";
 import MatchTimer from "../MatchTimer";
 import Match from "./Match";
 import MultiplayerService from "./MultiplayerService";
+import VoteHandler from "./VoteHandler";
 
 export default class Lobby {
-    private static readonly WAIT_BETWEEN_MATCHES = 10000;
-    private static readonly DEV_WAIT_BETWEEN_MATCHES = 2500;
+    private static readonly WAIT_BETWEEN_MATCHES = 15000;
+    private static readonly DEV_WAIT_BETWEEN_MATCHES = 15000;
     private static readonly MATCH_TIME = 180;
 
     private status: GameStatus;
@@ -21,15 +21,20 @@ export default class Lobby {
 
     private startTimeout: NodeJS.Timeout | undefined;
 
-    constructor(service: MultiplayerService) {
+    private voteHandler: VoteHandler;
 
+    constructor(service: MultiplayerService) {
         this.status = GameStatus.WAITING;
         this.service = service;
+
+        this.voteHandler = new VoteHandler(this);
     }
 
     public enable() {
         EventHandler.addListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
         EventHandler.addListener(this, EventHandler.Event.MATCH_TIMER_COMPLETE, this.onMatchTimerComplete);
+
+        this.voteHandler.enable();
     }
 
     public disable() {
@@ -40,11 +45,14 @@ export default class Lobby {
         if (this.startTimeout) {
             clearTimeout(this.startTimeout);
         }
+
+        this.voteHandler.disable();
     }
 
     public addPlayer(player: Player) {
 
         player.sendGameStatus(this.status);
+        this.voteHandler.sendVoteList(player);
 
         let isRunning = false;
         if (this.status === GameStatus.WAITING) {
@@ -68,6 +76,8 @@ export default class Lobby {
     }
 
     public removePlayer(player: Player) {
+        this.voteHandler.removePlayer(player);
+
         let sendMessage = false;
         if (this.status === GameStatus.RUNNING) {
             sendMessage = true;
@@ -84,6 +94,7 @@ export default class Lobby {
     }
 
     public removePlayers(players: Player[]) {
+        this.voteHandler.removePlayers();
 
         if (this.status === GameStatus.RUNNING) {
             for (const player of players) {
@@ -147,6 +158,7 @@ export default class Lobby {
         PlayerHandler.addMatch(this.match, this);
         this.match.run();
         this.matchTimer.start();
+        this.voteHandler.generateVotableArenas();
     }
     private startMatch() {
         this.updateStatus(GameStatus.STARTING);
@@ -161,7 +173,7 @@ export default class Lobby {
             const playerCount = PlayerHandler.getLobbyPlayerCount(this);
 
             if (playerCount >= Arena.minimumPlayerCount) {
-                const arena = ArenaLoader.getArena(playerCount);
+                const arena = this.voteHandler.getNextArena();
                 this.createMatch(arena);
                 this.updateStatus(GameStatus.RUNNING);
                 EventHandler.callEvent(EventHandler.Event.BOTS_AFTER_MATCH_START, {

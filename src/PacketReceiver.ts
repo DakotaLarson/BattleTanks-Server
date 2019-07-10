@@ -58,6 +58,13 @@ const receivePing = (player: Player) => {
     sendPong(player.id);
 };
 
+const receiveVote = (player: Player, vote: number) => {
+    EventHandler.callEvent(EventHandler.Event.PLAYER_VOTE, {
+        player,
+        vote,
+    });
+};
+
 const handlers: any = [
     receivePlayerMove,
     receivePlayerShoot,
@@ -68,6 +75,7 @@ const handlers: any = [
     receivePowerupPickup,
     receiveRamCollision,
     receivePing,
+    receiveVote,
 ];
 
 enum DataType {

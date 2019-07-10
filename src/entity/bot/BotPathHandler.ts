@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as WorkerThreads from "worker_threads";
-import Arena from "../../Arena";
+import Arena from "../../arena/Arena";
 import Lobby from "../../core/Lobby";
 import {Grid} from "../../pathfinding/PathFinding";
 import Vector3 from "../../vector/Vector3";

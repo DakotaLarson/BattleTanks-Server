@@ -58,6 +58,9 @@ enum Packet {
     POWERUP_APPLICATION,
 
     PONG,
+
+    VOTE_LIST,
+    VOTE_UPDATE,
 }
 
 enum DataType {
@@ -297,6 +300,17 @@ export const sendPowerupApplication = (id: number, powerupId: number) => {
 
 export const sendPong = (id: number) => {
     const data = constructData(Packet.PONG, undefined, DataType.HEADER_ONLY);
+    send(id, data);
+};
+
+export const sendVoteList = (id: number, voteList: any[]) => {
+    const data = constructData(Packet.VOTE_LIST, JSON.stringify(voteList), DataType.STRING);
+    send(id, data);
+};
+
+export const sendVoteUpdate = (id: number, voteIndex: number, voteCount: number) => {
+    const voteUpdate = [voteIndex, voteCount];
+    const data = constructData(Packet.VOTE_UPDATE, voteUpdate, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 

@@ -1,5 +1,5 @@
-import Vector3 from "./vector/Vector3";
-import Vector4 from "./vector/Vector4";
+import Vector3 from "../vector/Vector3";
+import Vector4 from "../vector/Vector4";
 
 export default class Arena {
 
@@ -7,6 +7,7 @@ export default class Arena {
     public static minimumPlayerCount: number;
 
     public title: string;
+    public author: string;
 
     public width: number;
     public height: number;
@@ -33,6 +34,8 @@ export default class Arena {
         this.rawData = data;
 
         this.title = data.title;
+        this.author = data.author;
+
         this.width = data.width;
         this.height = data.height;
 

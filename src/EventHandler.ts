@@ -8,6 +8,7 @@ enum Event {
     PLAYER_LEAVE,
     PLAYER_SHOOT,
     PLAYER_MOVE,
+    PLAYER_VOTE,
 
     // WS
     WS_CONNECTION_CHECK,
@@ -61,6 +62,7 @@ enum Event {
     NOTIFICATION_GLOBAL_SEND,
     NOTIFICATION_DELETE,
     NOTIFICATION_DELETE_MULTIPLE,
+
 }
 
 enum Level {

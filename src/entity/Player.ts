@@ -310,6 +310,18 @@ export default class Player {
         }, 1000);
     }
 
+    public sendVoteList(votableArenas: any[]) {
+        if (!this.isBot()) {
+            PacketSender.sendVoteList(this.id, votableArenas);
+        }
+    }
+
+    public sendVoteUpdate(voteIndex: number, voteCount: number) {
+        if (!this.isBot()) {
+            PacketSender.sendVoteUpdate(this.id, voteIndex, voteCount);
+        }
+    }
+
     public onMove(data: number[]) {
         this.position.x = data[0];
         this.position.y = data[1];

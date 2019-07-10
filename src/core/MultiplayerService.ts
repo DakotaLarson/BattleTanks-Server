@@ -1,4 +1,4 @@
-import Arena from "../Arena";
+import Arena from "../arena/Arena";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";

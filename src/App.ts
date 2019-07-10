@@ -1,5 +1,5 @@
 import {performance} from "perf_hooks";
-import ArenaLoader from "./ArenaLoader";
+import ArenaLoader from "./arena/ArenaLoader";
 import MultiplayerService from "./core/MultiplayerService";
 import DatabaseHandler from "./database/DatabaseHandler";
 import StoreDatabaseHandler from "./database/StoreDatabaseHandler";

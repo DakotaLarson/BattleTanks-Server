@@ -1,4 +1,4 @@
-import Arena from "../../Arena";
+import Arena from "../../arena/Arena";
 import Vector3 from "../../vector/Vector3";
 
 export default class BotHitscanHandler {
