@@ -148,6 +148,10 @@ export default class Lobby {
 
         this.updateStatus(GameStatus.WAITING);
         if (!this.service.onMatchEnd(this)) {
+            const lobbyPlayers = PlayerHandler.getLobbyPlayers(this);
+            for (const player of lobbyPlayers) {
+                this.voteHandler.sendVoteList(player);
+            }
             this.startMatch();
         }
     }

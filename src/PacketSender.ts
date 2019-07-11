@@ -308,9 +308,8 @@ export const sendVoteList = (id: number, voteList: any[]) => {
     send(id, data);
 };
 
-export const sendVoteUpdate = (id: number, voteIndex: number, voteCount: number) => {
-    const voteUpdate = [voteIndex, voteCount];
-    const data = constructData(Packet.VOTE_UPDATE, voteUpdate, DataType.NUMBER_ARRAY);
+export const sendVoteUpdate = (id: number, voteCounts: number[]) => {
+    const data = constructData(Packet.VOTE_UPDATE, voteCounts, DataType.NUMBER_ARRAY);
     send(id, data);
 };
 

@@ -128,7 +128,7 @@ export default class VoteHandler {
                 this.addVote(player, this.votableArenas[vote]);
             }
 
-            this.updatePlayers(vote, this.votableArenas[vote].voteCount);
+            this.updatePlayers();
         }
     }
 
@@ -155,10 +155,16 @@ export default class VoteHandler {
         this.playerVotes.set(player, votableArena);
     }
 
-    private updatePlayers(voteIndex: number, voteCount: number) {
+    private updatePlayers() {
+        const voteCounts = [];
+        for (const votableArena of this.votableArenas) {
+            voteCounts.push(votableArena.voteCount);
+        }
+        voteCounts.push(this.randomArenaVoteCount);
+
         const players = PlayerHandler.getLobbyPlayers(this.lobby);
         for (const player of players) {
-            player.sendVoteUpdate(voteIndex, voteCount);
+            player.sendVoteUpdate(voteCounts);
         }
     }
 

@@ -316,9 +316,9 @@ export default class Player {
         }
     }
 
-    public sendVoteUpdate(voteIndex: number, voteCount: number) {
+    public sendVoteUpdate(voteCounts: number[]) {
         if (!this.isBot()) {
-            PacketSender.sendVoteUpdate(this.id, voteIndex, voteCount);
+            PacketSender.sendVoteUpdate(this.id, voteCounts);
         }
     }
 
