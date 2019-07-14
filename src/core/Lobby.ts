@@ -10,7 +10,7 @@ import VoteHandler from "./VoteHandler";
 
 export default class Lobby {
     private static readonly WAIT_BETWEEN_MATCHES = 15000;
-    private static readonly DEV_WAIT_BETWEEN_MATCHES = 15000;
+    private static readonly DEV_WAIT_BETWEEN_MATCHES = 5000;
     private static readonly MATCH_TIME = 180;
 
     private status: GameStatus;
@@ -226,16 +226,30 @@ export default class Lobby {
     }
 
     private constructChatMessage(sender: Player, message: string) {
-        const segments = [];
-        segments.push({
-            color: sender.color,
-            text: sender.name,
-            profileLink: sender.sub !== undefined,
-        },
-        {
-            color: sender.sub ? 0xffffff : 0xa0a0a0,
-            text: ": " + message,
-        });
+        const rank = sender.getRank();
+        const segments = [
+            {
+                color: 0xff00ff,
+                text: "[",
+            },
+            {
+                color: 0xffffff,
+                text: rank,
+            },
+            {
+                color: 0xff00ff,
+                text: "] ",
+            },
+            {
+                color: sender.color,
+                text: sender.name,
+                profileLink: sender.sub !== undefined,
+            },
+            {
+                color: sender.sub ? 0xffffff : 0xa0a0a0,
+                text: ": " + message,
+            },
+        ];
         return segments;
     }
 }

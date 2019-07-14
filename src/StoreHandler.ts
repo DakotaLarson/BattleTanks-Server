@@ -32,6 +32,11 @@ export default class StoreHandler {
             "Charcoal",
             "Gold",
         ]],
+        ["The Quad", [
+            "Sand",
+            "Brown",
+            "Dark Gray",
+        ]],
     ]);
 
     private static readonly TANK_COLORS = [

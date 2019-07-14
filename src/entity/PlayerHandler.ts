@@ -7,6 +7,17 @@ export default class PlayerHandler {
     private static players: Map<Lobby, Player[]> = new Map();
     private static matches: Map<Match, Lobby> = new Map();
 
+    public static getPlayer(sub: string) {
+        for (const [, players] of PlayerHandler.players) {
+            for (const player of players) {
+                if (player.sub === sub) {
+                    return player;
+                }
+            }
+        }
+        return undefined;
+    }
+
     public static addLobby(lobby: Lobby) {
         PlayerHandler.players.set(lobby, []);
     }

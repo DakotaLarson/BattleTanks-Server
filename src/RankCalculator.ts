@@ -1,3 +1,4 @@
+import PlayerHandler from "./entity/PlayerHandler";
 import EventHandler from "./EventHandler";
 
 export default class RankCalculator {
@@ -42,6 +43,22 @@ export default class RankCalculator {
                 body,
             });
         }
+
+        const player = PlayerHandler.getPlayer(id);
+        if (player) {
+            player.addPoints(increment);
+        }
+    }
+
+    public static getData(points: number) {
+        const level = Math.max(Math.ceil(Math.pow(points, 1 / Math.E)), 1);
+        const rankIndex = Math.min(Math.floor((level - 1) / RankCalculator.LEVELS_PER_RANK), RankCalculator.RANKS.length - 1);
+
+        const rank = RankCalculator.RANKS[rankIndex];
+        return {
+            level: "" + level,
+            rank,
+        };
     }
 
     private static isChanged(points: number, increment: number) {
@@ -51,17 +68,6 @@ export default class RankCalculator {
         return {
             level: prevData.level !== currentData.level ? currentData.level : 0,
             rank: prevData.rank !== currentData.rank ? currentData.rank : undefined,
-        };
-    }
-
-    private static getData(points: number) {
-        const level = Math.ceil(Math.pow(points, 1 / Math.E));
-        const rankIndex = Math.min(Math.floor((level - 1) / RankCalculator.LEVELS_PER_RANK), RankCalculator.RANKS.length - 1);
-
-        const rank = RankCalculator.RANKS[rankIndex];
-        return {
-            level: "" + level,
-            rank,
         };
     }
 

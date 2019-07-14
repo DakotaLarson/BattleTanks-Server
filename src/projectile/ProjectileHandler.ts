@@ -11,6 +11,7 @@ export default class ProjectileHandler {
     private static readonly PROJECTILE_HEIGHTS: Map<string, number> = new Map([
         ["0", 0.575],
         ["1", 0.85],
+        ["2", 0.92],
     ]);
 
     private match: Match;

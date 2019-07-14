@@ -110,6 +110,10 @@ export default class DatabaseHandler {
         }
     }
 
+    public async getPlayerUsernameAndPoints(id: string) {
+        return await this.getPlayerPointsAndName(id, "points");
+    }
+
     public async getPlayerId(username: string): Promise<string> {
         const sql = "SELECT `id` FROM `players` WHERE `username` = ?";
 

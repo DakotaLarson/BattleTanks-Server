@@ -3,6 +3,7 @@ import Audio from "../Audio";
 import EventHandler from "../EventHandler";
 import * as PacketSender from "../PacketSender";
 import Powerup from "../powerup/Powerup";
+import RankCalculator from "../RankCalculator";
 import Vector3 from "../vector/Vector3";
 import Vector4 from "../vector/Vector4";
 
@@ -22,6 +23,7 @@ export default class Player {
     private static readonly HEAD_OFFSETS_BY_MODEL: Map<string, number> = new Map([
         ["0", 0.0921],
         ["1", 0.3567],
+        ["2", 0.413],
     ]);
 
     private static readonly HEALTH_BOOST = 0.4;
@@ -64,6 +66,8 @@ export default class Player {
 
     protected timeouts: NodeJS.Timeout[];
 
+    private points: number;
+
     private reloadPercentage: number;
     private reloading: boolean;
 
@@ -76,7 +80,7 @@ export default class Player {
 
     private headOffset: number;
 
-    constructor(name: string, id: number, modelId?: string, modelColors?: string[], sub?: string) {
+    constructor(name: string, id: number, points: number, modelId?: string, modelColors?: string[], sub?: string) {
         this.name = name;
         this.id = id;
         this.sub = sub;
@@ -107,6 +111,8 @@ export default class Player {
         this.health = 1;
         this.shield = 0;
 
+        this.points = points;
+
         this.hasSpeedBoost = false;
 
         this.ammoCount = Player.FULL_AMMO_COUNT;
@@ -122,6 +128,15 @@ export default class Player {
 
         this.ramTime = 0;
         this.timeouts = [];
+
+    }
+
+    public addPoints(points: number) {
+        this.points += points;
+    }
+
+    public getRank() {
+        return RankCalculator.getData(this.points).rank;
     }
 
     public sendPlayerName() {
@@ -168,6 +183,7 @@ export default class Player {
             PacketSender.sendConnectedPlayerAddition(this.id, {
                 id: player.id,
                 name: player.name,
+                rank: player.getRank(),
                 modelId: player.modelId,
                 modelColors: player.modelColors,
                 pos: [player.position.x, player.position.y, player.position.z, player.bodyRot],

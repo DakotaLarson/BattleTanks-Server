@@ -66,9 +66,9 @@ export default class PlayerConnector {
 
     private async createPlayer(ws: WebSocket, sub?: string): Promise<Player> {
         const id = PlayerConnector.getNextId();
-        const name = await this.getName(id, sub);
+        const details = await this.getPlayerDetails(id, sub);
         const modelData = await this.getModelDetails(sub);
-        const player = new Player(name, id, modelData.tank, modelData.colors, sub);
+        const player = new Player(details.username, id, details.points, modelData.tank, modelData.colors, sub);
         DomEventHandler.removeListener(this, ws, "message", this.checkMessage);
 
         ws.addEventListener("message", (message) => {
@@ -92,15 +92,18 @@ export default class PlayerConnector {
         return player;
     }
 
-    private async getName(id: number, sub?: string): Promise<string> {
-        let name;
+    private async getPlayerDetails(id: number, sub?: string): Promise<any> {
+        let details;
         if (sub) {
-            name = await this.databaseHandler.getPlayerUsername(sub);
+            details = await this.databaseHandler.getPlayerUsernameAndPoints(sub);
         } else {
-            name = "Guest #" + id;
+            details = {
+                username: "Guest #" + id,
+                points: 0,
+            };
         }
 
-        return name;
+        return details;
     }
 
     private async getModelDetails(sub?: string) {
