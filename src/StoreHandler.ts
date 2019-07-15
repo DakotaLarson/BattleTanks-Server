@@ -48,6 +48,9 @@ export default class StoreHandler {
         "Light Gray",
         "Charcoal",
         "Gold",
+        "Sand",
+        "Brown",
+        "Dark Gray",
     ];
 
     private databaseHandler: StoreDatabaseHandler;
