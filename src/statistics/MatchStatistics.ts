@@ -1,4 +1,6 @@
+import Audio from "../Audio";
 import Match from "../core/Match";
+import { Team } from "../core/Team";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
@@ -76,7 +78,7 @@ export default class MatchStatistics {
         }
     }
 
-    public updateSpectator(player: Player) {
+    public updateLateJoinPlayer(player: Player) {
         for (const [id, statistic] of this.teamAPlayerStatistics) {
             const stat: any = statistic.getStatisticUpdate();
             stat.id = id;
@@ -89,27 +91,54 @@ export default class MatchStatistics {
         }
     }
 
+    public addLatePlayer(player: Player, team: Team) {
+        if (team === Team.A) {
+            this.teamAPlayerStatistics.set(player.id, new PlayerStatistic());
+        } else if (team === Team.B) {
+            this.teamBPlayerStatistics.set(player.id, new PlayerStatistic());
+        } else {
+            throw new Error("Unrecognized team");
+        }
+    }
+
+    public getWinningTeam() {
+        const teamAPoints = this.teamAHits + this.teamAKills * 2;
+        const teamBPoints = this.teamBHits + this.teamBKills * 2;
+
+        if (teamAPoints > teamBPoints) {
+            return Team.A;
+        } else if (teamBPoints > teamAPoints) {
+            return Team.B;
+        } else {
+            return undefined;
+        }
+    }
+
     private onSend(data: any) {
         if (data.match === this.match) {
 
-            // The playerId is the id of the last player killed.
-            const successfulCompletion = data.playerId !== undefined;
-            const teamALost = this.teamAPlayerStatistics.has(data.playerId);
-            const teamBLost = this.teamBPlayerStatistics.has(data.playerId);
+            const winningTeam = this.getWinningTeam();
+            for (const player of PlayerHandler.getMatchPlayers(this.match)) {
+                if (this.match.getTeam(player) === winningTeam) {
+                    player.sendAudioRequest(Audio.WIN);
+                } else {
+                    player.sendAudioRequest(Audio.LOSE);
+                }
+            }
 
             const databaseStats: Map<string, any> = new Map();
 
-            this.teamAPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
-                const stats = stat.getStatistics(!teamALost, this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills, successfulCompletion);
+            for (const [id, stat] of this.teamAPlayerStatistics) {
+                const stats = stat.getStatistics(!(winningTeam === Team.B), this.teamAShots, this.teamAHits, this.teamAKills, this.teamBShots, this.teamBHits, this.teamBKills);
                 const player = this.sendStatsToPlayer(id, stats);
-                this.updateDatabaseStats(player, stats, databaseStats, successfulCompletion);
-            });
+                this.updateDatabaseStats(player, stats, databaseStats);
+            }
 
-            this.teamBPlayerStatistics.forEach((stat: PlayerStatistic, id: number) => {
-                const stats = stat.getStatistics(!teamBLost, this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills, successfulCompletion);
+            for (const [id, stat] of this.teamBPlayerStatistics) {
+                const stats = stat.getStatistics(!(winningTeam === Team.A), this.teamBShots, this.teamBHits, this.teamBKills, this.teamAShots, this.teamAHits, this.teamAKills);
                 const player = this.sendStatsToPlayer(id, stats);
-                this.updateDatabaseStats(player, stats, databaseStats, successfulCompletion);
-            });
+                this.updateDatabaseStats(player, stats, databaseStats);
+            }
 
             EventHandler.callEvent(EventHandler.Event.DB_PLAYERS_UPDATE, databaseStats);
         }
@@ -194,22 +223,12 @@ export default class MatchStatistics {
         }
     }
 
-    private updateDatabaseStats(player: Player, stats: number[], databaseStats: Map<string, any>, successfulCompletion: boolean) {
+    private updateDatabaseStats(player: Player, stats: number[], databaseStats: Map<string, any>) {
         if (player.sub) {
 
-            let victories;
-            let defeats;
-            if (successfulCompletion) {
-                victories = stats[12] ? 1 : 0;
-                defeats = stats[12] ? 0 : 1;
-            } else {
-                victories = 0;
-                defeats = 0;
-            }
-
             const data = {
-                victories,
-                defeats,
+                victories: stats[12] ? 1 : 0,
+                defeats: stats[12] ? 0 : 1,
                 shots: stats[6],
                 hits: stats[7],
                 kills: stats[8],
@@ -217,6 +236,7 @@ export default class MatchStatistics {
                 points: stats[10],
                 currency: stats[11],
             };
+
             databaseStats.set(player.sub, data);
         }
     }
@@ -239,4 +259,5 @@ export default class MatchStatistics {
             });
         }
     }
+
 }

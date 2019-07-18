@@ -6,7 +6,11 @@ import PowerupHandler from "../powerup/PowerupHandler";
 import ProjectileHandler from "../projectile/ProjectileHandler";
 import MatchStatistics from "../statistics/MatchStatistics";
 import Vector4 from "../vector/Vector4";
-import Gamemode from "./Gamemode";
+import Gamemode from "./gamemodes/Gamemode";
+import { GamemodeType } from "./gamemodes/GamemodeType";
+import TeamDeathmatch from "./gamemodes/TeamDeathmatch";
+import TeamElimination from "./gamemodes/TeamElimination";
+import { Team } from "./Team";
 
 export default class Match {
 
@@ -26,13 +30,19 @@ export default class Match {
 
     private projectileHandler: ProjectileHandler;
 
-    constructor(arena: Arena) {
+    constructor(arena: Arena, gamemodeType: GamemodeType) {
         this.arena = arena;
 
         this.projectileHandler = new ProjectileHandler(this);
         this.powerupHandler = new PowerupHandler(this);
 
-        this.gamemode = new Gamemode(this);
+        if (gamemodeType === GamemodeType.TEAM_DEATHMATCH) {
+            this.gamemode = new TeamDeathmatch(this);
+        } else if (gamemodeType === GamemodeType.TEAM_ELIMINATION) {
+            this.gamemode = new TeamElimination(this);
+        } else {
+            throw new Error("Unrecognized gamemode type:" + gamemodeType);
+        }
 
         this.teamAPlayers = [];
         this.teamBPlayers = [];
@@ -49,28 +59,20 @@ export default class Match {
         this.gamemode.enable();
 
         for (const player of PlayerHandler.getMatchPlayers(this)) {
-            let spawn: Vector4;
 
             if (this.teamAPlayers.length < this.teamBPlayers.length) {
-                this.teamAPlayers.push(player);
-                player.color = Match.TEAM_A_COLOR;
-                spawn = this.arena.getNextTeamASpawn();
+                this.joinTeamA(player);
             } else if (this.teamBPlayers.length < this.teamAPlayers.length) {
-                this.teamBPlayers.push(player);
-                player.color = Match.TEAM_B_COLOR;
-                spawn = this.arena.getNextTeamBSpawn();
+                this.joinTeamB(player);
             } else {
                 if (Math.random() >= 0.5) {
-                    this.teamAPlayers.push(player);
-                    player.color = Match.TEAM_A_COLOR;
-                    spawn = this.arena.getNextTeamASpawn();
+                    this.joinTeamA(player);
                 } else {
-                    this.teamBPlayers.push(player);
-                    player.color = Match.TEAM_B_COLOR;
-                    spawn = this.arena.getNextTeamBSpawn();
+                    this.joinTeamB(player);
                 }
             }
-            player.spawn(spawn);
+
+            player.spawn(this.getSpawn(player));
 
             for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
                 if (otherPlayer !== player) {
@@ -123,7 +125,11 @@ export default class Match {
         player.sendPlayerSpectating();
         player.sendArena(this.arena.getRawData());
         this.powerupHandler.onPlayerAddition(player);
-        (this.matchStats as MatchStatistics).updateSpectator(player);
+        (this.matchStats as MatchStatistics).updateLateJoinPlayer(player);
+
+        if (this.gamemode.getType() === GamemodeType.TEAM_DEATHMATCH) {
+            this.joinTeamLate(player);
+        }
 
         for (const otherPlayer of PlayerHandler.getMatchPlayers(this)) {
             if (player !== otherPlayer && otherPlayer.isAlive) {
@@ -158,17 +164,25 @@ export default class Match {
     public getSpawn(player: Player): Vector4 {
         if (this.teamAPlayers.includes(player)) {
             return this.arena.getNextTeamASpawn();
+        } else if (this.teamBPlayers.includes(player)) {
+            return this.arena.getNextTeamBSpawn();
         } else {
-            if (this.teamBPlayers.includes(player)) {
-                return this.arena.getNextTeamBSpawn();
-            } else {
-                throw new Error("Player is not part of a team and cannot be spawned in.");
-            }
+            throw new Error("Player is not part of a team and cannot be spawned in.");
         }
     }
 
     public onSameTeam(player: Player, otherPlayer: Player) {
         return this.teamAPlayers.includes(player) && this.teamAPlayers.includes(otherPlayer) || this.teamBPlayers.includes(player) && this.teamBPlayers.includes(otherPlayer);
+    }
+
+    public getTeam(player: Player) {
+        if (this.teamAPlayers.includes(player)) {
+            return Team.A;
+        } else if (this.teamBPlayers.includes(player)) {
+            return Team.B;
+        } else {
+            return undefined;
+        }
     }
 
     public hasEnoughPlayers() {
@@ -244,5 +258,40 @@ export default class Match {
         const height = arena.height + 2;
 
         return xPos >= 0 && xPos <= width && zPos >= 0 && zPos <= height;
+    }
+
+    private joinTeamLate(player: Player) {
+        const team = this.matchStats!.getWinningTeam();
+        let joinedTeam: Team;
+        if (team === Team.A) {
+            this.joinTeamB(player);
+            joinedTeam = Team.B;
+        } else if (team === Team.B) {
+            this.joinTeamA(player);
+            joinedTeam = Team.A;
+        } else {
+            if (Math.random() >= 0.5) {
+                this.joinTeamA(player);
+                joinedTeam = Team.A;
+            } else {
+                this.joinTeamB(player);
+                joinedTeam = Team.B;
+            }
+        }
+
+        this.matchStats!.addLatePlayer(player, joinedTeam);
+        this.gamemode!.spawn(player);
+    }
+
+    private joinTeamA(player: Player) {
+        this.teamAPlayers.push(player);
+        player.color = Match.TEAM_A_COLOR;
+        return this.arena.getNextTeamASpawn();
+    }
+
+    private joinTeamB(player: Player) {
+        this.teamBPlayers.push(player);
+        player.color = Match.TEAM_B_COLOR;
+        return this.arena.getNextTeamBSpawn();
     }
 }

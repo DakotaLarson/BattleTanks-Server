@@ -4,6 +4,7 @@ import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../EventHandler";
 import GameStatus from "../GameStatus";
 import MatchTimer from "../MatchTimer";
+import { GamemodeType } from "./gamemodes/GamemodeType";
 import Match from "./Match";
 import MultiplayerService from "./MultiplayerService";
 import VoteHandler from "./VoteHandler";
@@ -157,7 +158,7 @@ export default class Lobby {
     }
 
     private createMatch(arena: Arena) {
-        this.match = new Match(arena);
+        this.match = new Match(arena, GamemodeType.TEAM_DEATHMATCH);
         this.matchTimer = new MatchTimer(Lobby.MATCH_TIME, this.match);
         PlayerHandler.addMatch(this.match, this);
         this.match.run();

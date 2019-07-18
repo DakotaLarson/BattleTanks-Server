@@ -29,7 +29,7 @@ export default class PlayerStatistic {
         this.hits ++;
 
         this.points ++;
-        this.currency = this.calcuateCurrency(this.points); ;
+        this.currency = this.calcuateCurrency(this.points); 
 
         return {
             points: this.points,
@@ -56,14 +56,10 @@ export default class PlayerStatistic {
         };
     }
 
-    public getStatistics(win: boolean, teamShots: number, teamHits: number, teamKills: number, enemyTeamShots: number, enemyTeamHits: number, enemyTeamKills: number, successfulCompletion: boolean) {
+    public getStatistics(win: boolean, teamShots: number, teamHits: number, teamKills: number, enemyTeamShots: number, enemyTeamHits: number, enemyTeamKills: number) {
 
         const winData = win ? 1 : 0;
-        const stats = [teamShots, teamHits, teamKills, enemyTeamShots, enemyTeamHits, enemyTeamKills, this.shots, this.hits, this.kills, this.deaths, this.points, this.currency];
-
-        if (successfulCompletion) {
-            stats.push(winData);
-        }
+        const stats = [teamShots, teamHits, teamKills, enemyTeamShots, enemyTeamHits, enemyTeamKills, this.shots, this.hits, this.kills, this.deaths, this.points, this.currency, winData];
 
         return stats;
     }
