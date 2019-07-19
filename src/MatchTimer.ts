@@ -18,6 +18,7 @@ export default class MatchTimer {
 
     public start() {
         this.timeout = this.update();
+        this.updatePlayerGameTimers(this.time);
     }
 
     public stop() {
@@ -29,6 +30,9 @@ export default class MatchTimer {
     private update() {
         return setInterval(() => {
             this.time --;
+
+            this.updatePlayerGameTimers(this.time);
+
             if (this.time > 0) {
                 if (this.time % MatchTimer.REPEATING_MESSAGE_TIME === 0 || MatchTimer.MESSAGE_TIMES.includes(this.time)) {
                     for (const player of PlayerHandler.getMatchPlayers(this.match)) {
@@ -63,5 +67,13 @@ export default class MatchTimer {
             return "second";
         }
         return "seconds";
+    }
+
+    private updatePlayerGameTimers(time: number) {
+        const players = PlayerHandler.getMatchPlayers(this.match);
+
+        for (const player of players) {
+            player.sendGameTimerUpdate(time);
+        }
     }
 }

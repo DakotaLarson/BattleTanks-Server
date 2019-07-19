@@ -338,6 +338,12 @@ export default class Player {
         }
     }
 
+    public sendGameTimerUpdate(time: number) {
+        if (!this.isBot()) {
+            PacketSender.sendGameTimerUpdate(this.id, time);
+        }
+    }
+
     public onMove(data: number[]) {
         this.position.x = data[0];
         this.position.y = data[1];

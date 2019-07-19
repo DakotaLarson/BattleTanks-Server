@@ -61,6 +61,8 @@ enum Packet {
 
     VOTE_LIST,
     VOTE_UPDATE,
+
+    GAME_TIMER_UPDATE,
 }
 
 enum DataType {
@@ -310,6 +312,11 @@ export const sendVoteList = (id: number, voteList: any[]) => {
 
 export const sendVoteUpdate = (id: number, voteCounts: number[]) => {
     const data = constructData(Packet.VOTE_UPDATE, voteCounts, DataType.NUMBER_ARRAY);
+    send(id, data);
+};
+
+export const sendGameTimerUpdate = (id: number, time: number) => {
+    const data = constructData(Packet.GAME_TIMER_UPDATE, time, DataType.NUMBER);
     send(id, data);
 };
 

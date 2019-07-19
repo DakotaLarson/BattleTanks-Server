@@ -10,9 +10,10 @@ import MultiplayerService from "./MultiplayerService";
 import VoteHandler from "./VoteHandler";
 
 export default class Lobby {
-    private static readonly WAIT_BETWEEN_MATCHES = 15000;
-    private static readonly DEV_WAIT_BETWEEN_MATCHES = 5000;
-    private static readonly MATCH_TIME = 180;
+    private static readonly WAIT_BETWEEN_MATCHES = 15;
+    private static readonly DEV_WAIT_BETWEEN_MATCHES = 5;
+    private static readonly MATCH_TIME = 300;
+    private static readonly DEV_MATCH_TIME = 30;
 
     private status: GameStatus;
     private service: MultiplayerService;
@@ -20,15 +21,25 @@ export default class Lobby {
     private match: Match | undefined;
     private matchTimer: MatchTimer | undefined;
 
-    private startTimeout: NodeJS.Timeout | undefined;
+    private startInterval: NodeJS.Timeout | undefined;
 
     private voteHandler: VoteHandler;
+
+    private waitTime: number;
+    private matchTime: number;
 
     constructor(service: MultiplayerService) {
         this.status = GameStatus.WAITING;
         this.service = service;
 
         this.voteHandler = new VoteHandler(this);
+
+        this.waitTime = Lobby.WAIT_BETWEEN_MATCHES;
+        this.matchTime = Lobby.MATCH_TIME;
+        if (process.argv.includes("dev")) {
+            this.waitTime = Lobby.DEV_WAIT_BETWEEN_MATCHES;
+            this.matchTime = Lobby.DEV_MATCH_TIME;
+        }
     }
 
     public enable() {
@@ -43,8 +54,8 @@ export default class Lobby {
         EventHandler.removeListener(this, EventHandler.Event.CHAT_MESSAGE, this.onChatMessage);
         EventHandler.removeListener(this, EventHandler.Event.MATCH_TIMER_COMPLETE, this.onMatchTimerComplete);
 
-        if (this.startTimeout) {
-            clearTimeout(this.startTimeout);
+        if (this.startInterval) {
+            clearTimeout(this.startInterval);
         }
 
         this.voteHandler.disable();
@@ -159,7 +170,7 @@ export default class Lobby {
 
     private createMatch(arena: Arena) {
         this.match = new Match(arena, GamemodeType.TEAM_DEATHMATCH);
-        this.matchTimer = new MatchTimer(Lobby.MATCH_TIME, this.match);
+        this.matchTimer = new MatchTimer(this.matchTime, this.match);
         PlayerHandler.addMatch(this.match, this);
         this.match.run();
         this.matchTimer.start();
@@ -168,29 +179,42 @@ export default class Lobby {
     private startMatch() {
         this.updateStatus(GameStatus.STARTING);
 
-        let waitTime = Lobby.WAIT_BETWEEN_MATCHES;
-        if (process.argv.includes("dev")) {
-            waitTime = Lobby.DEV_WAIT_BETWEEN_MATCHES;
+        let remainingTime = this.waitTime;
+
+        const lobbyPlayers = PlayerHandler.getLobbyPlayers(this);
+        for (const player of lobbyPlayers) {
+            player.sendGameTimerUpdate(remainingTime);
         }
 
-        this.startTimeout = setTimeout(() => {
-            EventHandler.callEvent(EventHandler.Event.BOTS_MATCH_START, this);
-            const playerCount = PlayerHandler.getLobbyPlayerCount(this);
+        this.startInterval = setInterval(() => {
 
-            if (playerCount >= Arena.minimumPlayerCount) {
-                const arena = this.voteHandler.getNextArena();
-                this.createMatch(arena);
-                this.updateStatus(GameStatus.RUNNING);
-                EventHandler.callEvent(EventHandler.Event.BOTS_AFTER_MATCH_START, {
-                    lobby: this,
-                    arena,
-                });
-            } else {
-                this.updateStatus(GameStatus.WAITING);
-                this.service.onMatchEnd(this);
+            remainingTime --;
+
+            const players = PlayerHandler.getLobbyPlayers(this);
+            for (const player of players) {
+                player.sendGameTimerUpdate(remainingTime);
             }
-            this.startTimeout = undefined;
-        }, waitTime);
+
+            if (remainingTime === 0) {
+                EventHandler.callEvent(EventHandler.Event.BOTS_MATCH_START, this);
+                const playerCount = PlayerHandler.getLobbyPlayerCount(this);
+
+                if (playerCount >= Arena.minimumPlayerCount) {
+                    const arena = this.voteHandler.getNextArena();
+                    this.createMatch(arena);
+                    this.updateStatus(GameStatus.RUNNING);
+                    EventHandler.callEvent(EventHandler.Event.BOTS_AFTER_MATCH_START, {
+                        lobby: this,
+                        arena,
+                    });
+                } else {
+                    this.updateStatus(GameStatus.WAITING);
+                    this.service.onMatchEnd(this);
+                }
+                clearInterval(this.startInterval!);
+                this.startInterval = undefined;
+            }
+        }, 1000);
     }
 
     private onMatchTimerComplete(match: Match) {
