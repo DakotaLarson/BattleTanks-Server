@@ -78,6 +78,9 @@ export default class BotHandler {
                 for (let i = playerCount; i <= this.botQuantity; i ++) {
                     this.createBot(lobby);
                 }
+            } else if (playerCount === this.botQuantity) {
+                this.bots.set(lobby, []);
+                this.createBot(lobby);
             }
         }
     }
