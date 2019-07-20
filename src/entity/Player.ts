@@ -344,6 +344,12 @@ export default class Player {
         }
     }
 
+    public sendLobbyCode(code: string) {
+        if (!this.isBot()) {
+            PacketSender.sendLobbyCode(this.id, code);
+        }
+    }
+
     public onMove(data: number[]) {
         this.position.x = data[0];
         this.position.y = data[1];

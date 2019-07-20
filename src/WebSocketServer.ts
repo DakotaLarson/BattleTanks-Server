@@ -10,7 +10,7 @@ import WebServer from "./WebServer";
 export default class WebSocketServer {
 
     private static readonly PROTOCOL_PREFIX = "battletanks-";
-    private static readonly SERVER_VERSION = 11;
+    private static readonly SERVER_VERSION = 1.8;
 
     private static readonly CLIENT_OUTDATED_CODE = 4001;
     private static readonly SERVER_OUTDATED_CODE = 4002;
@@ -91,7 +91,7 @@ export default class WebSocketServer {
 
     private verifyVersion(protocol: string) {
         try {
-            const clientVersion = parseInt(protocol.split("-")[1], 10);
+            const clientVersion = parseFloat(protocol.split("-")[1]);
             if (isNaN(clientVersion)) {
                 return 4000;
             } else if (clientVersion > WebSocketServer.SERVER_VERSION) {

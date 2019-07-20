@@ -17,9 +17,10 @@ export default class PlayerTimer {
         EventHandler.addListener(this, EventHandler.Event.PLAYER_LEAVE, this.onPlayerLeave);
     }
 
-    private onPlayerJoin(player: Player) {
-        if (player.sub) {
-            this.joinTimes.set(player.sub, Date.now());
+    private onPlayerJoin(event: any) {
+
+        if (event.player.sub) {
+            this.joinTimes.set(event.player.sub, Date.now());
         }
     }
 

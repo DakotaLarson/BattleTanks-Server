@@ -18,7 +18,7 @@ export default class MultiplayerService {
         EventHandler.callEvent(EventHandler.Event.BOTS_MATCH_END, lobby);
 
         const amountToMove = PlayerHandler.getLobbyPlayerCount(lobby);
-        if (lobby.isBelowMaximumPlayerCount() && amountToMove) {
+        if (lobby.isBelowMaximumPlayerCount() && lobby.isPublic && amountToMove) {
             const lobbies = PlayerHandler.getLobbies();
             const availableSpace = this.getAvailableLobbySpace(lobbies, lobby);
             if (availableSpace >= amountToMove) {
@@ -30,41 +30,33 @@ export default class MultiplayerService {
         return false;
     }
 
-    private onPlayerJoin(player: Player): void {
+    private onPlayerJoin(event: any): void {
 
-        /*
-        Find a lobby below maximum that is starting.
-        Otherwise, find a lobby below maximum that is running.
-        Otherwise, find a lobby below minimum.
-        Otherwise, create a new lobby.
-        */
+        const player = event.player as Player;
+        const lobbyData = event.lobby;
 
-        const startingBelowMaxLobbies = [];
-        const runningBelowMaxLobbies = [];
+        let lobby: Lobby;
 
-        const belowMinLobbies = [];
+        if (lobbyData) {
 
-        for (const lobby of PlayerHandler.getLobbies()) {
-            if (lobby.isBelowMinimumPlayerCount()) {
-                belowMinLobbies.push(lobby);
-            } else if (lobby.isBelowMaximumPlayerCount()) {
-                if (lobby.isStarting()) {
-                    startingBelowMaxLobbies.push(lobby);
-                } else if (lobby.isRunning()) {
-                    runningBelowMaxLobbies.push(lobby);
+            if (lobbyData.code) {
+
+                const lobbySearchData = this.findLobbyWithCode(lobbyData.code);
+
+                if (!lobbySearchData.success) {
+                    player.sendAlert("Unable to find lobby with code: " + lobbyData.code + ". You were placed in a random arena");
                 }
+
+                lobby = lobbySearchData.lobby;
+            } else if ("public" in lobbyData && "bots" in lobbyData) {
+                lobby = this.createLobbyFromData(lobbyData);
+            } else {
+                lobby = this.findLobby();
             }
-        }
-        let lobby;
-        if (startingBelowMaxLobbies.length) {
-            lobby = this.getMostFullLobby(startingBelowMaxLobbies);
-        } else if (runningBelowMaxLobbies.length) {
-            lobby = this.getMostFullLobby(runningBelowMaxLobbies);
-        } else if (belowMinLobbies.length) {
-            lobby = this.getMostFullLobby(belowMinLobbies);
         } else {
-            lobby = this.createLobby();
+            lobby = this.findLobby();
         }
+
         this.addPlayerToLobby(player, lobby);
     }
 
@@ -145,35 +137,37 @@ export default class MultiplayerService {
     }
 
     private migrateWaitingPlayers(lobbies: IterableIterator<Lobby>, destinationLobby: Lobby) {
-        const playersToMove = Arena.maximumPlayerCount - PlayerHandler.getLobbyPlayerCount(destinationLobby);
-        let movedPlayers = 0;
-        for (const lobby of lobbies) {
-            if (lobby !== destinationLobby && lobby.isBelowMinimumPlayerCount()) {
-                if (PlayerHandler.getLobbyPlayerCount(lobby) <= playersToMove - movedPlayers) {
-                    const players = this.removeAllPlayersFromLobby(lobby);
+        if (destinationLobby.isPublic) {
+            const playersToMove = Arena.maximumPlayerCount - PlayerHandler.getLobbyPlayerCount(destinationLobby);
+            let movedPlayers = 0;
+            for (const lobby of lobbies) {
+                if (lobby !== destinationLobby && lobby.isBelowMinimumPlayerCount()) {
+                    if (PlayerHandler.getLobbyPlayerCount(lobby) <= playersToMove - movedPlayers) {
+                        const players = this.removeAllPlayersFromLobby(lobby);
 
-                    for (const player of players) {
-                        this.addPlayerToLobby(player, destinationLobby);
+                        for (const player of players) {
+                            this.addPlayerToLobby(player, destinationLobby);
+                        }
+
+                        if (lobby.isEmpty()) {
+                            this.removeLobby(lobby);
+                        }
+
+                        movedPlayers += players.length;
+                        if (movedPlayers === playersToMove) {
+                            break;
+                        }
+
+                    } else {
+                        console.log("Found waiting arena with more players to move than available.");
                     }
-
-                    if (lobby.isEmpty()) {
-                        this.removeLobby(lobby);
-                    }
-
-                    movedPlayers += players.length;
-                    if (movedPlayers === playersToMove) {
-                        break;
-                    }
-
-                } else {
-                    console.log("Found waiting arena with more players to move than available.");
                 }
             }
         }
     }
 
-    private createLobby() {
-        const lobby = new Lobby(this);
+    private createLobby(fromData: boolean, isPublic: boolean, hasBots: boolean, code?: string) {
+        const lobby = new Lobby(this, fromData, isPublic, hasBots, code);
         lobby.enable();
         PlayerHandler.addLobby(lobby);
         return lobby;
@@ -198,5 +192,80 @@ export default class MultiplayerService {
         const players = PlayerHandler.removeAllPlayers(lobby);
         lobby.removePlayers(players);
         return players;
+    }
+
+    private findLobby() {
+        /*
+        Find a lobby below maximum that is starting.
+        Otherwise, find a lobby below maximum that is running.
+        Otherwise, find a lobby below minimum.
+        Otherwise, create a new lobby.
+        */
+
+       const startingBelowMaxLobbies = [];
+       const runningBelowMaxLobbies = [];
+
+       const belowMinLobbies = [];
+
+       for (const lobby of PlayerHandler.getLobbies()) {
+           if (lobby.isPublic) {
+                if (lobby.isBelowMinimumPlayerCount()) {
+                    belowMinLobbies.push(lobby);
+                } else if (lobby.isBelowMaximumPlayerCount()) {
+                    if (lobby.isStarting()) {
+                        startingBelowMaxLobbies.push(lobby);
+                    } else if (lobby.isRunning()) {
+                        runningBelowMaxLobbies.push(lobby);
+                    }
+                }
+           }
+       }
+
+       let lobby;
+       if (startingBelowMaxLobbies.length) {
+           lobby = this.getMostFullLobby(startingBelowMaxLobbies);
+       } else if (runningBelowMaxLobbies.length) {
+           lobby = this.getMostFullLobby(runningBelowMaxLobbies);
+       } else if (belowMinLobbies.length) {
+           lobby = this.getMostFullLobby(belowMinLobbies);
+       } else {
+        lobby = this.createLobby(false, true, true);
+    }
+
+       return lobby;
+    }
+
+    private findLobbyWithCode(code: string) {
+        for (const lobby of PlayerHandler.getLobbies()) {
+            if (lobby.code === code && lobby.isBelowMaximumPlayerCount()) {
+                return {
+                    success: true,
+                    lobby,
+                };
+            }
+        }
+
+        return {
+            success: false,
+            lobby: this.findLobby(),
+        };
+    }
+
+    private createLobbyFromData(lobbyData: any) {
+        const code = this.generateCode();
+        return this.createLobby(true, lobbyData.public, lobbyData.bots, code);
+    }
+
+    private generateCode() {
+        const inclusiveMin = 65; // ASCII code 'A'
+        const exclusiveMax = 91; // ASCII code after 'Z'
+        const diff = exclusiveMax - inclusiveMin;
+
+        const codes = [];
+        for (let i = 0; i < 4; i ++) {
+            codes.push(Math.floor(Math.random() * diff) + inclusiveMin);
+        }
+
+        return String.fromCharCode.apply(this, (codes));
     }
 }

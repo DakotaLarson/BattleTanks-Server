@@ -71,16 +71,18 @@ export default class BotHandler {
     }
 
     private onMatchStart(lobby: Lobby) {
-        const playerCount = PlayerHandler.getLobbyPlayerCount(lobby);
-        if (playerCount) {
-           if (playerCount < this.botQuantity) {
-                this.bots.set(lobby, []);
-                for (let i = playerCount; i <= this.botQuantity; i ++) {
+        if (lobby.hasBots) {
+            const playerCount = PlayerHandler.getLobbyPlayerCount(lobby);
+            if (playerCount) {
+               if (playerCount < this.botQuantity) {
+                    this.bots.set(lobby, []);
+                    for (let i = playerCount; i <= this.botQuantity; i ++) {
+                        this.createBot(lobby);
+                    }
+                } else if (playerCount === this.botQuantity) {
+                    this.bots.set(lobby, []);
                     this.createBot(lobby);
                 }
-            } else if (playerCount === this.botQuantity) {
-                this.bots.set(lobby, []);
-                this.createBot(lobby);
             }
         }
     }

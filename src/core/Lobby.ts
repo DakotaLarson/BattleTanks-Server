@@ -10,10 +10,16 @@ import MultiplayerService from "./MultiplayerService";
 import VoteHandler from "./VoteHandler";
 
 export default class Lobby {
+
+    private static readonly PUBLICITY_DELAY = 60000;
     private static readonly WAIT_BETWEEN_MATCHES = 15;
     private static readonly DEV_WAIT_BETWEEN_MATCHES = 5;
     private static readonly MATCH_TIME = 300;
     private static readonly DEV_MATCH_TIME = 30;
+
+    public isPublic: boolean;
+    public hasBots: boolean;
+    public code: string | undefined;
 
     private status: GameStatus;
     private service: MultiplayerService;
@@ -28,7 +34,7 @@ export default class Lobby {
     private waitTime: number;
     private matchTime: number;
 
-    constructor(service: MultiplayerService) {
+    constructor(service: MultiplayerService, fromData: boolean, isPublic: boolean, hasBots: boolean, code?: string) {
         this.status = GameStatus.WAITING;
         this.service = service;
 
@@ -40,6 +46,17 @@ export default class Lobby {
             this.waitTime = Lobby.DEV_WAIT_BETWEEN_MATCHES;
             this.matchTime = Lobby.DEV_MATCH_TIME;
         }
+
+        if (fromData && isPublic) {
+            this.isPublic = false;
+            setTimeout(() => {
+                this.isPublic = isPublic;
+            }, Lobby.PUBLICITY_DELAY);
+        } else {
+            this.isPublic = isPublic;
+        }
+        this.hasBots = hasBots;
+        this.code = code;
     }
 
     public enable() {
@@ -84,6 +101,10 @@ export default class Lobby {
 
         if (isRunning) {
             this.getMatch().addPlayer(player);
+        }
+
+        if (this.code) {
+            player.sendLobbyCode(this.code);
         }
     }
 
