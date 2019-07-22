@@ -44,7 +44,7 @@ export default class MultiplayerService {
                 const lobbySearchData = this.findLobbyWithCode(lobbyData.code);
 
                 if (!lobbySearchData.success) {
-                    player.sendAlert("Unable to find lobby with code: " + lobbyData.code + ". You were placed in a random arena");
+                    player.sendAlert("Unable to find lobby with code: " + lobbyData.code + ". You were placed in a random lobby.");
                 }
 
                 lobby = lobbySearchData.lobby;
@@ -256,7 +256,7 @@ export default class MultiplayerService {
         return this.createLobby(true, lobbyData.public, lobbyData.bots, code);
     }
 
-    private generateCode() {
+    private generateCode(): string {
         const inclusiveMin = 65; // ASCII code 'A'
         const exclusiveMax = 91; // ASCII code after 'Z'
         const diff = exclusiveMax - inclusiveMin;
@@ -266,6 +266,14 @@ export default class MultiplayerService {
             codes.push(Math.floor(Math.random() * diff) + inclusiveMin);
         }
 
-        return String.fromCharCode.apply(this, (codes));
+        const code = String.fromCharCode.apply(this, (codes));
+
+        for (const lobby of PlayerHandler.getLobbies()) {
+            if (lobby.code === code) {
+                return this.generateCode();
+            }
+        }
+
+        return code;
     }
 }

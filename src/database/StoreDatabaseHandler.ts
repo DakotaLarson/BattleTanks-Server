@@ -1,13 +1,16 @@
 import * as mysql from "mysql";
 import EventHandler from "../EventHandler";
-import DatabaseHandler from "./DatabaseHandler";
+import DatabaseUtils from "./DatabaseUtils";
 
 export default class StoreDatabaseHandler {
 
     private pool: mysql.Pool | undefined;
+    private utils: DatabaseUtils;
 
     constructor() {
         EventHandler.addListener(this, EventHandler.Event.DB_POOL_UPDATE, this.onPoolUpdate);
+
+        this.utils = new DatabaseUtils();
     }
 
     public async purchase(playerId: string, productTitle: string, isFree: boolean, type: number, parentTitle?: string, childTitles?: string[], childType?: number) {
@@ -53,9 +56,9 @@ export default class StoreDatabaseHandler {
                     selectionValues.push(playerId, productResults.get(childTitles[i])!.id, i, productResult.id);
                 }
 
-                await this.queryFromConnection(connection, selectionSql, selectionValues);
+                await this.utils.queryFromConnection(connection, selectionSql, selectionValues);
             }
-            await this.queryFromConnection(connection, purchaseSql, purchaseValues);
+            await this.utils.queryFromConnection(connection, purchaseSql, purchaseValues);
 
             this.endTransaction(connection);
 
@@ -81,7 +84,7 @@ export default class StoreDatabaseHandler {
                 updateValues.push(-1, -1);
             }
 
-            await this.query(updateSql, updateValues);
+            await this.utils.query(updateSql, updateValues);
         } catch (ex) {
             console.error(ex);
             return false;
@@ -95,7 +98,7 @@ export default class StoreDatabaseHandler {
     //         const sql = "DELETE FROM selections WHERE player = ? AND position = ? AND parent = (SELECT purchases.product from purchases, products WHERE purchases.player = ? AND products.title = ? AND products.id = purchases.product)";
     //         const values = [playerId, position, playerId, parentTitle];
 
-    //         await this.query(sql, values);
+    //         await this.databaseUtils.query(sql, values);
     //     } catch (ex) {
     //         console.error(ex);
     //         return false;
@@ -114,7 +117,7 @@ export default class StoreDatabaseHandler {
             productSql += ", ?";
         }
         productSql += ")";
-        const productResults = await this.query(productSql, productTitles);
+        const productResults = await this.utils.query(productSql, productTitles);
 
         for (const product of productResults) {
             productIdsByTitles.set(product.title, product.id);
@@ -144,8 +147,8 @@ export default class StoreDatabaseHandler {
             }
 
             await Promise.all([
-                this.query(purchaseSql, purchaseValues),
-                this.query(selectionSql, selectionValues),
+                this.utils.query(purchaseSql, purchaseValues),
+                this.utils.query(selectionSql, selectionValues),
             ]);
 
         } else {
@@ -155,31 +158,32 @@ export default class StoreDatabaseHandler {
 
     public async getPlayerProducts() {
         const sql = "SELECT id, price, title, type, detail, parent_required, level_required, image_url FROM products";
-        return await this.query(sql);
+        return await this.utils.query(sql);
     }
 
     public async getPlayerPurchases(playerID: string) {
         const sql = "SELECT products.title, purchases.parent FROM purchases, products WHERE purchases.player = ? AND products.id = purchases.product";
-        return await this.query(sql, [playerID]);
+        return await this.utils.query(sql, [playerID]);
     }
 
     public async getPlayerSelections(playerId: string) {
         const sql = "SELECT products.title, selections.position, selections.parent FROM selections, products WHERE selections.player = ? AND products.id = selections.product";
-        return await this.query(sql, [playerId]);
+        return await this.utils.query(sql, [playerId]);
     }
 
     public async getPlayerCurrentSelection(playerId: string): Promise<any[]> {
         const sql = "SELECT products.detail, products.type, selections.position FROM products, selections WHERE selections.player = ? AND products.id = selections.product AND (selections.parent = -1 OR selections.parent = (SELECT product FROM selections WHERE player = ? AND parent = -1))";
-        return await this.query(sql, [playerId, playerId]);
+        return await this.utils.query(sql, [playerId, playerId]);
     }
 
     private onPoolUpdate(pool: mysql.Pool) {
         this.pool = pool;
+        this.utils.setPool(pool);
     }
 
     private async deductCurrency(connection: mysql.PoolConnection,  playerId: string, price: number) {
         const currencySql = "SELECT currency FROM players WHERE id = ?";
-        const currencyResults = await this.queryFromConnection(connection, currencySql, [playerId]);
+        const currencyResults = await this.utils.queryFromConnection(connection, currencySql, [playerId]);
         const currency = currencyResults[0].currency;
 
         if (price > currency) {
@@ -187,7 +191,7 @@ export default class StoreDatabaseHandler {
         } else {
             const remainingCurrency = currency - price;
             const deductionSql = "UPDATE players SET currency = ? WHERE id = ?";
-            await this.queryFromConnection(connection, deductionSql, [remainingCurrency, playerId]);
+            await this.utils.queryFromConnection(connection, deductionSql, [remainingCurrency, playerId]);
             return true;
         }
     }
@@ -209,7 +213,7 @@ export default class StoreDatabaseHandler {
 
         productSql += ")";
 
-        const productResults = await this.queryFromConnection(connection, productSql, productValues);
+        const productResults = await this.utils.queryFromConnection(connection, productSql, productValues);
 
         const results: Map<string, any> = new Map();
         for (const result of productResults) {
@@ -234,45 +238,13 @@ export default class StoreDatabaseHandler {
             productSql = "SELECT purchases.product FROM purchases, products WHERE purchases.player = ? AND products.title = ? AND products.id = purchases.product";
         }
 
-        const products = await this.query(productSql, productValues);
+        const products = await this.utils.query(productSql, productValues);
 
         if (products.length !== 1) {
             throw new Error("Unexpected product quantity: " + products.length);
         } else {
             return products[0];
         }
-    }
-
-    private query(sql: string, values?: any[]): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.pool!.query({
-                sql,
-                timeout: DatabaseHandler.TIMEOUT,
-                values,
-            }, (err, results) => {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                }
-                resolve(results);
-            });
-        });
-    }
-
-    private queryFromConnection(connection: mysql.PoolConnection, sql: string, values: any[]): Promise<any> {
-        return new Promise((resolve, reject) => {
-            connection.query({
-                sql,
-                timeout: DatabaseHandler.TIMEOUT,
-                values,
-            }, (err, results) => {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                }
-                resolve(results);
-            });
-        });
     }
 
     private startTransaction(): Promise<mysql.PoolConnection> {

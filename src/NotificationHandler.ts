@@ -1,5 +1,6 @@
 import express = require("express");
 import DatabaseHandler from "./database/DatabaseHandler";
+import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
 import EventHandler from "./EventHandler";
 
 export default class NotificationHandler {
@@ -21,11 +22,13 @@ export default class NotificationHandler {
     ];
 
     private databaseHandler: DatabaseHandler;
+    private socialDatabaseHandler: SocialDatabaseHandler;
 
     private notificationListeners: Map<string, express.Response>;
 
-    constructor(databaseHandler: DatabaseHandler) {
+    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler) {
         this.databaseHandler = databaseHandler;
+        this.socialDatabaseHandler = socialDatabaseHandler;
 
         this.notificationListeners = new Map();
 
@@ -61,7 +64,7 @@ export default class NotificationHandler {
                     body: data.body,
                 }]);
             } else if (NotificationHandler.SAVABLE_NOTIFICATION_TYPES.indexOf(data.type) > -1) {
-                this.databaseHandler.saveNotification(type, data.sender, data.receiver).catch((err) => {
+                this.socialDatabaseHandler.saveNotification(type, data.sender, data.receiver).catch((err) => {
                     console.error(err);
                 });
             }
@@ -82,7 +85,7 @@ export default class NotificationHandler {
     private onNotificationDelete(data: any) {
         const type = NotificationHandler.NOTIFICATION_TYPES.indexOf(data.type);
         if (type > -1) {
-            this.databaseHandler.deleteNotification(type, data.sender, data.receiver);
+            this.socialDatabaseHandler.deleteNotification(type, data.sender, data.receiver);
         }
     }
 
@@ -98,13 +101,13 @@ export default class NotificationHandler {
                 });
             }
         }
-        this.databaseHandler.deleteNotifications(parsedNotifications);
+        this.socialDatabaseHandler.deleteNotifications(parsedNotifications);
     }
 
     // Internal when player joins
     private async sendNotifications(receiver: string, res: express.Response) {
         try {
-            const results = await this.databaseHandler.getNotifications(receiver);
+            const results = await this.socialDatabaseHandler.getNotifications(receiver);
             this.sendNotification(res, results);
         } catch (ex) {
             return;

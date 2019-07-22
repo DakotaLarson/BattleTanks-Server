@@ -55,8 +55,8 @@ export default class StoreHandler {
 
     private databaseHandler: StoreDatabaseHandler;
 
-    constructor(databaseHandler: StoreDatabaseHandler) {
-        this.databaseHandler = databaseHandler;
+    constructor() {
+        this.databaseHandler = new StoreDatabaseHandler();
     }
 
     public async handleRequest(body: any, id?: string) {

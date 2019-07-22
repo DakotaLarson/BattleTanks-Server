@@ -1,5 +1,6 @@
 import Auth from "./Auth";
 import DatabaseHandler from "./database/DatabaseHandler";
+import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
 import EventHandler from "./EventHandler";
 
 export default class MessageHandler {
@@ -8,9 +9,11 @@ export default class MessageHandler {
     private static readonly MESSAGE_LIMIT = 10;
 
     private databaseHandler: DatabaseHandler;
+    private socialDatabaseHandler: SocialDatabaseHandler;
 
-    constructor(databaseHandler: DatabaseHandler) {
+    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler) {
         this.databaseHandler = databaseHandler;
+        this.socialDatabaseHandler = socialDatabaseHandler;
     }
 
     public addMessage(token: string, username: string, message: string) {
@@ -22,7 +25,7 @@ export default class MessageHandler {
                 Auth.verifyId(token).then((data) => {
                     const requestorId = data.id;
                     this.databaseHandler.getPlayerId(username).then((id) => {
-                        this.databaseHandler.addMessage(requestorId, id, message).then(() => {
+                        this.socialDatabaseHandler.addMessage(requestorId, id, message).then(() => {
                             this.sendNotification(requestorId, id, message);
                             resolve();
                         }).catch((err) => {
@@ -44,7 +47,7 @@ export default class MessageHandler {
                     const requestorId = data.id;
                     this.databaseHandler.getPlayerId(username).then((id) => {
 
-                        this.databaseHandler.getMessages(requestorId, id, MessageHandler.MESSAGE_LIMIT, offset).then((results) => {
+                        this.socialDatabaseHandler.getMessages(requestorId, id, MessageHandler.MESSAGE_LIMIT, offset).then((results) => {
                             resolve(results);
                         }).catch((err) => {
                             console.error(err);
@@ -69,7 +72,7 @@ export default class MessageHandler {
                 reject(400);
             } else {
                 Auth.verifyId(token).then((data) => {
-                    this.databaseHandler.getConversations(data.id, offset).then((results) => {
+                    this.socialDatabaseHandler.getConversations(data.id, offset).then((results) => {
                         resolve(results);
                     }).catch((err) => {
                         console.error(err);

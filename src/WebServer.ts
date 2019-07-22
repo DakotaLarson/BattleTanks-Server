@@ -4,6 +4,7 @@ import express = require("express");
 import http = require("http");
 import Auth from "./Auth";
 import DatabaseHandler from "./database/DatabaseHandler";
+import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
 import EventHandler from "./EventHandler";
 import MessageHandler from "./MessageHandler";
 import MetricsHandler from "./MetricsHandler";
@@ -41,16 +42,16 @@ export default class WebServer {
 
     private subscribers: express.Response[];
 
-    constructor(databaseHandler: DatabaseHandler, metricsHandler: MetricsHandler, storeHandler: StoreHandler) {
+    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler, metricsHandler: MetricsHandler, storeHandler: StoreHandler) {
         const app = express();
         this.server = http.createServer(app);
 
         this.databaseHandler = databaseHandler;
 
-        this.socialHandler = new SocialHandler(databaseHandler);
-        this.messageHandler = new MessageHandler(databaseHandler);
+        this.socialHandler = new SocialHandler(databaseHandler, socialDatabaseHandler);
+        this.messageHandler = new MessageHandler(databaseHandler, socialDatabaseHandler);
         this.metricsHandler = metricsHandler;
-        this.notificationHandler = new NotificationHandler(databaseHandler);
+        this.notificationHandler = new NotificationHandler(databaseHandler, socialDatabaseHandler);
         this.storeHandler = storeHandler;
 
         this.playerCount = 0;

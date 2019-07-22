@@ -1,32 +1,36 @@
 import Auth from "./Auth";
 import DatabaseHandler from "./database/DatabaseHandler";
+import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
 import EventHandler from "./EventHandler";
 
 export default class SocialHandler {
 
     private databaseHandler: DatabaseHandler;
+    private socialDatabaseHandler: SocialDatabaseHandler;
 
-    constructor(databaseHandler: DatabaseHandler) {
+    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler) {
         this.databaseHandler = databaseHandler;
+        this.socialDatabaseHandler = socialDatabaseHandler;
     }
 
     public async handleFriendUpdate(token: string, username: string, action: boolean) {
         const data = await Auth.verifyId(token);
         const requestorId = data.id;
         const id = await this.databaseHandler.getPlayerId(username);
-        const friendship = await this.databaseHandler.getFriendship(requestorId, id);
+        const friendship = await this.socialDatabaseHandler.getFriendship(requestorId, id);
 
         if (action) {
             if (friendship.friends === 0) {
                 // unblock friendship
-                await this.databaseHandler.deleteFriendship(requestorId, id, true);
+                await this.socialDatabaseHandler.deleteFriendship(requestorId, id, true);
             } else if (friendship.friends === 2) {
                 // create friendship
-                await this.databaseHandler.createFriendship(requestorId, id);
+                await this.socialDatabaseHandler.createFriendship(requestorId, id);
                 await this.sendNotification(true, requestorId, id);
             } else if (friendship.friends === 4) {
                 // accept friendship (update)
-                await this.databaseHandler.updateFriendship(id, requestorId, true);
+                await this.socialDatabaseHandler.updateFriendship(id, requestorId, true);
+                await this.socialDatabaseHandler.createConversation(requestorId, id);
                 await this.sendNotification(false, requestorId, id);
             } else {
                 throw new Error("400");
@@ -34,32 +38,32 @@ export default class SocialHandler {
         } else {
             if (friendship.negative === 1) {
                 // block friendship
-                await this.databaseHandler.blockFriendship(requestorId, id);
+                await this.socialDatabaseHandler.blockFriendship(requestorId, id);
             } else if (friendship.negative === 2) {
                 // cancel request (delete)
                 await Promise.all([
-                    this.databaseHandler.deleteFriendship(requestorId, id, true),
+                    this.socialDatabaseHandler.deleteFriendship(requestorId, id, true),
                     this.deleteNotification(requestorId, id),
                 ]);
 
             } else if (friendship.negative === 3) {
                 // delete request
-                await this.databaseHandler.deleteFriendship(id, requestorId, true);
+                await this.socialDatabaseHandler.deleteFriendship(id, requestorId, true);
             } else if (friendship.negative === 4) {
                 // unfriend (delete request)
-                await this.databaseHandler.deleteFriendship(requestorId, id, false);
+                await this.socialDatabaseHandler.deleteFriendship(requestorId, id, false);
             } else {
                 throw new Error("400");
             }
         }
-        return await this.databaseHandler.getFriendship(requestorId, id);
+        return await this.socialDatabaseHandler.getFriendship(requestorId, id);
     }
 
     public getFriendship(token: string, id: string) {
         return new Promise((resolve) => {
             Auth.verifyId(token).then((requestorData) => {
                 if (requestorData.id !== id) {
-                    this.databaseHandler.getFriendship(requestorData.id, id).then((friendship) => {
+                    this.socialDatabaseHandler.getFriendship(requestorData.id, id).then((friendship) => {
                         if (friendship) {
                             EventHandler.callEvent(EventHandler.Event.NOTIFICATION_DELETE_MULTIPLE, [
                                 {
@@ -142,7 +146,7 @@ export default class SocialHandler {
 
     private getPlayerOptions(id: string) {
         return new Promise((resolve, reject) => {
-            this.databaseHandler.getPlayerSocialOptions(id).then((rawResults: any) => {
+            this.socialDatabaseHandler.getPlayerSocialOptions(id).then((rawResults: any) => {
                 resolve({
                     friends: rawResults.friends ? true : false,
                     conversations: rawResults.conversations ? true : false,
