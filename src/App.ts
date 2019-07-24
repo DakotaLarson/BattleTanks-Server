@@ -8,6 +8,7 @@ import EventHandler from "./EventHandler";
 import MetricsHandler from "./MetricsHandler";
 import PlayerConnector from "./PlayerConnector";
 import PlayerTimer from "./PlayerTimer";
+import ReferralHandler from "./ReferralHandler";
 import StoreHandler from "./StoreHandler";
 import WebSocketServer from "./WebSocketServer";
 
@@ -19,9 +20,10 @@ const socialDatabaseHandler = new SocialDatabaseHandler();
 const storeHandler = new StoreHandler();
 const metricsHandler = new MetricsHandler(databaseHandler);
 const playerConnector = new PlayerConnector(databaseHandler, storeHandler);
+const referralHandler = new ReferralHandler();
 const wss = new WebSocketServer(databaseHandler, socialDatabaseHandler, metricsHandler, storeHandler);
 const botHandler = new BotHandler();
-const playerTimer = new PlayerTimer(databaseHandler);
+const playerTimer = new PlayerTimer(databaseHandler, referralHandler);
 
 wss.enable();
 playerConnector.enable();

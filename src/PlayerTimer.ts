@@ -1,14 +1,19 @@
 import DatabaseHandler from "./database/DatabaseHandler";
 import Player from "./entity/Player";
 import EventHandler from "./EventHandler";
+import ReferralHandler from "./ReferralHandler";
 
 export default class PlayerTimer {
 
     private databaseHandler: DatabaseHandler;
+    private referralHandler: ReferralHandler;
+
     private joinTimes: Map<string, number>;
 
-    constructor(databaseHandler: DatabaseHandler) {
+    constructor(databaseHandler: DatabaseHandler, referralHandler: ReferralHandler) {
         this.databaseHandler = databaseHandler;
+        this.referralHandler = referralHandler;
+
         this.joinTimes = new Map();
     }
 
@@ -32,6 +37,7 @@ export default class PlayerTimer {
 
                 const timePlayed = Math.round((Date.now() - joinTime) / 1000);
                 this.databaseHandler.addPlayTime(player.sub, timePlayed);
+                this.referralHandler.addPlayTime(player.sub, timePlayed);
             }
         }
     }
