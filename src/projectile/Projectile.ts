@@ -1,4 +1,4 @@
-import EventHandler from "../EventHandler";
+import EventHandler from "../main/EventHandler";
 import Vector3 from "../vector/Vector3";
 import CollisionHandler from "./CollisionHandler";
 

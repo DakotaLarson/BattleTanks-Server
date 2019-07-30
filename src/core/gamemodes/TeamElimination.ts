@@ -1,7 +1,7 @@
-import Audio from "../../Audio";
 import Player from "../../entity/Player";
 import PlayerHandler from "../../entity/PlayerHandler";
-import EventHandler from "../../EventHandler";
+import EventHandler from "../../main/EventHandler";
+import Audio from "../Audio";
 import Match from "../Match";
 import Gamemode from "./Gamemode";
 import { GamemodeType } from "./GamemodeType";

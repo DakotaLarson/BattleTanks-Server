@@ -1,5 +1,6 @@
 import * as mysql from "mysql";
-import EventHandler from "../EventHandler";
+import EventHandler from "../main/EventHandler";
+import Utils from "../main/Utils";
 import DatabaseUtils from "./DatabaseUtils";
 
 export default class ReferralDatabaseHandler {
@@ -19,13 +20,13 @@ export default class ReferralDatabaseHandler {
     }
 
     public async addReferrer(playerId: string) {
-        const referralCode = this.generateReferralCode();
+        const referralCode = Utils.generateCode(6);
 
         const sql = "INSERT INTO referrals (referrer, referral_code) VALUES (?, ?)";
         const values = [playerId, referralCode];
 
         try {
-            this.utils.query(sql, values);
+            await this.utils.query(sql, values);
         } catch (err) {
             if (err.code === "ER_DUP_ENTRY" && err.sqlMessage.includes("referral_code")) {
                 console.log("Duplicate referral code generated.");
@@ -220,16 +221,4 @@ export default class ReferralDatabaseHandler {
         await this.utils.query(sql);
     }
 
-    private generateReferralCode(): string {
-        const inclusiveMin = 65; // ASCII code 'A'
-        const exclusiveMax = 91; // ASCII code after 'Z'
-        const diff = exclusiveMax - inclusiveMin;
-
-        const codes = [];
-        for (let i = 0; i < 4; i ++) {
-            codes.push(Math.floor(Math.random() * diff) + inclusiveMin);
-        }
-
-        return String.fromCharCode.apply(this, (codes));
-    }
 }

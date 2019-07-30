@@ -1,9 +1,9 @@
-import Audio from "../Audio";
+import Audio from "../core/Audio";
 import Match from "../core/Match";
 import { Team } from "../core/Team";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
-import EventHandler from "../EventHandler";
+import EventHandler from "../main/EventHandler";
 import PlayerStatistic from "./PlayerStatistic";
 
 export default class MatchStatistics {

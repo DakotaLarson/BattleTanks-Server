@@ -1,7 +1,7 @@
-import Audio from "./Audio";
-import EventHandler from "./EventHandler";
-import Vector3 from "./vector/Vector3";
-import Vector4 from "./vector/Vector4";
+import Audio from "../core/Audio";
+import EventHandler from "../main/EventHandler";
+import Vector3 from "../vector/Vector3";
+import Vector4 from "../vector/Vector4";
 
 const sockets: Map<number, WebSocket> = new Map();
 

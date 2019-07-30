@@ -1,4 +1,4 @@
-import StoreDatabaseHandler from "./database/StoreDatabaseHandler";
+import StoreDatabaseHandler from "../database/StoreDatabaseHandler";
 
 enum ProductType {
     TANK,

@@ -1,7 +1,8 @@
 import Arena from "../arena/Arena";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
-import EventHandler from "../EventHandler";
+import EventHandler from "../main/EventHandler";
+import Utils from "../main/Utils";
 import Lobby from "./Lobby";
 
 export default class MultiplayerService {
@@ -257,16 +258,7 @@ export default class MultiplayerService {
     }
 
     private generateCode(): string {
-        const inclusiveMin = 65; // ASCII code 'A'
-        const exclusiveMax = 91; // ASCII code after 'Z'
-        const diff = exclusiveMax - inclusiveMin;
-
-        const codes = [];
-        for (let i = 0; i < 4; i ++) {
-            codes.push(Math.floor(Math.random() * diff) + inclusiveMin);
-        }
-
-        const code = String.fromCharCode.apply(this, (codes));
+        const code = Utils.generateCode(4);
 
         for (const lobby of PlayerHandler.getLobbies()) {
             if (lobby.code === code) {

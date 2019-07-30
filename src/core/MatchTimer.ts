@@ -1,6 +1,6 @@
-import Match from "./core/Match";
-import PlayerHandler from "./entity/PlayerHandler";
-import EventHandler from "./EventHandler";
+import PlayerHandler from "../entity/PlayerHandler";
+import EventHandler from "../main/EventHandler";
+import Match from "./Match";
 
 export default class MatchTimer {
 

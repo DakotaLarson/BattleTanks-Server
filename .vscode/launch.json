@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Server With Bots",
             "preLaunchTask": "tsc: build - tsconfig.json",
-            "program": "${workspaceFolder}/src/App.ts",
+            "program": "${workspaceFolder}/src/main/App.ts",
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ],
@@ -20,7 +20,7 @@
             "request": "launch",
             "name": "Server Sans Bots",
             "preLaunchTask": "tsc: build - tsconfig.json",
-            "program": "${workspaceFolder}/src/App.ts",
+            "program": "${workspaceFolder}/src/main/App.ts",
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ],

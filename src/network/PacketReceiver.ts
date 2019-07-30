@@ -1,7 +1,7 @@
-import Player from "./entity/Player";
-import EventHandler from "./EventHandler";
+import Player from "../entity/Player";
+import EventHandler from "../main/EventHandler";
+import Vector3 from "../vector/Vector3";
 import { sendPong } from "./PacketSender";
-import Vector3 from "./vector/Vector3";
 
 const receivePlayerMove = (player: Player, data: number[]) => {
     player.onMove(data);

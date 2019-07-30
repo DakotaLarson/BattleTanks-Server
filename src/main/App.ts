@@ -1,16 +1,16 @@
 import {performance} from "perf_hooks";
-import ArenaLoader from "./arena/ArenaLoader";
-import MultiplayerService from "./core/MultiplayerService";
-import DatabaseHandler from "./database/DatabaseHandler";
-import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
-import BotHandler from "./entity/bot/BotHandler";
+import ArenaLoader from "../arena/ArenaLoader";
+import MultiplayerService from "../core/MultiplayerService";
+import DatabaseHandler from "../database/DatabaseHandler";
+import SocialDatabaseHandler from "../database/SocialDatabaseHandler";
+import BotHandler from "../entity/bot/BotHandler";
+import MetricsHandler from "../handlers/MetricsHandler";
+import ReferralHandler from "../handlers/ReferralHandler";
+import StoreHandler from "../handlers/StoreHandler";
+import PlayerConnector from "../network/PlayerConnector";
+import WebSocketServer from "../network/WebSocketServer";
 import EventHandler from "./EventHandler";
-import MetricsHandler from "./MetricsHandler";
-import PlayerConnector from "./PlayerConnector";
 import PlayerTimer from "./PlayerTimer";
-import ReferralHandler from "./ReferralHandler";
-import StoreHandler from "./StoreHandler";
-import WebSocketServer from "./WebSocketServer";
 
 const multiplayerService = new MultiplayerService();
 

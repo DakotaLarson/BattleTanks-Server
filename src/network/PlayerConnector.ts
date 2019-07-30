@@ -1,12 +1,12 @@
 import WebSocket = require("ws");
-import Auth from "./Auth";
-import DatabaseHandler from "./database/DatabaseHandler";
-import DomEventHandler from "./DomEventHandler";
-import Player from "./entity/Player";
-import EventHandler from "./EventHandler";
+import DatabaseHandler from "../database/DatabaseHandler";
+import Player from "../entity/Player";
+import StoreHandler from "../handlers/StoreHandler";
+import Auth from "../main/Auth";
+import DomEventHandler from "../main/DomEventHandler";
+import EventHandler from "../main/EventHandler";
 import PacketReceiver from "./PacketReceiver";
 import * as PacketSender from "./PacketSender";
-import StoreHandler from "./StoreHandler";
 
 export default class PlayerConnector {
 

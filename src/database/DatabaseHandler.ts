@@ -2,8 +2,8 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as mysql from "mysql";
 import * as path from "path";
-import EventHandler from "../EventHandler";
-import RankCalculator from "../RankCalculator";
+import EventHandler from "../main/EventHandler";
+import RankCalculator from "../main/RankCalculator";
 import DatabaseUtils from "./DatabaseUtils";
 
 export default class DatabaseHandler {

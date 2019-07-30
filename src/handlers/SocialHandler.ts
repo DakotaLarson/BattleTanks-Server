@@ -1,7 +1,7 @@
-import Auth from "./Auth";
-import DatabaseHandler from "./database/DatabaseHandler";
-import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
-import EventHandler from "./EventHandler";
+import DatabaseHandler from "../database/DatabaseHandler";
+import SocialDatabaseHandler from "../database/SocialDatabaseHandler";
+import Auth from "../main/Auth";
+import EventHandler from "../main/EventHandler";
 
 export default class SocialHandler {
 

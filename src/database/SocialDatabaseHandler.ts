@@ -1,5 +1,5 @@
 import * as mysql from "mysql";
-import EventHandler from "../EventHandler";
+import EventHandler from "../main/EventHandler";
 import DatabaseUtils from "./DatabaseUtils";
 
 export default class SocialDatabaseHandler {

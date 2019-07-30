@@ -1,5 +1,5 @@
-import ReferralDatabaseHandler from "./database/ReferralDatabaseHandler";
-import EventHandler from "./EventHandler";
+import ReferralDatabaseHandler from "../database/ReferralDatabaseHandler";
+import EventHandler from "../main/EventHandler";
 
 export default class ReferralHandler {
 

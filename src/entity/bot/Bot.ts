@@ -1,6 +1,6 @@
 import {performance} from "perf_hooks";
 import Lobby from "../../core/Lobby";
-import EventHandler from "../../EventHandler";
+import EventHandler from "../../main/EventHandler";
 import Vector3 from "../../vector/Vector3";
 import Vector4 from "../../vector/Vector4";
 import Player from "../Player";

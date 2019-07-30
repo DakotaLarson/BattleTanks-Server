@@ -1,13 +1,18 @@
 import Arena from "../arena/Arena";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
-import EventHandler from "../EventHandler";
-import GameStatus from "../GameStatus";
-import MatchTimer from "../MatchTimer";
+import EventHandler from "../main/EventHandler";
 import { GamemodeType } from "./gamemodes/GamemodeType";
 import Match from "./Match";
+import MatchTimer from "./MatchTimer";
 import MultiplayerService from "./MultiplayerService";
 import VoteHandler from "./VoteHandler";
+
+enum GameStatus {
+    WAITING,
+    STARTING,
+    RUNNING,
+}
 
 export default class Lobby {
 

@@ -1,9 +1,9 @@
 import {performance} from "perf_hooks";
-import Audio from "../Audio";
-import EventHandler from "../EventHandler";
-import * as PacketSender from "../PacketSender";
+import Audio from "../core/Audio";
+import EventHandler from "../main/EventHandler";
+import RankCalculator from "../main/RankCalculator";
+import * as PacketSender from "../network/PacketSender";
 import Powerup from "../powerup/Powerup";
-import RankCalculator from "../RankCalculator";
 import Vector3 from "../vector/Vector3";
 import Vector4 from "../vector/Vector4";
 

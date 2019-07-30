@@ -1,4 +1,4 @@
-import PlayerHandler from "./entity/PlayerHandler";
+import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "./EventHandler";
 
 export default class RankCalculator {

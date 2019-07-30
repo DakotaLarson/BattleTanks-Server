@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import Globals from "../Globals";
+import Globals from "../main/Globals";
 import Arena from "./Arena";
 
 export default class ArenaLoader {

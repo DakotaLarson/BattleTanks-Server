@@ -1,6 +1,6 @@
 import Player from "../../entity/Player";
 import PlayerHandler from "../../entity/PlayerHandler";
-import EventHandler from "../../EventHandler";
+import EventHandler from "../../main/EventHandler";
 import Match from "../Match";
 import Gamemode from "./Gamemode";
 import { GamemodeType } from "./GamemodeType";

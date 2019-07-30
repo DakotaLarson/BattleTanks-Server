@@ -1,7 +1,7 @@
-import DatabaseHandler from "./database/DatabaseHandler";
-import Player from "./entity/Player";
+import DatabaseHandler from "../database/DatabaseHandler";
+import Player from "../entity/Player";
+import ReferralHandler from "../handlers/ReferralHandler";
 import EventHandler from "./EventHandler";
-import ReferralHandler from "./ReferralHandler";
 
 export default class PlayerTimer {
 

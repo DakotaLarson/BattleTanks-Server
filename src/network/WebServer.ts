@@ -2,15 +2,15 @@ import bodyParser = require("body-parser");
 import cors = require("cors");
 import express = require("express");
 import http = require("http");
-import Auth from "./Auth";
-import DatabaseHandler from "./database/DatabaseHandler";
-import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
-import EventHandler from "./EventHandler";
-import MessageHandler from "./MessageHandler";
-import MetricsHandler from "./MetricsHandler";
-import NotificationHandler from "./NotificationHandler";
-import SocialHandler from "./SocialHandler";
-import StoreHandler from "./StoreHandler";
+import DatabaseHandler from "../database/DatabaseHandler";
+import SocialDatabaseHandler from "../database/SocialDatabaseHandler";
+import MessageHandler from "../handlers/MessageHandler";
+import MetricsHandler from "../handlers/MetricsHandler";
+import NotificationHandler from "../handlers/NotificationHandler";
+import SocialHandler from "../handlers/SocialHandler";
+import StoreHandler from "../handlers/StoreHandler";
+import Auth from "../main/Auth";
+import EventHandler from "../main/EventHandler";
 
 export default class WebServer {
 

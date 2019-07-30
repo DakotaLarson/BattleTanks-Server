@@ -2,8 +2,8 @@ import Arena from "../arena/Arena";
 import VotableArena from "../arena/VotableArena";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
-import EventHandler from "../EventHandler";
-import Globals from "../Globals";
+import EventHandler from "../main/EventHandler";
+import Globals from "../main/Globals";
 import Lobby from "./Lobby";
 
 export default class VoteHandler {

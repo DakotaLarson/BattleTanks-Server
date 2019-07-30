@@ -1,11 +1,11 @@
 import WebSocket = require("ws");
 
-import DatabaseHandler from "./database/DatabaseHandler";
-import SocialDatabaseHandler from "./database/SocialDatabaseHandler";
-import DomEventHandler from "./DomEventHandler";
-import EventHandler from "./EventHandler";
-import MetricsHandler from "./MetricsHandler";
-import StoreHandler from "./StoreHandler";
+import DatabaseHandler from "../database/DatabaseHandler";
+import SocialDatabaseHandler from "../database/SocialDatabaseHandler";
+import MetricsHandler from "../handlers/MetricsHandler";
+import StoreHandler from "../handlers/StoreHandler";
+import DomEventHandler from "../main/DomEventHandler";
+import EventHandler from "../main/EventHandler";
 import WebServer from "./WebServer";
 
 export default class WebSocketServer {
