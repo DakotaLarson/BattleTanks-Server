@@ -21,7 +21,7 @@ const storeHandler = new StoreHandler();
 const metricsHandler = new MetricsHandler(databaseHandler);
 const playerConnector = new PlayerConnector(databaseHandler, storeHandler);
 const referralHandler = new ReferralHandler();
-const wss = new WebSocketServer(databaseHandler, socialDatabaseHandler, metricsHandler, storeHandler);
+const wss = new WebSocketServer(databaseHandler, socialDatabaseHandler, metricsHandler, storeHandler, referralHandler);
 const botHandler = new BotHandler();
 const playerTimer = new PlayerTimer(databaseHandler, referralHandler);
 

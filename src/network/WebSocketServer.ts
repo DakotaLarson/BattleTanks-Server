@@ -3,6 +3,7 @@ import WebSocket = require("ws");
 import DatabaseHandler from "../database/DatabaseHandler";
 import SocialDatabaseHandler from "../database/SocialDatabaseHandler";
 import MetricsHandler from "../handlers/MetricsHandler";
+import ReferralHandler from "../handlers/ReferralHandler";
 import StoreHandler from "../handlers/StoreHandler";
 import DomEventHandler from "../main/DomEventHandler";
 import EventHandler from "../main/EventHandler";
@@ -23,10 +24,10 @@ export default class WebSocketServer {
 
     private deadSockets: WebSocket[];
 
-    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler, metricsHandler: MetricsHandler, storeHandler: StoreHandler) {
+    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler, metricsHandler: MetricsHandler, storeHandler: StoreHandler, referralHandler: ReferralHandler) {
         this.connectionCheckerId = setInterval(this.checkConnections.bind(this), 30000, 30000);
 
-        this.webServer = new WebServer(databaseHandler, socialDatabaseHandler, metricsHandler, storeHandler);
+        this.webServer = new WebServer(databaseHandler, socialDatabaseHandler, metricsHandler, storeHandler, referralHandler);
         this.wss = new WebSocket.Server({
             server: this.webServer.server,
             verifyClient: this.verifyClient.bind(this),

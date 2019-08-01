@@ -7,6 +7,7 @@ import SocialDatabaseHandler from "../database/SocialDatabaseHandler";
 import MessageHandler from "../handlers/MessageHandler";
 import MetricsHandler from "../handlers/MetricsHandler";
 import NotificationHandler from "../handlers/NotificationHandler";
+import ReferralHandler from "../handlers/ReferralHandler";
 import SocialHandler from "../handlers/SocialHandler";
 import StoreHandler from "../handlers/StoreHandler";
 import Auth from "../main/Auth";
@@ -30,6 +31,7 @@ export default class WebServer {
     private metricsHandler: MetricsHandler;
     private notificationHandler: NotificationHandler;
     private storeHandler: StoreHandler;
+    private referralHandler: ReferralHandler;
 
     private playerCount: number;
     private botCount: number;
@@ -42,7 +44,7 @@ export default class WebServer {
 
     private subscribers: express.Response[];
 
-    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler, metricsHandler: MetricsHandler, storeHandler: StoreHandler) {
+    constructor(databaseHandler: DatabaseHandler, socialDatabaseHandler: SocialDatabaseHandler, metricsHandler: MetricsHandler, storeHandler: StoreHandler, referralHandler: ReferralHandler) {
         const app = express();
         this.server = http.createServer(app);
 
@@ -53,6 +55,7 @@ export default class WebServer {
         this.metricsHandler = metricsHandler;
         this.notificationHandler = new NotificationHandler(databaseHandler, socialDatabaseHandler);
         this.storeHandler = storeHandler;
+        this.referralHandler = referralHandler;
 
         this.playerCount = 0;
         this.botCount = 0;
@@ -88,6 +91,7 @@ export default class WebServer {
         app.post("/conversations", this.onPostConversations.bind(this));
         app.post("/store", this.onPostStore.bind(this));
         app.post("/selection", this.onPostSelection.bind(this));
+        app.post("/referral", this.onPostReferral.bind(this));
     }
 
     public enable() {
@@ -130,6 +134,7 @@ export default class WebServer {
                 const isNew = await this.databaseHandler.handlePlayerAuth(data);
                 if (isNew) {
                     await this.storeHandler.initPlayer(data.id);
+                    await this.referralHandler.initPlayer(data.id);
                 }
                 res.sendStatus(200);
             } else {
@@ -476,6 +481,47 @@ export default class WebServer {
             }
         } else {
             res.sendStatus(400);
+        }
+    }
+
+    private async onPostReferral(req: express.Request, res: express.Response) {
+        if (req.body && "token" in req.body) {
+            try {
+                const data = await Auth.verifyId(req.body.token);
+
+                let results = {};
+                let status = 400;
+
+                if ("code" in req.body) {
+                    const success = await this.referralHandler.setReferredFrom(data.id, req.body.code);
+                    if (success) {
+                        status = 200;
+                        results = {
+                            success: true,
+                        };
+                    } else {
+                        results = {
+                            success: false,
+                        };
+                    }
+                } else {
+                    const referralResults = await this.referralHandler.getReferralData(data.id);
+                    if (referralResults) {
+                        status = 200;
+                        results = referralResults;
+                    }
+                }
+
+                res.status(status).set({
+                    "content-type": "application/json",
+                });
+                res.send(results);
+            } catch (ex) {
+                console.error(ex);
+                res.sendStatus(500);
+            }
+        } else {
+            res.sendStatus(403);
         }
     }
 

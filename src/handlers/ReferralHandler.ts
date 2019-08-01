@@ -28,6 +28,36 @@ export default class ReferralHandler {
         }
     }
 
+    public async initPlayer(id: string) {
+        await this.databaseHandler.addReferrer(id);
+    }
+
+    public async setReferredFrom(id: string, code: string) {
+        const referrer = await this.databaseHandler.getReferrer(id, code);
+        if (referrer) {
+            await this.databaseHandler.setReferredFrom(id, referrer);
+            return true;
+        } else {
+           return false;
+        }
+    }
+
+    public async getReferralData(id: string) {
+        const rawData = await this.databaseHandler.getData(id);
+
+        let data: any;
+        if (rawData) {
+            data = {
+                referrer : rawData.username,
+                code : rawData.referral_code,
+                currency : rawData.referred_currency,
+                time : rawData.referred_time,
+                referrals : rawData.referral_count,
+            };
+        }
+        return data;
+    }
+
     private async onPlayerUpdate(event: any) {
         const currency = event.data.currency;
 

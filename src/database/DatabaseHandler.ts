@@ -167,13 +167,14 @@ export default class DatabaseHandler {
     }
 
     public async handlePlayerAuth(data: any) {
-        const hasPlayer = await this.hasPlayer(data.id);
-        if (!hasPlayer) {
+        const isNew = await this.isNew(data.id);
+        if (isNew) {
             const count = await this.getPlayerCount();
             // Player name *should* be unique.
             await this.createPlayer(data.id, data.email, data.name, "Player #" + count);
         }
-        return !hasPlayer;
+
+        return isNew;
     }
 
     public async getPlayerRank(points: number, column: string): Promise<number> {
@@ -395,7 +396,7 @@ export default class DatabaseHandler {
         await this.utils.query(sql, [id, email, name, username, false]);
     }
 
-    private async hasPlayer(id: string) {
+    private async isNew(id: string) {
         const sql = "SELECT COUNT(*) AS count FROM `players` WHERE `id` = ?";
         const results = await this.utils.query(sql, [id]);
 
@@ -403,7 +404,7 @@ export default class DatabaseHandler {
         if (dbCount > 1) {
             throw new Error("Multiple users with same Id");
         }
-        return dbCount === 1;
+        return dbCount === 0;
     }
 
     private async getPlayersData(ids: string[], fields: string[]) {

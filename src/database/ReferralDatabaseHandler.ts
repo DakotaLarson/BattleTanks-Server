@@ -55,6 +55,20 @@ export default class ReferralDatabaseHandler {
         }
     }
 
+    public async getData(playerId: string) {
+        const sql = "SELECT players.username, referred_currency, referred_time, referral_code, (SELECT COUNT(*) FROM referrals WHERE referred_from = ?) AS 'referral_count' FROM referrals LEFT JOIN players ON referred_from = players.id WHERE referrer = ?";
+        const values = [playerId, playerId];
+
+        const results = await this.utils.query(sql, values);
+        if (results.length === 1) {
+            return results[0];
+        } else if (results.length === 0) {
+            return undefined;
+        } else {
+            throw new Error("Multiple referrers found with id: " + playerId);
+        }
+    }
+
     public async getReferralData(ids: string[]) {
 
         let sql = "SELECT referrer, referral_currency, referral_time FROM referrals WHERE referred_from IS NOT NULL AND referrer IN (?";
