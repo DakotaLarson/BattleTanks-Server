@@ -2,6 +2,7 @@ import Arena from "../arena/Arena";
 import Player from "../entity/Player";
 import PlayerHandler from "../entity/PlayerHandler";
 import EventHandler from "../main/EventHandler";
+import RankCalculator from "../main/RankCalculator";
 import { GamemodeType } from "./gamemodes/GamemodeType";
 import Match from "./Match";
 import MatchTimer from "./MatchTimer";
@@ -278,17 +279,19 @@ export default class Lobby {
 
     private constructChatMessage(sender: Player, message: string) {
         const rank = sender.getRank();
+        const rankColor = RankCalculator.getRankColor(rank);
+
         const segments = [
             {
-                color: 0xff00ff,
+                color: 0xffffff,
                 text: "[",
             },
             {
-                color: 0xffffff,
+                color: rankColor!,
                 text: rank,
             },
             {
-                color: 0xff00ff,
+                color: 0xffffff,
                 text: "] ",
             },
             {

@@ -19,6 +19,20 @@ export default class RankCalculator {
         "General",
     ];
 
+    private static readonly RANK_COLORS: Map<string, number> = new Map([
+        ["Recruit", 0xffffff],
+        ["Private", 0x00ff80],
+        ["Corporal", 0xffff00],
+        ["Sergeant", 0x00ffff],
+        ["Officer", 0xff8000],
+        ["Lieutenant", 0x80ff00],
+        ["Commander", 0x804000],
+        ["Captain", 0xff0080],
+        ["Major", 0x0080ff],
+        ["Colonel", 0xff00ff],
+        ["General", 0x8000ff],
+    ]);
+
     public static handlePointChange(id: string, username: string, points: number, increment: number) {
         const changeData = RankCalculator.isChanged(points, increment);
         if (changeData.level) {
@@ -59,6 +73,10 @@ export default class RankCalculator {
             level: "" + level,
             rank,
         };
+    }
+
+    public static getRankColor(rank: string) {
+        return RankCalculator.RANK_COLORS.get(rank);
     }
 
     private static isChanged(points: number, increment: number) {

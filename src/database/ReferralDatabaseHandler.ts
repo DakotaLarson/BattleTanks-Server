@@ -83,7 +83,7 @@ export default class ReferralDatabaseHandler {
         for (const result of results) {
             referralData.set(result.referrer, {
                 currency: result.referral_currency,
-                time: results.referral_time,
+                time: result.referral_time,
             });
         }
 

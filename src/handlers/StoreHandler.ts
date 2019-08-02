@@ -35,7 +35,7 @@ export default class StoreHandler {
         ["The Quad", [
             "Sand",
             "Brown",
-            "Dark Gray",
+            "Charcoal",
         ]],
     ]);
 
@@ -50,7 +50,6 @@ export default class StoreHandler {
         "Gold",
         "Sand",
         "Brown",
-        "Dark Gray",
     ];
 
     private databaseHandler: StoreDatabaseHandler;
