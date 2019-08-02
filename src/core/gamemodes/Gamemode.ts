@@ -10,7 +10,7 @@ export default abstract class Gamemode {
     protected static readonly OOB_ID = -1; // Out of Bounds Id
 
     private static readonly RESPAWN_TIME = 7500;
-    private static readonly DEV_RESPAWN_TIME = 2500;
+    private static readonly DEV_RESPAWN_TIME = 7500;
     private static readonly PROTECTED_TIME = 3000;
 
     private static readonly PROJECTILE_DAMAGE = 0.2;

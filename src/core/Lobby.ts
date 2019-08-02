@@ -20,7 +20,7 @@ export default class Lobby {
     private static readonly WAIT_BETWEEN_MATCHES = 15;
     private static readonly DEV_WAIT_BETWEEN_MATCHES = 5;
     private static readonly MATCH_TIME = 300;
-    private static readonly DEV_MATCH_TIME = 30;
+    private static readonly DEV_MATCH_TIME = 180;
 
     public isPublic: boolean;
     public hasBots: boolean;
