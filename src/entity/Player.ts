@@ -36,6 +36,25 @@ export default class Player {
     private static readonly RAM_COOLDOWN = 7500;
     private static readonly RAM_USAGE_TIME = 500;
 
+    private static readonly NAME_ADJECTIVES = [
+        "Solid",
+        "Snazzy",
+        "Husky",
+        "Grumpy",
+        "Wicked",
+        "Zippy",
+        "Joyful",
+    ];
+
+    private static readonly NAME_NOUNS = [
+        "Sherman",
+        "Panzer",
+        "Tiger",
+        "Stuart",
+        "Priest",
+        "Abrams",
+    ];
+
     public name: string;
     public id: number;
     public sub: string | undefined;
@@ -80,8 +99,8 @@ export default class Player {
 
     private headOffset: number;
 
-    constructor(name: string, id: number, points: number, modelId?: string, modelColors?: string[], sub?: string) {
-        this.name = name;
+    constructor(name: string | undefined, id: number, points: number, modelId?: string, modelColors?: string[], sub?: string) {
+        this.name = name || Player.generateUsername();
         this.id = id;
         this.sub = sub;
 
@@ -129,6 +148,14 @@ export default class Player {
         this.ramTime = 0;
         this.timeouts = [];
 
+    }
+
+    private static generateUsername() {
+        const adjective = Player.NAME_ADJECTIVES[Math.floor(Math.random() * Player.NAME_ADJECTIVES.length)];
+        const noun = Player.NAME_NOUNS[Math.floor(Math.random() * Player.NAME_NOUNS.length)];
+        const int = Math.floor(Math.random() * 90) + 10;
+
+        return adjective + noun + int;
     }
 
     public addPoints(points: number) {

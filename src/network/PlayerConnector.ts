@@ -107,7 +107,7 @@ export default class PlayerConnector {
             details = await this.databaseHandler.getPlayerUsernameAndPoints(sub);
         } else {
             details = {
-                username: "Guest #" + id,
+                username: undefined,
                 points: 0,
             };
         }

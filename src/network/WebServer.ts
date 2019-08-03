@@ -92,6 +92,9 @@ export default class WebServer {
         app.post("/store", this.onPostStore.bind(this));
         app.post("/selection", this.onPostSelection.bind(this));
         app.post("/referral", this.onPostReferral.bind(this));
+        app.get("/", (req: express.Request, res: express.Response) => {
+            res.send("You are probably looking for https://battletanks.app");
+        });
     }
 
     public enable() {
