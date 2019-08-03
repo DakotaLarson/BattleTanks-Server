@@ -611,7 +611,7 @@ export default class WebServer {
     }
 
     private isNameInvalid(name: string) {
-        return name.length < WebServer.MINIMUM_USERNAME_LENGTH || name.length > WebServer.MAXIMUM_USERNAME_LENGTH || name.toLowerCase().startsWith("guest") || name.toLowerCase().startsWith("player");
+        return name.length < WebServer.MINIMUM_USERNAME_LENGTH || name.length > WebServer.MAXIMUM_USERNAME_LENGTH || name.toLowerCase().startsWith("player");
     }
 
     private async verifyToken(req: express.Request) {

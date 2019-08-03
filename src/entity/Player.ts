@@ -51,7 +51,6 @@ export default class Player {
         "Panzer",
         "Tiger",
         "Stuart",
-        "Priest",
         "Abrams",
     ];
 

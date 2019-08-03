@@ -4,7 +4,6 @@ import DatabaseUtils from "./DatabaseUtils";
 
 export default class StoreDatabaseHandler {
 
-    private pool: mysql.Pool | undefined;
     private utils: DatabaseUtils;
 
     constructor() {
@@ -15,7 +14,7 @@ export default class StoreDatabaseHandler {
 
     public async purchase(playerId: string, productTitle: string, isFree: boolean, type: number, parentTitle?: string, childTitles?: string[], childType?: number) {
 
-        const connection = await this.startTransaction();
+        const connection = await this.utils.startTransaction();
         try {
 
             // Get products
@@ -60,7 +59,7 @@ export default class StoreDatabaseHandler {
             }
             await this.utils.queryFromConnection(connection, purchaseSql, purchaseValues);
 
-            this.endTransaction(connection);
+            this.utils.commit(connection);
 
             return true;
 
@@ -177,7 +176,6 @@ export default class StoreDatabaseHandler {
     }
 
     private onPoolUpdate(pool: mysql.Pool) {
-        this.pool = pool;
         this.utils.setPool(pool);
     }
 
@@ -245,34 +243,5 @@ export default class StoreDatabaseHandler {
         } else {
             return products[0];
         }
-    }
-
-    private startTransaction(): Promise<mysql.PoolConnection> {
-        return new Promise((resolve, reject) => {
-            this.pool!.getConnection((connectionErr: mysql.MysqlError, connection: mysql.PoolConnection) => {
-                if (connectionErr) {
-                    reject(connectionErr);
-                }
-
-                connection.beginTransaction((transactionErr: mysql.MysqlError) => {
-                    if (transactionErr) {
-                        reject(connectionErr);
-                    }
-                    resolve(connection);
-                });
-            });
-        });
-    }
-
-    private endTransaction(connection: mysql.PoolConnection) {
-        return new Promise((resolve, reject) => {
-            connection.commit((err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
     }
 }

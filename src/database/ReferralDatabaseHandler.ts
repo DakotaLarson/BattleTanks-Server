@@ -99,85 +99,94 @@ export default class ReferralDatabaseHandler {
     }
 
     public async updateReferredData() {
-        const referralSql = "SELECT referred_from, referral_currency, referral_time FROM referrals WHERE referred_from IS NOT NULL AND (referral_currency != 0 OR referral_time != 0)";
+        const connection = await this.utils.startTransaction();
 
-        const referralResults = await this.utils.query(referralSql);
-        if (referralResults.length) {
+        try {
+            const referralSql = "SELECT referred_from, referral_currency, referral_time FROM referrals WHERE referred_from IS NOT NULL AND (referral_currency != 0 OR referral_time != 0)";
 
-            const referredIds = [];
-            for (const result of referralResults) {
-                referredIds.push(result.referred_from);
-            }
+            const referralResults = await this.utils.queryFromConnection(connection, referralSql);
+            if (referralResults.length) {
 
-            let referrerSql = "SELECT referrer, referred_currency, referred_time FROM referrals WHERE referrer IN (?";
-            for (let i = 1; i < referredIds.length; i ++) {
-                referrerSql += ", ?";
-            }
-            referrerSql += ")";
-
-            const referrerResults = await this.utils.query(referrerSql, referredIds);
-
-            const updatedReferrerTimes: Map<string, number> = new Map();
-            const updatedReferrerCurrencies: Map<string, number> = new Map();
-
-            const referrerCurrencyDeltas: Map<string, number> = new Map();
-
-            const eligibleReferrers = [];
-
-            // Populate initial referrer data, elegibility
-            for (const referrerResult of referrerResults) {
-
-                const referrer = referrerResult.referrer;
-                const time = referrerResult.referred_time;
-                const currency = referrerResult.referred_currency;
-
-                updatedReferrerTimes.set(referrer, time);
-                if (time < ReferralDatabaseHandler.REFERRED_REWARD_TIME) {
-                    eligibleReferrers.push(referrer);
+                const referredIds = [];
+                for (const result of referralResults) {
+                    referredIds.push(result.referred_from);
                 }
 
-                updatedReferrerCurrencies.set(referrer, currency);
+                let referrerSql = "SELECT referrer, referred_currency, referred_time FROM referrals WHERE referrer IN (?";
+                for (let i = 1; i < referredIds.length; i ++) {
+                    referrerSql += ", ?";
+                }
+                referrerSql += ")";
 
-            }
+                const referrerResults = await this.utils.queryFromConnection(connection, referrerSql, referredIds);
 
-            // Add referral time, currency
-            for (const referral of referralResults) {
+                const updatedReferrerTimes: Map<string, number> = new Map();
+                const updatedReferrerCurrencies: Map<string, number> = new Map();
 
-                const referrerTime = updatedReferrerTimes.get(referral.referred_from)!;
-                const referrerCurrency = updatedReferrerCurrencies.get(referral.referred_from)!;
+                const referrerCurrencyDeltas: Map<string, number> = new Map();
 
-                const updatedTime = referrerTime + referral.referral_time;
-                const updatedCurrency = referrerCurrency + referral.referral_currency;
+                const eligibleReferrers = [];
 
-                updatedReferrerTimes.set(referral.referred_from, updatedTime);
-                updatedReferrerCurrencies.set(referral.referred_from, updatedCurrency);
+                // Populate initial referrer data, elegibility
+                for (const referrerResult of referrerResults) {
 
-                referrerCurrencyDeltas.set(referral.referred_from, updatedCurrency);
-            }
+                    const referrer = referrerResult.referrer;
+                    const time = referrerResult.referred_time;
+                    const currency = referrerResult.referred_currency;
 
-            // Add reward to elible referrers who cross threshold.
-            for (const referrer of eligibleReferrers) {
-                const time = updatedReferrerTimes.get(referrer)!;
+                    updatedReferrerTimes.set(referrer, time);
+                    if (time < ReferralDatabaseHandler.REFERRED_REWARD_TIME) {
+                        eligibleReferrers.push(referrer);
+                    }
 
-                if (time >= ReferralDatabaseHandler.REFERRED_REWARD_TIME) {
-
-                    const currency = updatedReferrerCurrencies.get(referrer)!;
-                    const currencyDelta = referrerCurrencyDeltas.get(referrer)!;
-
-                    updatedReferrerCurrencies.set(referrer, currency + ReferralDatabaseHandler.REFERRED_TIME_REWARD);
-
-                    referrerCurrencyDeltas.set(referrer, currencyDelta + ReferralDatabaseHandler.REFERRED_TIME_REWARD);
+                    updatedReferrerCurrencies.set(referrer, currency);
 
                 }
+
+                // Add referral time, currency
+                for (const referral of referralResults) {
+
+                    const referrerTime = updatedReferrerTimes.get(referral.referred_from)!;
+                    const referrerCurrency = updatedReferrerCurrencies.get(referral.referred_from)!;
+
+                    const updatedTime = referrerTime + referral.referral_time;
+                    const updatedCurrency = referrerCurrency + referral.referral_currency;
+
+                    updatedReferrerTimes.set(referral.referred_from, updatedTime);
+                    updatedReferrerCurrencies.set(referral.referred_from, updatedCurrency);
+
+                    referrerCurrencyDeltas.set(referral.referred_from, updatedCurrency);
+                }
+
+                // Add reward to elible referrers who cross threshold.
+                for (const referrer of eligibleReferrers) {
+                    const time = updatedReferrerTimes.get(referrer)!;
+
+                    if (time >= ReferralDatabaseHandler.REFERRED_REWARD_TIME) {
+
+                        const currency = updatedReferrerCurrencies.get(referrer)!;
+                        const currencyDelta = referrerCurrencyDeltas.get(referrer)!;
+
+                        updatedReferrerCurrencies.set(referrer, currency + ReferralDatabaseHandler.REFERRED_TIME_REWARD);
+
+                        referrerCurrencyDeltas.set(referrer, currencyDelta + ReferralDatabaseHandler.REFERRED_TIME_REWARD);
+
+                    }
+                }
+
+                // Update referral table
+                await this.updateData(updatedReferrerCurrencies, "referred_currency", connection);
+                await this.updateData(updatedReferrerTimes, "referred_time", connection);
+
+                await this.updatePlayerCurrencies(connection, referrerCurrencyDeltas);
+
+                await this.resetReferralData(connection);
+
             }
-
-            // Update referral table
-            await this.updateData(updatedReferrerCurrencies, "referred_currency");
-            await this.updateData(updatedReferrerTimes, "referred_time");
-
-            await this.updatePlayerCurrencies(referrerCurrencyDeltas);
-
-            await this.resetReferralData();
+            await this.utils.commit(connection);
+        } catch (err) {
+            console.error(err);
+            await this.utils.rollback(connection);
         }
 
     }
@@ -186,21 +195,33 @@ export default class ReferralDatabaseHandler {
         this.utils.setPool(pool);
     }
 
-    private async updateData(data: Map<string, number>, columnName: string) {
+    private async updateData(data: Map<string, number>, columnName: string, connection?: mysql.PoolConnection) {
         const values = [];
 
         let sql = "UPDATE referrals SET " + columnName + " = CASE";
         for (const [id, value] of data) {
-            sql += " WHEN referrer = ? THEN ?";
+            sql += " WHEN referrer = ? THEN ? ";
             values.push(id, value);
         }
-        sql += " END";
+        sql += " END WHERE referrer IN (";
+        for (const [id] of data) {
+            sql += "?, ";
+            values.push(id);
+        }
+        if (data.size) {
+            sql = sql.substr(0, sql.length - 2);
+        }
+        sql += ")";
 
-        await this.utils.query(sql, values);
-
+        if (connection) {
+            await this.utils.queryFromConnection(connection, sql, values);
+        } else {
+            await this.utils.query(sql, values);
+        }
     }
 
-    private async updatePlayerCurrencies(currencyDeltas: Map<string, number>) {
+    private async updatePlayerCurrencies(connection: mysql.PoolConnection, currencyDeltas: Map<string, number>) {
+
         const playerIds = [];
 
         let currencySql = "SELECT id, currency FROM players WHERE id IN (";
@@ -209,30 +230,41 @@ export default class ReferralDatabaseHandler {
             currencySql += "?, ";
         }
         currencySql = currencySql.substr(0, currencySql.length - 2) + ")";
-        const currencyResults = await this.utils.query(currencySql, playerIds);
+        const currencyResults = await this.utils.queryFromConnection(connection, currencySql, playerIds);
 
         const updatedCurrencies: Map<string, number> = new Map();
 
         for (const result of currencyResults) {
-            updatedCurrencies.set(result.id, Math.round(currencyDeltas.get(result.id)! * ReferralDatabaseHandler.REFERRED_PERCENTAGE / 100) + currencyResults.currency);
+            updatedCurrencies.set(result.id, Math.round(currencyDeltas.get(result.id)! * ReferralDatabaseHandler.REFERRED_PERCENTAGE / 100) + result.currency);
         }
 
-        let updateSql = "UPDATE players SET currency = CASE ";
+        let updateSql = "UPDATE players SET currency = CASE";
         const updateValues = [];
 
         for (const [playerId, currency] of updatedCurrencies) {
-            updateSql += "WHEN id = ? THEN ?";
+            updateSql += " WHEN id = ? THEN ?";
             updateValues.push(playerId, currency);
         }
 
-        updateSql += " END";
+        updateSql += " END WHERE id IN (";
 
-        await this.utils.query(updateSql, updateValues);
+        for (const [playerId] of updatedCurrencies) {
+            updateSql += "?, ";
+            updateValues.push(playerId);
+        }
+
+        if (updatedCurrencies.size) {
+            updateSql = updateSql.substr(0, updateSql.length - 2);
+        }
+        updateSql += ")";
+
+        await this.utils.queryFromConnection(connection, updateSql, updateValues);
+
     }
 
-    private async resetReferralData() {
+    private async resetReferralData(connection: mysql.PoolConnection) {
         const sql = "UPDATE referrals SET referral_currency = 0, referral_time = 0";
-        await this.utils.query(sql);
+        await this.utils.queryFromConnection(connection, sql);
     }
 
 }
