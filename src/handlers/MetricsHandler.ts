@@ -134,7 +134,7 @@ export default class MetricsHandler {
     private getSecret(): Promise<string> {
         return new Promise((resolve, reject) => {
             const filePath = path.join(process.cwd(), MetricsHandler.DIRECTORY_NAME, MetricsHandler.FILE_NAME);
-            fs.readFile(filePath, (err: NodeJS.ErrnoException, rawData: Buffer) => {
+            fs.readFile(filePath, (err: NodeJS.ErrnoException | null, rawData: Buffer) => {
                 if (err) {
                     console.error(err);
                     reject("Error reading file " + MetricsHandler.FILE_NAME);

@@ -18,7 +18,7 @@ export default class ArenaLoader {
             fs.exists(dirPath, (exists) => {
 
                 if (exists) {
-                    fs.readdir(dirPath, (err: NodeJS.ErrnoException, arenaFiles: string[]) => {
+                    fs.readdir(dirPath, (err: NodeJS.ErrnoException | null, arenaFiles: string[]) => {
                         if (err) {
 
                             console.error(err);
@@ -59,7 +59,7 @@ export default class ArenaLoader {
                     });
                 } else {
 
-                    fs.mkdir(dirPath, undefined, (err: NodeJS.ErrnoException) => {
+                    fs.mkdir(dirPath, undefined, (err: NodeJS.ErrnoException | null) => {
                         if (err) {
                             console.error(err);
                         }
@@ -104,7 +104,7 @@ export default class ArenaLoader {
         return new Promise((resolve, reject) => {
             const filePath = path.join(dirPath, fileName);
             if (fileName.endsWith(".json")) {
-                fs.readFile(filePath, (err: NodeJS.ErrnoException, rawData: Buffer) => {
+                fs.readFile(filePath, (err: NodeJS.ErrnoException | null, rawData: Buffer) => {
                     if (err) {
                         console.error(err);
                         reject("Error reading file " + fileName);
