@@ -10,8 +10,8 @@ export default class DatabaseHandler {
 
     public static readonly TIMEOUT = 5000;
 
-    private static readonly DIRECTORY_NAME = "keys";
-    private static readonly FILE_NAME = "database.json";
+    private static readonly CRED_DIRECTORY_NAME = "keys";
+    private static readonly CRED_FILE_NAME = "database.json";
 
     private static readonly LEADERBOARD_LENGTH = 10;
 
@@ -554,11 +554,11 @@ export default class DatabaseHandler {
     private getConnectionData(): Promise<any> {
         return new Promise((resolve, reject) => {
 
-            const filePath = path.join(process.cwd(), DatabaseHandler.DIRECTORY_NAME, DatabaseHandler.FILE_NAME);
+            const filePath = path.join(process.cwd(), DatabaseHandler.CRED_DIRECTORY_NAME, DatabaseHandler.CRED_FILE_NAME);
             fs.readFile(filePath, (err: NodeJS.ErrnoException | null, rawData: Buffer) => {
                 if (err) {
                     console.error(err);
-                    reject("Error reading file " + DatabaseHandler.FILE_NAME);
+                    reject("Error reading file " + DatabaseHandler.CRED_FILE_NAME);
                 }
 
                 let data;
@@ -566,13 +566,13 @@ export default class DatabaseHandler {
                     data = JSON.parse(rawData.toString());
                 } catch (ex) {
                     console.error(ex);
-                    reject("Error parsing content in " + DatabaseHandler.FILE_NAME);
+                    reject("Error parsing content in " + DatabaseHandler.CRED_FILE_NAME);
                 }
 
                 if (data.host && data.port && data.username && data.password && data.database && data["database-dev"]) {
                     resolve(data);
                 } else {
-                    reject("Incorrect data in " + DatabaseHandler.FILE_NAME);
+                    reject("Incorrect data in " + DatabaseHandler.CRED_FILE_NAME);
                 }
             });
         });

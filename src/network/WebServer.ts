@@ -1,12 +1,15 @@
 import bodyParser = require("body-parser");
 import cors = require("cors");
+import crypto = require("crypto");
 import express = require("express");
 import http = require("http");
+import multer = require("multer");
 import DatabaseHandler from "../database/DatabaseHandler";
 import SocialDatabaseHandler from "../database/SocialDatabaseHandler";
 import MessageHandler from "../handlers/MessageHandler";
 import MetricsHandler from "../handlers/MetricsHandler";
 import NotificationHandler from "../handlers/NotificationHandler";
+import RecordingHandler from "../handlers/RecordingHandler";
 import ReferralHandler from "../handlers/ReferralHandler";
 import SocialHandler from "../handlers/SocialHandler";
 import StoreHandler from "../handlers/StoreHandler";
@@ -32,6 +35,7 @@ export default class WebServer {
     private notificationHandler: NotificationHandler;
     private storeHandler: StoreHandler;
     private referralHandler: ReferralHandler;
+    private recordingHandler: RecordingHandler;
 
     private playerCount: number;
     private botCount: number;
@@ -56,6 +60,7 @@ export default class WebServer {
         this.notificationHandler = new NotificationHandler(databaseHandler, socialDatabaseHandler);
         this.storeHandler = storeHandler;
         this.referralHandler = referralHandler;
+        this.recordingHandler = new RecordingHandler();
 
         this.playerCount = 0;
         this.botCount = 0;
@@ -69,8 +74,30 @@ export default class WebServer {
         this.subscribers = [];
 
         app.use(cors());
+
+        const storage = multer.diskStorage({
+            destination: "recordings/raw/",
+            filename: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+                const name =  crypto.pseudoRandomBytes(4).toString("hex") + Date.now() + ".webm";
+                // tslint:disable-next-line: no-null-keyword
+                cb(null, name);
+            },
+        });
+        const upload = multer({
+            storage,
+            fileFilter: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, acceptFile: boolean) => void) => {
+                // tslint:disable-next-line: no-null-keyword
+                cb(null, file.mimetype === "video/webm");
+            },
+            limits: {
+                files: 1,
+                fileSize: 100 * 1024 * 1024,
+            },
+        });
+
         app.use(bodyParser.json());
         app.use(bodyParser.text());
+        app.use(upload.single("recording"));
         // app.use(bodyParser.urlencoded({extended: false}));
 
         app.get("/serverstats", this.onGetServerStats.bind(this));
@@ -92,6 +119,7 @@ export default class WebServer {
         app.post("/store", this.onPostStore.bind(this));
         app.post("/selection", this.onPostSelection.bind(this));
         app.post("/referral", this.onPostReferral.bind(this));
+        app.post("/recording", this.onPostRecording.bind(this));
         app.get("/", (req: express.Request, res: express.Response) => {
             res.send("You are probably looking for https://battletanks.app");
         });
@@ -526,6 +554,26 @@ export default class WebServer {
         } else {
             res.sendStatus(403);
         }
+    }
+
+    private async onPostRecording(req: express.Request, res: express.Response) {
+        let id: any;
+        try {
+            if (req.body && "token" in req.body) {
+                const data = await Auth.verifyId(req.body.token);
+                id = data.id;
+            }
+            const destination = await this.recordingHandler.handleUpload(id, req.file, req.body);
+            if (destination) {
+                res.status(200).send(destination);
+            } else {
+                res.sendStatus(400);
+            }
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+        
     }
 
     private getSearchResults(res: express.Response, query: string, id?: string, friends?: boolean) {

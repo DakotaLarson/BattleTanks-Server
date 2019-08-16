@@ -5,3 +5,5 @@ arenas/
 .idea/
 .old/
 .DS_Store
+recordings/raw/
+recordings/processed/
