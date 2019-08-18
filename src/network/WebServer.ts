@@ -524,7 +524,8 @@ export default class WebServer {
                 let status = 400;
 
                 if ("code" in req.body) {
-                    const success = await this.referralHandler.setReferredFrom(data.id, req.body.code);
+                    const username = await this.databaseHandler.getPlayerUsername(data.id);
+                    const success = await this.referralHandler.setReferredFrom(data.id, req.body.code, username);
                     if (success) {
                         status = 200;
                         results = {
@@ -573,7 +574,7 @@ export default class WebServer {
             console.error(err);
             res.sendStatus(500);
         }
-        
+
     }
 
     private getSearchResults(res: express.Response, query: string, id?: string, friends?: boolean) {

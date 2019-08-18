@@ -13,12 +13,14 @@ export default class NotificationHandler {
         "friend_accept",
         "level_up",
         "rank_up",
+        "referral",
     ];
 
     private static readonly SAVABLE_NOTIFICATION_TYPES = [
         "message",
         "friend_request",
         "friend_accept",
+        "referral",
     ];
 
     private databaseHandler: DatabaseHandler;

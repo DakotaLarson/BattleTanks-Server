@@ -32,10 +32,20 @@ export default class ReferralHandler {
         await this.databaseHandler.addReferrer(id);
     }
 
-    public async setReferredFrom(id: string, code: string) {
+    public async setReferredFrom(id: string, code: string, username: string) {
         const referrer = await this.databaseHandler.getReferrer(id, code);
         if (referrer) {
             await this.databaseHandler.setReferredFrom(id, referrer);
+            const body = JSON.stringify({
+                username,
+                message: "",
+            });
+            EventHandler.callEvent(EventHandler.Event.NOTIFICATION_SEND, {
+                type: "referral",
+                sender: id,
+                receiver: referrer,
+                body,
+            });
             return true;
         } else {
            return false;
