@@ -76,7 +76,18 @@ export default class SocialHandler {
                                     sender: id,
                                     receiver: requestorData.id,
                                 },
+                                {
+                                    type: "referral",
+                                    sender: id,
+                                    receiver: requestorData.id,
+                                },
                             ]);
+                        } else {
+                            EventHandler.callEvent(EventHandler.Event.NOTIFICATION_DELETE, {
+                                type: "referral",
+                                sender: id,
+                                receiver: requestorData.id,
+                            });
                         }
                         resolve(friendship);
                     }).catch((err) => {
