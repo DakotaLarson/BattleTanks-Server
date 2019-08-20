@@ -330,6 +330,16 @@ export default class DatabaseHandler {
         await this.utils.query(sql, [playTime, id]);
     }
 
+    public async createRecording(playerId: string, url: string, arena: string) {
+        const sql = "INSERT INTO recordings (url, player, arena) VALUES (?, ?, ?)";
+        await this.utils.query(sql, [url, playerId, arena]);
+    }
+
+    public async getRecordings(playerId: string) {
+        const sql = "SELECT url, arena, date FROM recordings WHERE player = ?";
+        return await this.utils.query(sql, [playerId]);
+    }
+
     private async onPlayerUpdate(eventData: any) {
         const id = eventData.id;
         const data = eventData.data;

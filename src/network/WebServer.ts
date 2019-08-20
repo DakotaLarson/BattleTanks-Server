@@ -60,13 +60,13 @@ export default class WebServer {
         this.notificationHandler = new NotificationHandler(databaseHandler, socialDatabaseHandler);
         this.storeHandler = storeHandler;
         this.referralHandler = referralHandler;
-        this.recordingHandler = new RecordingHandler();
+        this.recordingHandler = new RecordingHandler(databaseHandler);
 
         this.playerCount = 0;
         this.botCount = 0;
 
         this.inboundCount = 0;
-        this.outboundCount = 0;
+        this.outboundCount  = 0;
 
         this.lastSecondInbound = 0;
         this.lastSecondOutbound = 0;
@@ -119,7 +119,7 @@ export default class WebServer {
         app.post("/store", this.onPostStore.bind(this));
         app.post("/selection", this.onPostSelection.bind(this));
         app.post("/referral", this.onPostReferral.bind(this));
-        app.post("/recording", this.onPostRecording.bind(this));
+        app.post("/recordings", this.onPostRecordings.bind(this));
         app.get("/", (req: express.Request, res: express.Response) => {
             res.send("You are probably looking for https://battletanks.app");
         });
@@ -557,19 +557,26 @@ export default class WebServer {
         }
     }
 
-    private async onPostRecording(req: express.Request, res: express.Response) {
-        let id: any;
+    private async onPostRecordings(req: express.Request, res: express.Response) {
         try {
             if (req.body && "token" in req.body) {
                 const data = await Auth.verifyId(req.body.token);
-                id = data.id;
-            }
-            const destination = await this.recordingHandler.handleUpload(id, req.file, req.body);
-            if (destination) {
-                res.status(200).send(destination);
+
+                if (req.file) {
+                    const destination = await this.recordingHandler.handleUpload(data.id, req.file, req.body);
+                    if (destination) {
+                        res.status(200).send(destination);
+                    } else {
+                        res.sendStatus(400);
+                    }
+                } else {
+                    const recordings = await this.recordingHandler.getRecordings(data.id);
+                    res.status(200).send(recordings);
+                }
             } else {
-                res.sendStatus(400);
+                res.sendStatus(403);
             }
+
         } catch (err) {
             console.error(err);
             res.sendStatus(500);

@@ -2,6 +2,7 @@ import * as Ffmpeg from "fluent-ffmpeg";
 import * as fs from "fs";
 import * as ftp from "ftp";
 import * as path from "path";
+import DatabaseHandler from "../database/DatabaseHandler";
 
 export default class RecordingHandler {
 
@@ -14,27 +15,37 @@ export default class RecordingHandler {
     private static readonly CRED_DIRECTORY_NAME = "keys";
     private static readonly CRED_FILE_NAME = "ftp.json";
 
+    private databaseHandler: DatabaseHandler;
+
     private connectionData: any;
 
-    constructor() {
+    constructor(databaseHandler: DatabaseHandler) {
+        this.databaseHandler = databaseHandler;
+
         this.getConnectionData().then((data: any) => {
             this.connectionData = data;
         }).catch(console.error);
     }
 
-    public async handleUpload(id: string | undefined, file: Express.Multer.File, body: any) {
+    public async handleUpload(id: string, file: Express.Multer.File, body: any) {
         let destination;
         if (id && this.validateBody(body)) {
             const localDetails: any = await this.processVideo(file.filename, file.path, parseInt(body.start, 10), parseInt(body.end, 10));
             destination = await this.uploadVideo(localDetails.destination, localDetails.filename);
-            await this.deleteFile(file);
+            await this.databaseHandler.createRecording(id, destination, body.arena);
+            await this.deleteFile(file.path, true);
+            await this.deleteFile(localDetails.destination, false);
         } else {
-            await this.deleteFile(file);
+            await this.deleteFile(file.path, true);
         }
         return destination;
     }
 
-    private uploadVideo(localDestination: string, filename: string) {
+    public async getRecordings(id: string) {
+        return await this.databaseHandler.getRecordings(id);
+    }
+
+    private uploadVideo(localDestination: string, filename: string): Promise<string> {
         return new Promise((resolve, reject) => {
             let remoteDestination = "/" + filename;
             if (process.argv.includes("dev")) {
@@ -150,15 +161,15 @@ export default class RecordingHandler {
         });
     }
 
-    private async deleteFile(file: Express.Multer.File) {
+    private deleteFile(filepath: string, isRelative: boolean) {
         return new Promise((resolve, reject) => {
-            fs.unlink("./" + file.path, (err: NodeJS.ErrnoException | null) => {
+            const pathToDelete = isRelative ? "./" + filepath : filepath;
+            fs.unlink(pathToDelete, (err: NodeJS.ErrnoException | null) => {
                 if (err) {
                     reject(err);
                 } else {
                     resolve();
                 }
-                console.log("deleted");
             });
         });
     }
@@ -168,7 +179,7 @@ export default class RecordingHandler {
             const start = parseInt(body.start, 10);
             const end = parseInt(body.end, 10);
 
-            if (!isNaN(start) && !isNaN(end)) {
+            if (!isNaN(start) && !isNaN(end) && body.arena) {
                 if (start >= 0 && end >= 0) {
                     const length = end - start;
                     if (length >= RecordingHandler.MIN_LENGTH && length <= RecordingHandler.MAX_LENGTH) {
