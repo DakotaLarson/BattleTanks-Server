@@ -35,10 +35,11 @@ export default class RecordingHandler {
             await this.databaseHandler.createRecording(id, destination, body.arena);
             await this.deleteFile(file.path, true);
             await this.deleteFile(localDetails.destination, false);
+            return true;
         } else {
             await this.deleteFile(file.path, true);
+            return false;
         }
-        return destination;
     }
 
     public async getRecordings(id: string) {

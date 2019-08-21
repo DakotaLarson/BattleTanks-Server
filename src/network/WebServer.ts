@@ -563,12 +563,15 @@ export default class WebServer {
                 const data = await Auth.verifyId(req.body.token);
 
                 if (req.file) {
-                    const destination = await this.recordingHandler.handleUpload(data.id, req.file, req.body);
-                    if (destination) {
-                        res.status(200).send(destination);
+                    res.status(200);
+                    res.write("processing");
+                    const success = await this.recordingHandler.handleUpload(data.id, req.file, req.body);
+                    if (success) {
+                        res.write("success");
                     } else {
-                        res.sendStatus(400);
+                        res.write("failure");
                     }
+                    res.end();
                 } else {
                     const recordings = await this.recordingHandler.getRecordings(data.id);
                     res.status(200).send(recordings);

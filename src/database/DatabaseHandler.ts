@@ -336,7 +336,7 @@ export default class DatabaseHandler {
     }
 
     public async getRecordings(playerId: string) {
-        const sql = "SELECT url, arena, date FROM recordings WHERE player = ?";
+        const sql = "SELECT url, arena, date FROM recordings WHERE player = ? ORDER BY date DESC";
         return await this.utils.query(sql, [playerId]);
     }
 
