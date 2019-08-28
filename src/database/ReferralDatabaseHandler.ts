@@ -203,7 +203,7 @@ export default class ReferralDatabaseHandler {
             sql += " WHEN referrer = ? THEN ? ";
             values.push(id, value);
         }
-        sql += " END WHERE referrer IN (";
+        sql += "END WHERE referrer IN (";
         for (const [id] of data) {
             sql += "?, ";
             values.push(id);
