@@ -21,36 +21,23 @@ export default class StoreHandler {
 
     private static readonly TANK_DEFAULT_COLORS = new Map([
         ["Little Timmy", [
-            "Bisque",
-            "Tan",
-            "Green",
-            "Dark Green",
+            "Cornsilk",
+            "Coffee",
+            "Mantis",
+            "Forest Green",
         ]],
         ["The Big Mama", [
             "Silver",
-            "Light Gray",
-            "Charcoal",
-            "Gold",
+            "Ash Gray",
+            "Jet",
+            "Citrine",
         ]],
         ["The Quad", [
-            "Sand",
-            "Brown",
-            "Charcoal",
+            "Ecru",
+            "Chocolate",
+            "Jet",
         ]],
     ]);
-
-    private static readonly TANK_COLORS = [
-        "Bisque",
-        "Tan",
-        "Green",
-        "Dark Green",
-        "Silver",
-        "Light Gray",
-        "Charcoal",
-        "Gold",
-        "Sand",
-        "Brown",
-    ];
 
     private databaseHandler: StoreDatabaseHandler;
 
@@ -247,8 +234,9 @@ export default class StoreHandler {
         };
     }
 
-    private validateColorSelectionRequest(body: any) {
-        if (StoreHandler.TANK_COLORS.includes(body.selection)) {
+    private async validateColorSelectionRequest(body: any) {
+        const colors = await this.databaseHandler.getColorNames(ProductType.COLOR);
+        if (colors.includes(body.selection)) {
 
             const defaultColors = StoreHandler.TANK_DEFAULT_COLORS.get(body.parent);
             if (defaultColors) {

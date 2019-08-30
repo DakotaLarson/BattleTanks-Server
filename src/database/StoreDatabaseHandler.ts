@@ -92,20 +92,7 @@ export default class StoreDatabaseHandler {
         return true;
     }
 
-    // public async selectDefault(playerId: string, position: number, parentTitle: string) {
-    //     try {
-    //         const sql = "DELETE FROM selections WHERE player = ? AND position = ? AND parent = (SELECT purchases.product from purchases, products WHERE purchases.player = ? AND products.title = ? AND products.id = purchases.product)";
-    //         const values = [playerId, position, playerId, parentTitle];
-
-    //         await this.databaseUtils.query(sql, values);
-    //     } catch (ex) {
-    //         console.error(ex);
-    //         return false;
-    //     }
-    //     return true;
-    // }
-
-    public async initPlayer(playerId: string, productTitle: string, colorTitles: string[], type: number) {
+  public async initPlayer(playerId: string, productTitle: string, colorTitles: string[], type: number) {
         const productTitles = colorTitles.slice();
         productTitles.push(productTitle);
 
@@ -173,6 +160,17 @@ export default class StoreDatabaseHandler {
     public async getPlayerCurrentSelection(playerId: string): Promise<any[]> {
         const sql = "SELECT products.detail, products.type, selections.position FROM products, selections WHERE selections.player = ? AND products.id = selections.product AND (selections.parent = -1 OR selections.parent = (SELECT product FROM selections WHERE player = ? AND parent = -1))";
         return await this.utils.query(sql, [playerId, playerId]);
+    }
+
+    public async getColorNames(type: number) {
+        const sql = "SELECT title FROM products WHERE type = ?";
+        const rawColors = await this.utils.query(sql, [type]);
+
+        const colors = [];
+        for (const color of rawColors) {
+            colors.push(color.title);
+        }
+        return colors;
     }
 
     private onPoolUpdate(pool: mysql.Pool) {
