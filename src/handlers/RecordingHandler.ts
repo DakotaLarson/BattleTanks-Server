@@ -9,8 +9,11 @@ export default class RecordingHandler {
     private static readonly MIN_LENGTH = 5;
     private static readonly MAX_LENGTH = 30;
 
-    private static readonly OVERLAY_PATH = path.join(process.cwd(), "recordings", "overlay", "header.png");
+    private static readonly OVERLAY_PATH = path.join(process.cwd(), "recordings", "res", "header.png");
     private static readonly DESTINATION_PATH = path.join(process.cwd(), "recordings", "processed");
+
+    private static readonly TEMPLATE_PATH = path.join(process.cwd(), "recordings", "res", "template.html");
+    private static readonly TEMPLATE_PLACEHOLDER = /\[VIDEO_URL\]/g;
 
     private static readonly CRED_DIRECTORY_NAME = "keys";
     private static readonly CRED_FILE_NAME = "ftp.json";
@@ -31,7 +34,7 @@ export default class RecordingHandler {
         let destination;
         if (id && this.validateBody(body)) {
             const localDetails: any = await this.processVideo(file.filename, file.path, parseInt(body.start, 10), parseInt(body.end, 10));
-            destination = await this.uploadVideo(localDetails.destination, localDetails.filename);
+            destination = await this.uploadContent(localDetails.destination, localDetails.filename);
             await this.databaseHandler.createRecording(id, destination, body.arena);
             await this.deleteFile(file.path, true);
             await this.deleteFile(localDetails.destination, false);
@@ -46,21 +49,46 @@ export default class RecordingHandler {
         return await this.databaseHandler.getRecordings(id);
     }
 
-    private uploadVideo(localDestination: string, filename: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            let remoteDestination = "/" + filename;
+    private uploadContent(localDestination: string, fullFilename: string): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            const dotIndex = fullFilename.lastIndexOf(".");
+            const filename = fullFilename.substring(0, dotIndex);
+            const fileExtension = fullFilename.substring(dotIndex);
+
+            let remoteVideoDestination = "/" + filename + "/video" + fileExtension;
+            let remoteHtmlDestination = "/" + filename + "/index.html";
             if (process.argv.includes("dev")) {
-                remoteDestination = "/dev/" + filename;
+                remoteVideoDestination = "/dev" + remoteVideoDestination;
+                remoteHtmlDestination = "/dev" + remoteHtmlDestination;
             }
+
+            const templateData = await this.createTemplate("https://battletanks.app/recordings" + remoteVideoDestination);
             const client = new ftp();
 
             client.on("ready", () => {
-                client.put(localDestination, remoteDestination, (err: Error) => {
-                    client.end();
-                    if (err) {
-                        reject(err);
+                let dir = "/" + filename;
+                if (process.argv.includes("dev")) {
+                    dir = "/dev" + dir;
+                }
+                client.mkdir(dir, (mkDirErr: Error) => {
+                    if (mkDirErr) {
+                        reject(mkDirErr);
                     } else {
-                        resolve("https://battletanks.app/recordings" + remoteDestination);
+                        client.put(localDestination, remoteVideoDestination, (videoErr: Error) => {
+                            if (videoErr) {
+                                reject(videoErr);
+                                client.end();
+                            } else {
+                                client.put(templateData, remoteHtmlDestination, (htmlErr: Error) => {
+                                    client.end();
+                                    if (htmlErr) {
+                                        reject(htmlErr);
+                                    } else {
+                                        resolve("https://battletanks.app/recordings" + dir);
+                                    }
+                                });
+                            }
+                        });
                     }
                 });
             });
@@ -78,7 +106,8 @@ export default class RecordingHandler {
 
     private processVideo(filename: string, inputPath: string, start: number, end: number) {
         return new Promise((resolve, reject) => {
-            const destination = path.join(RecordingHandler.DESTINATION_PATH, filename);
+            const newFilename = filename.replace("webm", "mp4");
+            const destination = path.join(RecordingHandler.DESTINATION_PATH, newFilename);
             const ffmpeg: Ffmpeg.FfmpegCommand = Ffmpeg();
             ffmpeg.input("./" + inputPath).setStartTime(start);
             ffmpeg.input(RecordingHandler.OVERLAY_PATH);
@@ -105,13 +134,25 @@ export default class RecordingHandler {
                     outputs: "[ovrl]",
                 },
                 {
+                    filter: "pad",
+                    options: {
+                        width: "1280",
+                        height: "720",
+                        x: "-1",
+                        y: "-1",
+                        color: "black",
+                    },
+                    inputs: "[ovrl]",
+                    outputs: "[pd]",
+                },
+                {
                     filter: "fade",
                     options: {
                         type: "in",
                         start_time: 0,
                         duration: 0.5,
                     },
-                    inputs: "[ovrl]",
+                    inputs: "[pd]",
                     outputs: "[fdin]",
                 },
                 {
@@ -150,7 +191,7 @@ export default class RecordingHandler {
             ffmpeg.on("end", () => {
                 resolve({
                     destination,
-                    filename,
+                    filename: newFilename,
                 });
             });
             ffmpeg.on("error", (err, stdout, stderr) => {
@@ -190,6 +231,20 @@ export default class RecordingHandler {
             }
         }
         return false;
+    }
+
+    private async createTemplate(videoUrl: string): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            fs.readFile(RecordingHandler.TEMPLATE_PATH, (err, rawData) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const data = rawData.toString();
+                    const replaced = data.replace(RecordingHandler.TEMPLATE_PLACEHOLDER, videoUrl);
+                    resolve(Buffer.from(replaced));
+                }
+            });
+        });
     }
 
     private getConnectionData(): Promise<any> {

@@ -565,7 +565,13 @@ export default class WebServer {
                 if (req.file) {
                     res.status(200);
                     res.write("processing");
-                    const success = await this.recordingHandler.handleUpload(data.id, req.file, req.body);
+                    let success;
+                    try {
+                        success = await this.recordingHandler.handleUpload(data.id, req.file, req.body);
+                    } catch (err) {
+                        console.error(err);
+                        success = false;
+                    }
                     if (success) {
                         res.write("success");
                     } else {

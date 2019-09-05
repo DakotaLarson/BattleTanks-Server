@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BattleTanks</title>
+    
+    <meta name="description" content="BattleTanks is a free, web based, 2.5D tank shooter!"/>
+    <meta name="keywords" content="shooting games, tank games, tank battle, tank wars, tank shooter, BattleTanks, battle tanks, battletanks.app"/>
+    <meta name="author" content="Dakota Larson"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+
+    <meta property="fb:app_id" content="467119764067470"/>
+
+    <meta property="og:title" content="BattleTanks"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://battletanks.app"/>
+    <meta property="og:description" content="The best free multiplayer tank game! (No install required)"/>
+    
+    <meta property="og:video" content="[VIDEO_URL]" />
+    <meta property="og:video:secure_url" content="[VIDEO_URL]" />
+    <meta property="og:video:type" content="video/mp4" />
+    <meta property="og:video:width" content="1280" />
+    <meta property="og:video:height" content="720" />
+
+    <meta property="og:image" content="https://battletanks.app/res/menu/BattleTanksLogo.png"/>
+    <meta property="og:image:width" content="1250"/>
+    <meta property="og:image:height" content="655"/>
+    <meta property="og:image:type" content="image/png"/>
+    <meta property="og:image:alt" content="BattleTanks Logo"/>
+
+    <link rel="canonical" href="https://battletanks.app"/>
+    <style>
+        html, body {
+            margin: 0;
+            background: #000000;
+        }
+        .game-frame {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        .recording-video-container {
+            position: absolute;
+            height: 100vh;
+            width: 100vw;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 1);
+            transition: all 500ms linear;
+        }
+        .recording-video-container-loaded {
+            background-color: rgba(0, 0, 0, 0.85);
+        }
+        .recording-video-container-hidden {
+            opacity: 0;
+        }
+        .recording {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <iframe src="https://battletanks.app" frameborder="0"  class="game-frame"></iframe>
+    <div class="recording-video-container">
+        <video autoplay controls muted class="recording">
+            <source src="[VIDEO_URL]" type="video/mp4">
+        </video>
+    </div>
+    <script>
+        const container = document.querySelector(".recording-video-container");
+        setTimeout(() => {
+            container.classList.add("recording-video-container-loaded");
+        }, 5000);
+        container.addEventListener("click", (event) => {
+            if (event.button === 0 && event.target === container) {
+                const recording = document.querySelector(".recording");
+		        recording.pause();
+
+                container.classList.add("recording-video-container-hidden");
+                setTimeout(() => {
+                    container.style.display = "none";
+                }, 500 + 50);
+            }
+        });
+        document.oncontextmenu = () => false;
+    </script>
+</body>
+</html>
