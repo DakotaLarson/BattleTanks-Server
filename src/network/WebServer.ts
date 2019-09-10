@@ -120,6 +120,7 @@ export default class WebServer {
         app.post("/selection", this.onPostSelection.bind(this));
         app.post("/referral", this.onPostReferral.bind(this));
         app.post("/recordings", this.onPostRecordings.bind(this));
+        app.post("/payment" , this.onPostPayment.bind(this));
         app.get("/", (req: express.Request, res: express.Response) => {
             res.send("You are probably looking for https://battletanks.app");
         });
@@ -590,7 +591,21 @@ export default class WebServer {
             console.error(err);
             res.sendStatus(500);
         }
+    }
 
+    private async onPostPayment(req: express.Request, res: express.Response) {
+        if (req.body && "token" in req.body && "payment" in req.body) {
+            try {
+                const data = await Auth.verifyId(req.body.token);
+                const results = await this.storeHandler.getPaymentDetails(data.id, req.body.payment);
+                res.status(200).send(results);
+            } catch (err) {
+                console.error(err);
+                res.sendStatus(500);
+            }
+        } else {
+            res.sendStatus(403);
+        }
     }
 
     private getSearchResults(res: express.Response, query: string, id?: string, friends?: boolean) {

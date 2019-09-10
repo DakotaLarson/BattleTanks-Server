@@ -143,7 +143,7 @@ export default class StoreDatabaseHandler {
     }
 
     public async getPlayerProducts() {
-        const sql = "SELECT id, price, title, type, detail, parent_required, level_required, image_url FROM products";
+        const sql = "SELECT id, price, title, type, detail, parent_required, level_required, image_url FROM products ORDER BY type, price";
         return await this.utils.query(sql);
     }
 
@@ -171,6 +171,13 @@ export default class StoreDatabaseHandler {
             colors.push(color.title);
         }
         return colors;
+    }
+
+    public async getCompletedPaymentCurrency(playerId: string, paymentId: string) {
+        const paymentSql = "SELECT players.currency FROM payments INNER JOIN players ON players.id = payments.player WHERE player = ? AND state = 'COMPLETED' AND payment = ?";
+        const paymentValues = [playerId, paymentId];
+        const results = await this.utils.query(paymentSql, paymentValues);
+        return results;
     }
 
     private onPoolUpdate(pool: mysql.Pool) {

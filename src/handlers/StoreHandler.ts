@@ -37,6 +37,79 @@ export default class StoreHandler {
             "Chocolate",
             "Jet",
         ]],
+        ["Tank 3", [
+            "Bice Blue",
+            "Eerie Black",
+        ]],
+        ["Tank 4", [
+            "Davy's Gray",
+            "Feldgrau",
+            "Battleship Gray",
+            "Champagne",
+            "Cool Gray",
+            "Fern Green",
+            "Burgundy",
+        ]],
+        ["Tank 5", [
+            "Cream",
+            "Gunmetal",
+            "Slate Gray",
+            "Marengo",
+        ]],
+        ["Tank 6", [
+            "Carmine",
+            "Cadet Gray",
+            "Jasmine",
+            "Gray",
+            "Almond",
+            "Payne's Gray",
+        ]],
+        ["Tank 7", [
+            "Charcoal",
+            "Burnt Orange",
+        ]],
+        ["Tank 8", [
+            "Mint",
+            "Aureolin",
+            "Fluorescent Blue",
+            "Dim Gray",
+            "Fern Green",
+        ]],
+        ["Tank 9", [
+            "Gunmetal",
+            "Citron",
+            "Cool Gray",
+            "Alabaster",
+            "Platinum",
+        ]],
+        ["Tank 10", [
+            "Jungle Green",
+            "Ebony",
+        ]],
+        ["Tank 11", [
+            "Ice Blue",
+            "Beaver",
+            "Caribbean Current",
+            "Brown Sugar",
+            "Davy's Gray",
+            "Jasmine",
+            "Light Sea Green",
+            "Baby Blue",
+            "Mango",
+            "Garnet",
+        ]],
+        ["Tank 12", [
+            "Blue-Gray",
+            "Cornflower Blue",
+            "Dim Gray",
+            "Glaucous",
+            "Bone",
+            "Feldgrau",
+            "Dark Red",
+            "Linen",
+            "Mindaro",
+            "Aqua-Cyan",
+        ]],
     ]);
 
     private databaseHandler: StoreDatabaseHandler;
@@ -113,6 +186,14 @@ export default class StoreHandler {
         return {
             tanks,
             colors,
+        };
+    }
+
+    public async getPaymentDetails(playerId: string, paymentId: string) {
+        const results = await this.databaseHandler.getCompletedPaymentCurrency(playerId, paymentId);
+        return {
+            complete: results.length > 0,
+            currency: results.length > 0 ? results[0].currency as number : 0,
         };
     }
 
