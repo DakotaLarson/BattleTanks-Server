@@ -17,31 +17,31 @@ enum SelectionType {
 }
 export default class StoreHandler {
 
-    private static readonly INITIALIZATION_PURCHASE_TITLE = "Little Timmy";
+    private static readonly INITIALIZATION_PURCHASE_TITLE = "BeefChief";
 
     private static readonly TANK_DEFAULT_COLORS = new Map([
-        ["Little Timmy", [
-            "Cornsilk",
+        ["BeefChief", [
+            "Khaki",
             "Coffee",
             "Mantis",
             "Forest Green",
         ]],
-        ["The Big Mama", [
+        ["Snowplow", [
             "Silver",
             "Ash Gray",
             "Jet",
             "Citrine",
         ]],
-        ["The Quad", [
+        ["Dunebug", [
             "Ecru",
             "Chocolate",
             "Jet",
         ]],
-        ["Tank 3", [
+        ["Lightning", [
             "Bice Blue",
-            "Eerie Black",
+            "Black Olive",
         ]],
-        ["Tank 4", [
+        ["Jarhead", [
             "Davy's Gray",
             "Feldgrau",
             "Battleship Gray",
@@ -50,13 +50,13 @@ export default class StoreHandler {
             "Fern Green",
             "Burgundy",
         ]],
-        ["Tank 5", [
+        ["Tankette", [
             "Cream",
             "Gunmetal",
             "Slate Gray",
             "Marengo",
         ]],
-        ["Tank 6", [
+        ["Bullseye", [
             "Carmine",
             "Cadet Gray",
             "Jasmine",
@@ -64,29 +64,29 @@ export default class StoreHandler {
             "Almond",
             "Payne's Gray",
         ]],
-        ["Tank 7", [
+        ["Challenger", [
             "Charcoal",
             "Burnt Orange",
         ]],
-        ["Tank 8", [
+        ["Schnoz", [
             "Mint",
             "Aureolin",
             "Fluorescent Blue",
             "Dim Gray",
             "Fern Green",
         ]],
-        ["Tank 9", [
+        ["Hornet", [
             "Gunmetal",
-            "Citron",
+            "Mikado Yellow",
             "Cool Gray",
             "Alabaster",
             "Platinum",
         ]],
-        ["Tank 10", [
+        ["Bunker", [
             "Jungle Green",
             "Ebony",
         ]],
-        ["Tank 11", [
+        ["Centurion", [
             "Ice Blue",
             "Beaver",
             "Caribbean Current",
@@ -98,7 +98,7 @@ export default class StoreHandler {
             "Mango",
             "Garnet",
         ]],
-        ["Tank 12", [
+        ["Ogimatok", [
             "Blue-Gray",
             "Cornflower Blue",
             "Dim Gray",

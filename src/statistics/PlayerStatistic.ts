@@ -1,6 +1,6 @@
 export default class PlayerStatistic {
 
-    private static readonly CURRENCY_DIVISOR = 10;
+    private static readonly CURRENCY_DIVISOR = 2;
 
     private shots: number;
     private hits: number;
@@ -29,7 +29,7 @@ export default class PlayerStatistic {
         this.hits ++;
 
         this.points ++;
-        this.currency = this.calcuateCurrency(this.points); 
+        this.currency = this.calcuateCurrency(this.points);
 
         return {
             points: this.points,
