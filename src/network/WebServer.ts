@@ -15,6 +15,7 @@ import SocialHandler from "../handlers/SocialHandler";
 import StoreHandler from "../handlers/StoreHandler";
 import Auth from "../main/Auth";
 import EventHandler from "../main/EventHandler";
+import WebSocketServer from "./WebSocketServer";
 
 export default class WebServer {
 
@@ -122,7 +123,7 @@ export default class WebServer {
         app.post("/recordings", this.onPostRecordings.bind(this));
         app.post("/payment" , this.onPostPayment.bind(this));
         app.get("/", (req: express.Request, res: express.Response) => {
-            res.send("You are probably looking for https://battletanks.app");
+            res.send("You are probably looking for https://battletanks.app (v" + WebSocketServer.SERVER_VERSION + ")");
         });
     }
 

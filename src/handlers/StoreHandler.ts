@@ -64,7 +64,7 @@ export default class StoreHandler {
             "Almond",
             "Payne's Gray",
         ]],
-        ["Challenger", [
+        ["Marauder", [
             "Charcoal",
             "Burnt Orange",
         ]],
@@ -82,7 +82,7 @@ export default class StoreHandler {
             "Alabaster",
             "Platinum",
         ]],
-        ["Bunker", [
+        ["Challenger", [
             "Jungle Green",
             "Ebony",
         ]],

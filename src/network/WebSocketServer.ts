@@ -11,8 +11,8 @@ import WebServer from "./WebServer";
 
 export default class WebSocketServer {
 
+    public static readonly SERVER_VERSION = 1.8;
     private static readonly PROTOCOL_PREFIX = "battletanks-";
-    private static readonly SERVER_VERSION = 1.8;
 
     private static readonly CLIENT_OUTDATED_CODE = 4001;
     private static readonly SERVER_OUTDATED_CODE = 4002;
@@ -33,7 +33,7 @@ export default class WebSocketServer {
             verifyClient: this.verifyClient.bind(this),
         } as WebSocket.ServerOptions);
         this.wss.on("listening", () => {
-            console.log("WSS Listening...");
+            console.log("Game Server Listening...");
         });
         this.wss.on("connection", this.handleConnection.bind(this));
 
