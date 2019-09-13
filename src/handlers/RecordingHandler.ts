@@ -138,8 +138,8 @@ export default class RecordingHandler {
                     options: {
                         width: "1280",
                         height: "720",
-                        x: "-1",
-                        y: "-1",
+                        x: "(ow-iw)/2",
+                        y: "(oh-ih)/2",
                         color: "black",
                     },
                     inputs: "[ovrl]",
