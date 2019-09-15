@@ -94,7 +94,7 @@ export default abstract class Gamemode {
 
     protected onHit(data: any, damage: number) {
         if (data.match === this.match) {
-            if (!(this.match as Match).onSameTeam(data.player, data.target)) {
+            if (!this.match.onSameTeam(data.player, data.target)) {
                 if (!this.protected.includes(data.target.id)) {
                     const previousShield = data.target.shield;
                     const targetData = data.target.damage(damage);
@@ -158,12 +158,14 @@ export default abstract class Gamemode {
         if (this.match.hasPlayer(data.player) && !this.protected.includes(data.targetId)) {
             // collision between players
             const target = PlayerHandler.getMatchPlayer(this.match, data.targetId);
-            const vec = target.position.clone().sub(data.player.position).normalize();
-            target.sendRamResponse(vec, data.player.id);
+            if (!this.match.onSameTeam(data.player, target)) {
+                const vec = target.position.clone().sub(data.player.position).normalize();
+                target.sendRamResponse(vec, data.player.id);
 
-            data.match = this.match;
-            data.target = target;
-            this.onHit(data, Gamemode.RAM_DAMAGE);
+                data.match = this.match;
+                data.target = target;
+                this.onHit(data, Gamemode.RAM_DAMAGE);
+            }
         }
     }
 

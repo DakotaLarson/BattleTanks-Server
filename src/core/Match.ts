@@ -122,7 +122,7 @@ export default class Match {
     }
 
     public addPlayer(player: Player): void { // adding spectator, not regular player
-        player.sendPlayerSpectating();
+        // player.sendPlayerSpectating();
         player.sendArena(this.arena.getRawData());
         this.powerupHandler.onPlayerAddition(player);
         (this.matchStats as MatchStatistics).updateLateJoinPlayer(player);
