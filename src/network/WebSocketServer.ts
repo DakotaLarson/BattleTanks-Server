@@ -11,7 +11,7 @@ import WebServer from "./WebServer";
 
 export default class WebSocketServer {
 
-    public static readonly SERVER_VERSION = 1.8;
+    public static readonly SERVER_VERSION = 1.9;
     private static readonly PROTOCOL_PREFIX = "battletanks-";
 
     private static readonly CLIENT_OUTDATED_CODE = 4001;
