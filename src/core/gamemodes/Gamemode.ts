@@ -86,7 +86,9 @@ export default abstract class Gamemode {
     }
 
     public handleOutOfBounds(player: Player) {
-        this.killPlayer(player, player.ramAttackerId || Gamemode.OOB_ID);
+        if (player.isAlive) {
+            this.killPlayer(player, player.ramAttackerId || Gamemode.OOB_ID);
+        }
     }
 
     public abstract isPlayerValid(player: Player): boolean;
@@ -170,6 +172,8 @@ export default abstract class Gamemode {
     }
 
     private onDeath(target: Player, player: Player)  {
-        this.killPlayer(target, player.id);
+        if (target.isAlive) {
+            this.killPlayer(target, player.id);
+        }
     }
 }
